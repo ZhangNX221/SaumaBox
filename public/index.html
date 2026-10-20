@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SaumaBox — All-in-One Personal Media Catalog</title>
+  <meta name="description" content="Aplikasi katalog media pribadi terpadu untuk Games, Cinema, dan Music dengan database SQLite offline-first dan tampilan responsif DitherOS.">
+  <meta name="theme-color" content="#09090b">
+
+  <!-- PWA Manifest & Icons -->
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎮</text></svg>">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎮</text></svg>">
+
+  <!-- Google Fonts: Outfit & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div id="app">
+    <!-- Sticky Desktop Header -->
+    <header class="site-header" role="banner">
+      <div class="header-container">
+        <a class="brand-logo" onclick="app.navigate(app.state.user ? 'dashboard' : 'landing')" aria-label="Beranda SaumaBox">
+          <span>🎮</span>
+          <span>SaumaBox</span>
+          <span class="brand-badge">DitherOS</span>
+        </a>
+
+        <!-- Desktop Navigation Bar -->
+        <nav class="nav-links" id="nav-links" role="navigation" aria-label="Navigasi Utama">
+          <!-- Diisi dinamis oleh app.updateNavbar() -->
+        </nav>
+
+        <!-- Right Side Actions: Theme & Auth -->
+        <div class="nav-actions">
+          <button class="btn btn-secondary btn-icon" id="btn-toggle-theme" title="Ganti Tema (Terang/Gelap)" aria-label="Ganti Tema">
+            <span id="theme-toggle-icon">☀️</span>
+          </button>
+          <div id="auth-actions">
+            <!-- Diisi dinamis oleh app.updateNavbar() -->
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main View Dynamic Container -->
+    <main class="main-content" id="view-container" role="main">
+      <div class="state-container">
+        <div class="state-icon">⏳</div>
+        <div class="state-title">Menyiapkan SaumaBox...</div>
+      </div>
+    </main>
+
+    <!-- Mobile Bottom Navigation Bar (Thumb-Zone Friendly) -->
+    <nav class="bottom-nav" id="bottom-nav" role="navigation" aria-label="Navigasi Bawah">
+      <!-- Diisi dinamis oleh app.updateNavbar() -->
+    </nav>
+
+    <!-- Toast Notification Host -->
+    <div id="toast-container" aria-live="polite" aria-atomic="true"></div>
+  </div>
+
+  <!-- Client-side Scripts -->
+  <script src="/js/utils.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/app.js"></script>
+
+  <!-- PWA Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').catch(err => {
+          console.warn('PWA service worker registration failed:', err);
+        });
+      });
+    }
+  </script>
+</body>
+</html>

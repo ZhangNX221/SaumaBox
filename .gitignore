@@ -1,0 +1,23 @@
+# Dependency directories
+node_modules/
+
+# SQLite runtime database & backup snapshots
+data/*.sqlite
+data/*.sqlite-shm
+data/*.sqlite-wal
+data/backups/*
+!data/backups/.gitkeep
+data/uploads/*
+!data/uploads/.gitkeep
+
+# Environment files
+.env
+.env.*
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS metadata
+.DS_Store
+Thumbs.db
