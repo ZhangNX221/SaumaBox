@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SaumaBox — All-in-One Personal Media Catalog</title>
-  <meta name="description" content="Aplikasi katalog media pribadi terpadu untuk Games, Cinema, dan Music dengan database SQLite offline-first dan tampilan responsif DitherOS.">
+  <title>SaumaBox: Personal Media Catalog</title>
+  <meta name="description" content="Katalog media pribadi terpadu untuk koleksi game, film, dan musik dengan database SQLite offline-first.">
   <meta name="theme-color" content="#09090b">
 
   <!-- PWA Manifest & Icons -->
   <link rel="manifest" href="/manifest.json">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎮</text></svg>">
-  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎮</text></svg>">
+  <link rel="icon" type="image/svg+xml" href="/images/logo.svg">
+  <link rel="apple-touch-icon" href="/images/logo.svg">
 
   <!-- Google Fonts: Outfit & JetBrains Mono -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -22,44 +22,96 @@
 </head>
 <body>
   <div id="app">
-    <!-- Sticky Desktop Header -->
-    <header class="site-header" role="banner">
-      <div class="header-container">
-        <a class="brand-logo" onclick="app.navigate(app.state.user ? 'dashboard' : 'landing')" aria-label="Beranda SaumaBox">
-          <span>🎮</span>
-          <span>SaumaBox</span>
-          <span class="brand-badge">DitherOS</span>
-        </a>
+    <!-- Admin Sidebar (Rendered on Admin Mode) -->
+    <aside class="admin-sidebar" id="admin-sidebar" role="navigation" aria-label="Navigasi Menu Admin">
+      <!-- Diisi dinamis oleh app.updateNavbar() -->
+    </aside>
 
-        <!-- Desktop Navigation Bar -->
-        <nav class="nav-links" id="nav-links" role="navigation" aria-label="Navigasi Utama">
-          <!-- Diisi dinamis oleh app.updateNavbar() -->
-        </nav>
+    <!-- Overlay Backdrop for Mobile Sidebar Drawer -->
+    <div class="sidebar-backdrop" id="sidebar-backdrop" onclick="app.toggleAdminSidebar(false)" aria-hidden="true"></div>
 
-        <!-- Right Side Actions: Theme & Auth -->
-        <div class="nav-actions">
-          <button class="btn btn-secondary btn-icon" id="btn-toggle-theme" title="Ganti Tema (Terang/Gelap)" aria-label="Ganti Tema">
-            <span id="theme-toggle-icon">☀️</span>
-          </button>
-          <div id="auth-actions">
+    <!-- App Shell Wrapper (Header, Main View, Bottom Nav) -->
+    <div class="app-shell">
+      <!-- Sticky Header -->
+      <header class="site-header" role="banner">
+        <div class="header-container">
+          <div class="header-brand-group">
+            <button class="btn btn-secondary btn-icon" id="btn-toggle-sidebar" onclick="app.toggleSidebar()" title="Perkecil menu sidebar" aria-label="Toggle menu sidebar">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+            </button>
+            <a class="brand-logo" onclick="app.navigate(app.state.user ? 'dashboard' : 'landing')" aria-label="Beranda SaumaBox">
+              <img src="/images/logo.svg" class="brand-logo-img" alt="Logo SaumaBox" width="28" height="28">
+              <span class="brand-name">SaumaBox</span>
+              <span class="brand-badge" id="header-brand-badge">Catalog</span>
+            </a>
+          </div>
+
+          <!-- Topbar Global Search Bar -->
+          <div class="topbar-search-wrap" id="topbar-search-wrap">
+            <span class="topbar-search-icon" aria-hidden="true">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            </span>
+            <input type="search" class="topbar-search-input" id="topbar-search-input" placeholder="Cari koleksi katalog..." aria-label="Pencarian Global" autocomplete="off">
+            <button type="button" class="topbar-search-clear hidden" id="topbar-search-clear" onclick="app.clearTopbarSearch()" title="Hapus pencarian" aria-label="Hapus kata kunci pencarian">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+
+          <!-- Desktop Navigation Bar (Digunakan pada mode Pengunjung Publik) -->
+          <nav class="nav-links" id="nav-links" role="navigation" aria-label="Navigasi Utama">
             <!-- Diisi dinamis oleh app.updateNavbar() -->
+          </nav>
+
+          <!-- Right Side Actions: Notifications, Theme & Auth -->
+          <div class="nav-actions">
+            <!-- Notifications Center Dropdown -->
+            <div class="notifications-wrapper" id="notifications-wrapper">
+              <button class="btn btn-secondary btn-icon" id="btn-toggle-notifications" onclick="app.toggleNotificationsPanel(event)" title="Notifikasi" aria-label="Buka notifikasi sistem">
+                <svg class="ui-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                <span id="notif-badge" class="notif-badge hidden"></span>
+              </button>
+              <div class="notifications-dropdown hidden" id="notifications-dropdown" role="dialog" aria-label="Pusat Notifikasi">
+                <div class="notif-header">
+                  <div class="notif-header-title">
+                    <span>Notifikasi</span>
+                    <span class="notif-header-count" id="notif-unread-count"></span>
+                  </div>
+                  <div class="notif-header-actions">
+                    <button type="button" class="notif-action-btn" onclick="app.markNotificationsAsRead()">Tandai Dibaca</button>
+                    <button type="button" class="notif-action-btn text-danger" onclick="app.clearAllNotifications()">Bersihkan</button>
+                  </div>
+                </div>
+                <div class="notif-list" id="notif-list">
+                  <!-- Diisi dinamis oleh app.renderNotificationsList() -->
+                </div>
+              </div>
+            </div>
+
+            <!-- Theme Switcher -->
+            <button class="btn btn-secondary btn-icon" id="btn-toggle-theme" onclick="app.toggleTheme()" title="Ganti Tema Tampilan" aria-label="Ganti Tema Tampilan">
+              <span id="theme-toggle-icon">☀️</span>
+            </button>
+            <div id="auth-actions">
+              <!-- Diisi dinamis oleh app.updateNavbar() -->
+            </div>
           </div>
         </div>
-      </div>
-    </header>
+      </header>
 
-    <!-- Main View Dynamic Container -->
-    <main class="main-content" id="view-container" role="main">
-      <div class="state-container">
-        <div class="state-icon">⏳</div>
-        <div class="state-title">Menyiapkan SaumaBox...</div>
-      </div>
-    </main>
+      <!-- Main View Dynamic Container -->
+      <main class="main-content" id="view-container" role="main">
+        <div class="state-container">
+          <div class="state-spinner" aria-hidden="true"></div>
+          <div class="state-title">Menyiapkan SaumaBox...</div>
+          <div class="state-desc">Memuat data koleksi dan preferensi Anda.</div>
+        </div>
+      </main>
 
-    <!-- Mobile Bottom Navigation Bar (Thumb-Zone Friendly) -->
-    <nav class="bottom-nav" id="bottom-nav" role="navigation" aria-label="Navigasi Bawah">
-      <!-- Diisi dinamis oleh app.updateNavbar() -->
-    </nav>
+      <!-- Mobile Bottom Navigation Bar (Thumb-Zone Friendly) -->
+      <nav class="bottom-nav" id="bottom-nav" role="navigation" aria-label="Navigasi Bawah">
+        <!-- Diisi dinamis oleh app.updateNavbar() -->
+      </nav>
+    </div>
 
     <!-- Toast Notification Host -->
     <div id="toast-container" aria-live="polite" aria-atomic="true"></div>
@@ -69,6 +121,15 @@
   <script src="/js/utils.js"></script>
   <script src="/js/api.js"></script>
   <script src="/js/app.js"></script>
+  <script src="/js/modules/modal.js"></script>
+  <script src="/js/modules/landing.js"></script>
+  <script src="/js/modules/dashboard.js"></script>
+  <script src="/js/modules/games.js"></script>
+  <script src="/js/modules/cinema.js"></script>
+  <script src="/js/modules/music.js"></script>
+  <script src="/js/modules/admin.js"></script>
+  <script src="/js/modules/taxonomy.js"></script>
+  <script src="/js/modules/profile.js"></script>
 
   <!-- PWA Service Worker Registration -->
   <script>

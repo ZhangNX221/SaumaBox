@@ -6,6 +6,7 @@ const path = require('node:path');
 const { DatabaseSync } = require('node:sqlite');
 const { getDb, logActivity, DB_PATH, BACKUP_DIR, DB_DIR } = require('../db');
 const { requireAuth } = require('../auth');
+const { parseExcel, generateExcel } = require('../excel');
 const {
   cleanPrice,
   cleanRating,
@@ -13,6 +14,7 @@ const {
   cleanSizeGb,
   cleanText,
   cleanWatched,
+  cleanCompleted,
   parseCSV,
   generateCSV,
   autoMapColumns
@@ -21,27 +23,86 @@ const {
 const UPLOADS_DIR = path.join(DB_DIR, 'uploads');
 if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 
+// Multer storage dengan mempertahankan ekstensi asli untuk deteksi tipe file (.xlsx, .csv, .json)
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, UPLOADS_DIR),
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const ext = path.extname(file.originalname).toLowerCase();
+    cb(null, `${file.fieldname}-${uniqueSuffix}${ext}`);
+  }
+});
+
 const upload = multer({
-  dest: UPLOADS_DIR,
+  storage,
   limits: { fileSize: 100 * 1024 * 1024 } // 100MB limit
 });
 
-// POST /api/data/import-preview — Mengunggah file CSV/JSON & menghasilkan preview mapping
+const COVERS_DIR = path.join(__dirname, '..', '..', 'public', 'images', 'covers');
+if (!fs.existsSync(COVERS_DIR)) fs.mkdirSync(COVERS_DIR, { recursive: true });
+
+const coverStorage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, COVERS_DIR),
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E6);
+    const ext = path.extname(file.originalname).toLowerCase() || '.jpg';
+    cb(null, `cover-${uniqueSuffix}${ext}`);
+  }
+});
+
+const coverUpload = multer({
+  storage: coverStorage,
+  limits: { fileSize: 20 * 1024 * 1024 }, // 20MB limit
+  fileFilter: (req, file, cb) => {
+    const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml', 'image/gif'];
+    if (allowed.includes(file.mimetype) || /\.(jpe?g|png|webp|svg|gif)$/i.test(file.originalname)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Hanya berkas gambar (JPG, PNG, WebP, SVG, GIF) yang diperbolehkan.'));
+    }
+  }
+});
+
+// POST /api/data/upload-cover — Unggah gambar cover/poster manual
+router.post('/upload-cover', requireAuth, coverUpload.single('cover_image'), (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ error: 'Berkas gambar wajib dipilih.' });
+  }
+  res.json({
+    success: true,
+    url: `/images/covers/${req.file.filename}`,
+    filename: req.file.filename,
+    size: req.file.size
+  });
+});
+
+// POST /api/data/import-preview — Mengunggah file Excel/CSV/JSON & menghasilkan preview mapping
 router.post('/import-preview', requireAuth, upload.single('file'), (req, res) => {
   if (!req.file) {
     return res.status(400).json({ error: 'File wajib diunggah.' });
   }
 
   const filePath = req.file.path;
+  const ext = path.extname(req.file.originalname).toLowerCase();
+  const isExcel = ['.xlsx', '.xls'].includes(ext);
+  const isJson = ext === '.json';
+
   try {
-    const rawContent = fs.readFileSync(filePath, 'utf-8');
     let headers = [];
     let sampleRows = [];
     let totalRows = 0;
+    let sheets = [];
+    let activeSheet = null;
 
-    const isJson = req.file.originalname.toLowerCase().endsWith('.json') || rawContent.trim().startsWith('[');
-
-    if (isJson) {
+    if (isExcel) {
+      const excelData = parseExcel(filePath, req.body.sheet_name || null);
+      headers = excelData.headers;
+      sampleRows = excelData.rows.slice(0, 5);
+      totalRows = excelData.totalRows;
+      sheets = excelData.sheets;
+      activeSheet = excelData.sheetName;
+    } else if (isJson) {
+      const rawContent = fs.readFileSync(filePath, 'utf-8');
       const parsed = JSON.parse(rawContent);
       if (Array.isArray(parsed) && parsed.length > 0) {
         headers = Object.keys(parsed[0]);
@@ -51,6 +112,7 @@ router.post('/import-preview', requireAuth, upload.single('file'), (req, res) =>
         return res.status(400).json({ error: 'Format JSON harus berupa array of objects.' });
       }
     } else {
+      const rawContent = fs.readFileSync(filePath, 'utf-8');
       const csvResult = parseCSV(rawContent);
       headers = csvResult.headers;
       sampleRows = csvResult.rows.slice(0, 5);
@@ -62,20 +124,23 @@ router.post('/import-preview', requireAuth, upload.single('file'), (req, res) =>
     res.json({
       temp_file_id: path.basename(filePath),
       filename: req.file.originalname,
+      format: isExcel ? 'excel' : (isJson ? 'json' : 'csv'),
       total_rows: totalRows,
       headers,
       suggested_mapping: suggestedMapping,
-      sample_rows: sampleRows
+      sample_rows: sampleRows,
+      sheets,
+      sheet_name: activeSheet
     });
   } catch (err) {
     fs.unlink(filePath, () => {});
-    res.status(500).json({ error: `Gagal membaca file: ${err.message}` });
+    res.status(500).json({ error: `Gagal membaca file ${ext}: ${err.message}` });
   }
 });
 
 // POST /api/data/import-execute — Mengeksekusi import data ke modul target
 router.post('/import-execute', requireAuth, (req, res) => {
-  const { temp_file_id, module: targetModule, mapping, sub_type } = req.body;
+  const { temp_file_id, module: targetModule, mapping, sub_type, sheet_name } = req.body;
   if (!temp_file_id || !targetModule || !mapping) {
     return res.status(400).json({ error: 'Parameter import tidak lengkap.' });
   }
@@ -86,14 +151,18 @@ router.post('/import-execute', requireAuth, (req, res) => {
   }
 
   const db = getDb();
+  const ext = path.extname(filePath).toLowerCase();
 
   try {
-    const rawContent = fs.readFileSync(filePath, 'utf-8');
     let rows = [];
 
-    if (filePath.endsWith('.json') || rawContent.trim().startsWith('[')) {
+    if (['.xlsx', '.xls'].includes(ext)) {
+      rows = parseExcel(filePath, sheet_name || null).rows;
+    } else if (ext === '.json') {
+      const rawContent = fs.readFileSync(filePath, 'utf-8');
       rows = JSON.parse(rawContent);
     } else {
+      const rawContent = fs.readFileSync(filePath, 'utf-8');
       rows = parseCSV(rawContent).rows;
     }
 
@@ -103,10 +172,10 @@ router.post('/import-execute', requireAuth, (req, res) => {
     if (targetModule === 'games') {
       const stmt = db.prepare(`
         INSERT INTO games (
-          type, title, year, publisher, developer, size_gb, rating, status,
+          type, title, year, release_date, genre, publisher, developer, size_gb, rating, status,
           platform, price, console, emulator, rom_format, port_year,
-          port_developer, port_version, enhancements
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          port_developer, port_version, enhancements, cover_url, completed
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `);
 
       for (const row of rows) {
@@ -117,12 +186,14 @@ router.post('/import-execute', requireAuth, (req, res) => {
         }
 
         const typeVal = (sub_type || row[mapping.type] || 'PC').toUpperCase();
-        const safeType = ['PC', 'EMULATOR', 'RECOMP'].includes(typeVal) ? typeVal : 'PC';
+        const safeType = ['PC', 'EMULATOR', 'RECOMP', 'MOBILE'].includes(typeVal) ? typeVal : 'PC';
 
         stmt.run(
           safeType,
           String(titleVal).trim(),
           cleanYear(row[mapping.year]),
+          cleanText(row[mapping.release_date]),
+          cleanText(row[mapping.genre]),
           cleanText(row[mapping.publisher]),
           cleanText(row[mapping.developer]),
           cleanSizeGb(row[mapping.size_gb]),
@@ -136,7 +207,9 @@ router.post('/import-execute', requireAuth, (req, res) => {
           cleanYear(row[mapping.port_year]),
           cleanText(row[mapping.port_developer]),
           cleanText(row[mapping.port_version]),
-          cleanText(row[mapping.enhancements])
+          cleanText(row[mapping.enhancements]),
+          cleanText(row[mapping.cover_url]),
+          cleanCompleted(row[mapping.completed])
         );
         successCount++;
       }
@@ -144,8 +217,8 @@ router.post('/import-execute', requireAuth, (req, res) => {
       const stmt = db.prepare(`
         INSERT INTO cinema (
           type, title, rating, year, country, studio, genre,
-          age_rating, total_episodes, total_seasons, watched
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          age_rating, total_episodes, total_seasons, watched, director, cast, synopsis, cover_url
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `);
 
       for (const row of rows) {
@@ -169,15 +242,19 @@ router.post('/import-execute', requireAuth, (req, res) => {
           cleanText(row[mapping.age_rating]),
           row[mapping.total_episodes] ? parseInt(row[mapping.total_episodes], 10) : null,
           row[mapping.total_seasons] ? parseInt(row[mapping.total_seasons], 10) : null,
-          cleanWatched(row[mapping.watched])
+          cleanWatched(row[mapping.watched]),
+          cleanText(row[mapping.director]),
+          cleanText(row[mapping.cast]),
+          cleanText(row[mapping.synopsis]),
+          cleanText(row[mapping.cover_url])
         );
         successCount++;
       }
     } else if (targetModule === 'music') {
       const stmt = db.prepare(`
         INSERT INTO music (
-          title, artist, album, year, genre, platform, size_mb, rating, is_favorite, notes
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          title, artist, album, year, genre, platform, size_mb, rating, is_favorite, notes, duration_secs, lyrics, cover_url
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `);
 
       for (const row of rows) {
@@ -197,16 +274,17 @@ router.post('/import-execute', requireAuth, (req, res) => {
           row[mapping.size_mb] ? parseFloat(row[mapping.size_mb]) : null,
           cleanRating(row[mapping.rating]),
           row[mapping.is_favorite] ? 1 : 0,
-          cleanText(row[mapping.notes])
+          cleanText(row[mapping.notes]),
+          row[mapping.duration_secs] ? parseInt(row[mapping.duration_secs], 10) : null,
+          cleanText(row[mapping.lyrics]),
+          cleanText(row[mapping.cover_url])
         );
         successCount++;
       }
     }
 
-    // Bersihkan file temporary
     fs.unlink(filePath, () => {});
-
-    logActivity(db, 'IMPORT', targetModule, null, `${successCount} baris diimport (${failedCount} dilewati)`);
+    logActivity(db, 'IMPORT', targetModule, null, `${successCount} baris diimport (${ext})`);
 
     res.json({
       success: true,
@@ -219,14 +297,15 @@ router.post('/import-execute', requireAuth, (req, res) => {
   }
 });
 
-// GET /api/data/export — Mengekspor data ke CSV atau JSON
+// GET /api/data/export — Mengekspor data ke Excel (.xlsx), CSV, atau JSON
 router.get('/export', requireAuth, (req, res) => {
-  const { module: targetModule, format = 'csv', type } = req.query;
+  const { module: targetModule, format = 'xlsx', type } = req.query;
   const db = getDb();
+  const exportFormat = String(format).toLowerCase();
 
   let data = [];
   let headers = [];
-  let filename = `saumabox_${targetModule}_${new Date().toISOString().slice(0, 10)}`;
+  const filename = `saumabox_${targetModule}_${new Date().toISOString().slice(0, 10)}`;
 
   if (targetModule === 'games') {
     const where = type && type !== 'ALL' ? "WHERE type = '" + type.toUpperCase() + "'" : '';
@@ -236,8 +315,10 @@ router.get('/export', requireAuth, (req, res) => {
       { key: 'type', label: 'Tipe' },
       { key: 'title', label: 'Judul Game' },
       { key: 'year', label: 'Tahun' },
-      { key: 'publisher', label: 'Publisher' },
-      { key: 'developer', label: 'Developer' },
+      { key: 'release_date', label: 'Tanggal Rilis' },
+      { key: 'genre', label: 'Genre' },
+      { key: 'publisher', label: 'Penerbit' },
+      { key: 'developer', label: 'Pengembang' },
       { key: 'size_gb', label: 'Ukuran (GB)' },
       { key: 'rating', label: 'Rating' },
       { key: 'status', label: 'Status' },
@@ -249,7 +330,9 @@ router.get('/export', requireAuth, (req, res) => {
       { key: 'port_year', label: 'Tahun Port' },
       { key: 'port_developer', label: 'Port Developer' },
       { key: 'port_version', label: 'Port Version' },
-      { key: 'enhancements', label: 'Enhancements' }
+      { key: 'enhancements', label: 'Fitur Tambahan' },
+      { key: 'cover_url', label: 'URL Cover' },
+      { key: 'completed', label: 'Tamat (1/0)' }
     ];
   } else if (targetModule === 'cinema') {
     const where = type && type !== 'ALL' ? "WHERE type = '" + type.toUpperCase() + "'" : '';
@@ -263,16 +346,20 @@ router.get('/export', requireAuth, (req, res) => {
       { key: 'country', label: 'Negara' },
       { key: 'studio', label: 'Studio' },
       { key: 'genre', label: 'Genre' },
-      { key: 'age_rating', label: 'Rating Umur' },
+      { key: 'age_rating', label: 'Rating Usia' },
       { key: 'total_episodes', label: 'Total Episode' },
       { key: 'total_seasons', label: 'Total Season' },
-      { key: 'watched', label: 'Ditonton (1/0)' }
+      { key: 'watched', label: 'Ditonton (1/0)' },
+      { key: 'director', label: 'Sutradara' },
+      { key: 'cast', label: 'Pemeran' },
+      { key: 'synopsis', label: 'Sinopsis' },
+      { key: 'cover_url', label: 'URL Poster' }
     ];
   } else if (targetModule === 'music') {
     data = db.prepare('SELECT * FROM music ORDER BY id ASC').all();
     headers = [
       { key: 'id', label: 'ID' },
-      { key: 'title', label: 'Judul' },
+      { key: 'title', label: 'Judul Trek' },
       { key: 'artist', label: 'Artis' },
       { key: 'album', label: 'Album' },
       { key: 'year', label: 'Tahun' },
@@ -281,23 +368,30 @@ router.get('/export', requireAuth, (req, res) => {
       { key: 'size_mb', label: 'Ukuran (MB)' },
       { key: 'rating', label: 'Rating' },
       { key: 'is_favorite', label: 'Favorit (1/0)' },
-      { key: 'notes', label: 'Catatan' }
+      { key: 'duration_secs', label: 'Durasi (detik)' },
+      { key: 'notes', label: 'Catatan' },
+      { key: 'cover_url', label: 'URL Cover' }
     ];
   } else {
     return res.status(400).json({ error: 'Modul export tidak dikenal.' });
   }
 
-  logActivity(db, 'EXPORT', targetModule, null, `${data.length} baris diekspor (${format})`);
+  logActivity(db, 'EXPORT', targetModule, null, `${data.length} baris diekspor (${exportFormat})`);
 
-  if (format === 'json') {
-    res.setHeader('Content-Type', 'application/json');
+  if (exportFormat === 'xlsx' || exportFormat === 'excel') {
+    const excelBuffer = generateExcel(targetModule, data, headers);
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}.xlsx"`);
+    return res.send(excelBuffer);
+  } else if (exportFormat === 'json') {
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
     res.setHeader('Content-Disposition', `attachment; filename="${filename}.json"`);
     return res.send(JSON.stringify(data, null, 2));
   } else {
     const csvContent = generateCSV(headers, data);
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader('Content-Disposition', `attachment; filename="${filename}.csv"`);
-    return res.send('\uFEFF' + csvContent); // Include UTF-8 BOM agar rapi di Excel
+    return res.send('\uFEFF' + csvContent);
   }
 });
 
@@ -305,19 +399,14 @@ router.get('/export', requireAuth, (req, res) => {
 router.get('/backup', requireAuth, (req, res) => {
   const db = getDb();
   try {
-    // Flush WAL buffer ke file utama
     db.exec('PRAGMA wal_checkpoint(TRUNCATE);');
-
     const now = new Date();
     const pad = (n) => String(n).padStart(2, '0');
     const timestamp = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}`;
     const backupFileName = `catalog_backup_${timestamp}.sqlite`;
     const backupFilePath = path.join(BACKUP_DIR, backupFileName);
 
-    // Salin file database
     fs.copyFileSync(DB_PATH, backupFilePath);
-
-    // Perbarui setting waktu backup terakhir
     db.prepare("UPDATE app_settings SET value = ?, updated_at = datetime('now') WHERE key = 'last_backup_at'").run(now.toISOString());
     logActivity(db, 'BACKUP', 'system', null, `Database backed up to ${backupFileName}`);
 
@@ -327,16 +416,14 @@ router.get('/backup', requireAuth, (req, res) => {
   }
 });
 
-// POST /api/data/restore — 1-Click Database Restore dengan validasi integritas & auto rollback
+// POST /api/data/restore — 1-Click Database Restore
 router.post('/restore', requireAuth, upload.single('backup_file'), (req, res) => {
   if (!req.file) {
     return res.status(400).json({ error: 'File backup (.sqlite) wajib diunggah.' });
   }
 
   const uploadedPath = req.file.path;
-
   try {
-    // Validasi 1: Uji integritas SQLite menggunakan connection terisolasi
     const testDb = new DatabaseSync(uploadedPath);
     const integrityResult = testDb.prepare('PRAGMA integrity_check;').get();
 
@@ -346,7 +433,6 @@ router.post('/restore', requireAuth, upload.single('backup_file'), (req, res) =>
       return res.status(400).json({ error: 'File backup korup atau tidak lulus validasi integritas SQLite.' });
     }
 
-    // Validasi 2: Verifikasi tabel-tabel utama harus ada
     const tables = testDb.prepare("SELECT name FROM sqlite_master WHERE type='table'").all().map(r => r.name);
     const requiredTables = ['games', 'cinema', 'music', 'users', 'app_settings'];
     const missing = requiredTables.filter(t => !tables.includes(t));
@@ -359,17 +445,14 @@ router.post('/restore', requireAuth, upload.single('backup_file'), (req, res) =>
 
     testDb.close();
 
-    // Buat rollback snapshot otomatis sebelum restore
     const rollbackPath = path.join(BACKUP_DIR, 'auto_backup_before_restore.sqlite');
     if (fs.existsSync(DB_PATH)) {
       fs.copyFileSync(DB_PATH, rollbackPath);
     }
 
-    // Ganti file database aktif dengan file yang baru diunggah
     fs.copyFileSync(uploadedPath, DB_PATH);
     fs.unlinkSync(uploadedPath);
 
-    // Bersihkan WAL & SHM lama jika ada
     if (fs.existsSync(`${DB_PATH}-wal`)) fs.unlinkSync(`${DB_PATH}-wal`);
     if (fs.existsSync(`${DB_PATH}-shm`)) fs.unlinkSync(`${DB_PATH}-shm`);
 

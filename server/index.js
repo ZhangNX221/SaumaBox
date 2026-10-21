@@ -11,6 +11,8 @@ const cinemaRoutes = require('./routes/cinema');
 const musicRoutes = require('./routes/music');
 const settingsRoutes = require('./routes/settings');
 const dataRoutes = require('./routes/data');
+const taxonomyRoutes = require('./routes/taxonomy');
+const metadataRoutes = require('./routes/metadata');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -31,6 +33,8 @@ app.use('/api/cinema', cinemaRoutes);
 app.use('/api/music', musicRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/data', dataRoutes);
+app.use('/api/taxonomy', taxonomyRoutes);
+app.use('/api/metadata', metadataRoutes);
 app.get('/api/recent', (req, res, next) => {
   req.url = '/recent';
   settingsRoutes(req, res, next);

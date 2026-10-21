@@ -1,4 +1,4 @@
-const CACHE_NAME = 'saumabox-v1.0.0';
+const CACHE_NAME = 'saumabox-v1.3.0';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -6,7 +6,17 @@ const STATIC_ASSETS = [
   '/css/style.css',
   '/js/utils.js',
   '/js/api.js',
-  '/js/app.js'
+  '/js/app.js',
+  '/js/modules/modal.js',
+  '/js/modules/landing.js',
+  '/js/modules/dashboard.js',
+  '/js/modules/games.js',
+  '/js/modules/cinema.js',
+  '/js/modules/music.js',
+  '/js/modules/admin.js',
+  '/js/modules/taxonomy.js',
+  '/js/modules/moderation.js',
+  '/js/modules/users.js'
 ];
 
 self.addEventListener('install', (event) => {

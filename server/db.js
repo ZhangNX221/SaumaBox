@@ -55,9 +55,11 @@ function initDb(database) {
 
     CREATE TABLE IF NOT EXISTS games (
       id             INTEGER PRIMARY KEY AUTOINCREMENT,
-      type           TEXT NOT NULL CHECK(type IN ('PC', 'EMULATOR', 'RECOMP')),
+      type           TEXT NOT NULL CHECK(type IN ('PC', 'EMULATOR', 'RECOMP', 'MOBILE')),
       title          TEXT NOT NULL,
       year           INTEGER,
+      release_date   TEXT DEFAULT '',
+      genre          TEXT DEFAULT '',
       publisher      TEXT DEFAULT '',
       developer      TEXT DEFAULT '',
       size_gb        TEXT DEFAULT '',
@@ -74,7 +76,9 @@ function initDb(database) {
       port_year      INTEGER,
       port_developer TEXT DEFAULT '',
       port_version   TEXT DEFAULT '',
-      enhancements   TEXT DEFAULT ''
+      enhancements   TEXT DEFAULT '',
+      completed      INTEGER NOT NULL DEFAULT 0,
+      download_url   TEXT DEFAULT ''
     );
     CREATE INDEX IF NOT EXISTS idx_games_type ON games(type);
     CREATE INDEX IF NOT EXISTS idx_games_title ON games(title);
@@ -99,6 +103,7 @@ function initDb(database) {
       total_seasons  INTEGER DEFAULT NULL,
       watched        INTEGER NOT NULL DEFAULT 0,
       cover_url      TEXT DEFAULT '',
+      download_url   TEXT DEFAULT '',
       created_at     TEXT NOT NULL DEFAULT (datetime('now')),
       updated_at     TEXT NOT NULL DEFAULT (datetime('now'))
     );
@@ -121,6 +126,7 @@ function initDb(database) {
       is_favorite INTEGER NOT NULL DEFAULT 0,
       notes       TEXT DEFAULT '',
       cover_url   TEXT DEFAULT '',
+      download_url TEXT DEFAULT '',
       created_at  TEXT NOT NULL DEFAULT (datetime('now')),
       updated_at  TEXT NOT NULL DEFAULT (datetime('now'))
     );
@@ -158,6 +164,64 @@ function initDb(database) {
     }
   }
 
+  // Migrasi kolom genre, release_date, dan completed pada tabel games jika belum ada
+  const gameCols = database.prepare('PRAGMA table_info(games)').all().map(c => c.name);
+  if (!gameCols.includes('genre')) {
+    database.exec("ALTER TABLE games ADD COLUMN genre TEXT DEFAULT ''");
+  }
+  if (!gameCols.includes('release_date')) {
+    database.exec("ALTER TABLE games ADD COLUMN release_date TEXT DEFAULT ''");
+  }
+  if (!gameCols.includes('completed')) {
+    database.exec("ALTER TABLE games ADD COLUMN completed INTEGER NOT NULL DEFAULT 0");
+  }
+  database.exec("CREATE INDEX IF NOT EXISTS idx_games_genre ON games(genre)");
+  database.exec("CREATE INDEX IF NOT EXISTS idx_games_release_date ON games(release_date)");
+  database.exec("CREATE INDEX IF NOT EXISTS idx_games_completed ON games(completed)");
+
+  // Migrasi tabel games untuk mendukung type 'MOBILE'
+  const gamesTableSql = database.prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='games'").get()?.sql || '';
+  if (gamesTableSql && !gamesTableSql.includes('MOBILE')) {
+    database.exec(`
+      PRAGMA foreign_keys = OFF;
+      CREATE TABLE games_migration_temp (
+        id             INTEGER PRIMARY KEY AUTOINCREMENT,
+        type           TEXT NOT NULL CHECK(type IN ('PC', 'EMULATOR', 'RECOMP', 'MOBILE')),
+        title          TEXT NOT NULL,
+        year           INTEGER,
+        publisher      TEXT DEFAULT '',
+        developer      TEXT DEFAULT '',
+        size_gb        TEXT DEFAULT '',
+        rating         REAL DEFAULT NULL,
+        status         TEXT DEFAULT '',
+        cover_url      TEXT DEFAULT '',
+        created_at     TEXT NOT NULL DEFAULT (datetime('now')),
+        updated_at     TEXT NOT NULL DEFAULT (datetime('now')),
+        platform       TEXT DEFAULT '',
+        price          INTEGER DEFAULT 0,
+        console        TEXT DEFAULT '',
+        emulator       TEXT DEFAULT '',
+        rom_format     TEXT DEFAULT '',
+        port_year      INTEGER,
+        port_developer TEXT DEFAULT '',
+        port_version   TEXT DEFAULT '',
+        enhancements   TEXT DEFAULT ''
+      );
+      INSERT INTO games_migration_temp SELECT * FROM games;
+      DROP TABLE games;
+      ALTER TABLE games_migration_temp RENAME TO games;
+      CREATE INDEX IF NOT EXISTS idx_games_type ON games(type);
+      CREATE INDEX IF NOT EXISTS idx_games_title ON games(title);
+      CREATE INDEX IF NOT EXISTS idx_games_year ON games(year);
+      CREATE INDEX IF NOT EXISTS idx_games_platform ON games(platform);
+      CREATE INDEX IF NOT EXISTS idx_games_status ON games(status);
+      CREATE INDEX IF NOT EXISTS idx_games_console ON games(console);
+      CREATE INDEX IF NOT EXISTS idx_games_price ON games(price);
+      CREATE INDEX IF NOT EXISTS idx_games_type_year ON games(type, year DESC);
+      PRAGMA foreign_keys = ON;
+    `);
+  }
+
   // Default app settings
   const defaultSettings = [
     ['app_name', 'SaumaBox'],
@@ -179,110 +243,9 @@ function initDb(database) {
     insertSetting.run(key, val);
   }
 
-  // Seed sample data jika database masih kosong, serta perbarui cover jika kosong
-  seedSampleData(database);
-}
-
-function seedSampleData(database) {
-  const gamesCount = database.prepare('SELECT COUNT(*) as count FROM games').get().count;
-  if (gamesCount === 0) {
-    const insertGame = database.prepare(`
-      INSERT INTO games (type, title, year, publisher, developer, size_gb, rating, status, platform, price, console, emulator, rom_format, port_year, port_developer, port_version, enhancements, cover_url)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `);
-
-    // PC Games
-    insertGame.run('PC', 'Far Cry New Dawn Ultimate', 2019, 'Ubisoft', 'Ubisoft Montreal', '40', 8.0, 'Purchase', 'Ubisoft', 169750, '', '', '', null, '', '', '', '/images/covers/far_cry.svg');
-    insertGame.run('PC', 'It Takes Two', 2021, 'Electronic Arts (EA)', 'Hazelight Studios', '50', 9.5, 'Purchase', 'Steam', 479000, '', '', '', null, '', '', '', '/images/covers/it_takes_two.svg');
-    insertGame.run('PC', 'Cyberpunk 2077', 2020, 'CD Projekt', 'CD Projekt Red', '70', 8.8, 'Purchase', 'GOG', 699000, '', '', '', null, '', '', '', '/images/covers/cyberpunk2077.svg');
-    insertGame.run('PC', 'A Space for the Unbound', 2023, 'Toge Productions', 'Mojiken Studio', '2.5', 9.2, 'Purchase', 'Steam', 99000, '', '', '', null, '', '', '', '/images/covers/space_unbound.svg');
-    insertGame.run('PC', 'Elden Ring', 2022, 'Bandai Namco', 'FromSoftware', '60', 9.8, 'Purchase', 'Steam', 599000, '', '', '', null, '', '', '', '/images/covers/elden_ring.jpg');
-    insertGame.run('PC', 'Hollow Knight: Silksong', 2025, 'Team Cherry', 'Team Cherry', 'TBA', null, 'Wishlist', 'Steam', 0, '', '', '', null, '', '', '', '/images/covers/silksong.svg');
-
-    // Emulator Games
-    insertGame.run('EMULATOR', 'God of War II (USA)', 2007, 'Sony Computer Entertainment', 'Santa Monica Studio', '7.9', 9.6, 'Playable (60 FPS)', '', 0, 'PS2', 'PCSX2', '.iso', null, '', '', '', '/images/covers/god_of_war.svg');
-    insertGame.run('EMULATOR', 'Persona 5 Royal (USA)', 2019, 'Atlus', 'P-Studio', '14.2', 9.5, 'Playable (60 FPS)', '', 0, 'Switch', 'Ryujinx', '.nsp', null, '', '', '', '/images/covers/persona5.svg');
-    insertGame.run('EMULATOR', 'The Legend of Zelda: Breath of the Wild', 2017, 'Nintendo', 'Nintendo EPD', '13.5', 9.9, 'Completed', '', 0, 'Wii U', 'Cemu', '.wux', null, '', '', '', '/images/covers/zelda_botw.svg');
-    insertGame.run('EMULATOR', 'Metal Gear Solid 3: Snake Eater', 2004, 'Konami', 'Konami Computer Entertainment', '4.1', 9.7, 'Playable (60 FPS)', '', 0, 'PS2', 'PCSX2', '.chd', null, '', '', '', '/images/covers/mgs3.svg');
-
-    // Recomp Games
-    insertGame.run('RECOMP', 'Ship of Harkinian (Ocarina of Time)', 1998, 'Nintendo', 'Nintendo EAD', '1.2', 9.9, 'Installed', '', 0, 'N64', '', '', 2022, 'Harbour Masters', 'v8.0.5', 'High FPS (60/120+), Ultrawide Support, HD Texture Pack', '/images/covers/ship_of_harkinian.svg');
-    insertGame.run('RECOMP', 'OpenGOAL: Jak and Daxter', 2001, 'Sony Computer Entertainment', 'Naughty Dog', '2.1', 9.4, 'Completed', '', 0, 'PS2', '', '', 2023, 'OpenGOAL Team', 'v1.2.0', 'Ultrawide Support, 120 FPS, Custom Texture', '/images/covers/opengoal.svg');
-    insertGame.run('RECOMP', 'Super Mario 64 PC Port', 1996, 'Nintendo', 'Nintendo EAD', '0.8', 9.6, 'Installed', '', 0, 'N64', '', '', 2020, 'SM64 Decomp Team', 'Render96 v3.1', 'HD Model Pack, Ray Tracing, 60 FPS', '/images/covers/mario64.svg');
-  }
-
-  const cinemaCount = database.prepare('SELECT COUNT(*) as count FROM cinema').get().count;
-  if (cinemaCount === 0) {
-    const insertCinema = database.prepare(`
-      INSERT INTO cinema (type, title, rating, year, country, studio, genre, age_rating, total_episodes, total_seasons, watched, cover_url)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `);
-
-    insertCinema.run('MOVIE', '22 Menit', 6.6, 2018, 'Indonesia', 'Buttonijo Games', 'Aksi, Drama, Thriller', 'D (13+)', null, null, 1, '/images/covers/menit22.svg');
-    insertCinema.run('MOVIE', '3 Srikandi', 7.1, 2016, 'Indonesia', 'MVP Pictures', 'Drama, Biografi, Olahraga', 'SU (Semua Umur)', null, null, 1, '/images/covers/srikandi3.svg');
-    insertCinema.run('MOVIE', 'Ada Apa Dengan Cinta?', 7.7, 2002, 'Indonesia', 'Miles Films', 'Drama, Romansa', 'R (13+)', null, null, 1, '/images/covers/ada_apa_cinta.svg');
-    insertCinema.run('ANIME', 'Attack on Titan: The Final Season', 9.0, 2020, 'Jepang', 'MAPPA', 'Aksi, Fantasi, Drama', 'D (17+)', 28, null, 1, '/images/covers/aot.svg');
-    insertCinema.run('ANIME', 'Jujutsu Kaisen', 8.6, 2020, 'Jepang', 'MAPPA', 'Aksi, Supernatural, Shounen', 'D (17+)', 24, null, 1, '/images/covers/jujutsu_kaisen.svg');
-    insertCinema.run('SERIES', 'Breaking Bad', 9.5, 2008, 'Amerika Serikat', 'High Bridge Productions', 'Kejahatan, Drama, Thriller', 'D (17+)', 62, 5, 1, '/images/covers/breaking_bad.jpg');
-  }
-
-  const musicCount = database.prepare('SELECT COUNT(*) as count FROM music').get().count;
-  if (musicCount === 0) {
-    const insertMusic = database.prepare(`
-      INSERT INTO music (title, artist, album, year, genre, platform, size_mb, rating, is_favorite, notes, cover_url)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `);
-
-    insertMusic.run('Bohemian Rhapsody', 'Queen', 'A Night at the Opera', 1975, 'Rock', 'FLAC/Lossless', 48.2, 10.0, 1, 'Masterpiece classic', '/images/covers/bohemian_rhapsody.jpg');
-    insertMusic.run('Hikaru Nara', 'Goose house', 'Milk', 2014, 'J-Pop, Anime OST', 'Spotify', 11.4, 9.2, 1, 'Your Lie in April OP', '/images/covers/hikaru_nara.svg');
-    insertMusic.run('Gurenge', 'LiSA', 'Leo-Nine', 2019, 'J-Rock, Anime OST', 'Apple Music', 10.2, 9.0, 1, 'Demon Slayer OP', '/images/covers/gurenge.svg');
-    insertMusic.run('Time', 'Hans Zimmer', 'Inception OST', 2010, 'Orkestra / Soundtrack', 'FLAC/Lossless', 35.8, 9.8, 1, 'Christopher Nolan film score', '/images/covers/time_zimmer.svg');
-  }
-
-  // Backfill cover_url untuk data yang sudah ada di database lokal
-  const gameCovers = {
-    'Elden Ring': '/images/covers/elden_ring.jpg',
-    'Cyberpunk 2077': '/images/covers/cyberpunk2077.svg',
-    'Far Cry New Dawn Ultimate': '/images/covers/far_cry.svg',
-    'It Takes Two': '/images/covers/it_takes_two.svg',
-    'A Space for the Unbound': '/images/covers/space_unbound.svg',
-    'Hollow Knight: Silksong': '/images/covers/silksong.svg',
-    'God of War II (USA)': '/images/covers/god_of_war.svg',
-    'Persona 5 Royal (USA)': '/images/covers/persona5.svg',
-    'The Legend of Zelda: Breath of the Wild': '/images/covers/zelda_botw.svg',
-    'Metal Gear Solid 3: Snake Eater': '/images/covers/mgs3.svg',
-    'Ship of Harkinian (Ocarina of Time)': '/images/covers/ship_of_harkinian.svg',
-    'OpenGOAL: Jak and Daxter': '/images/covers/opengoal.svg',
-    'Super Mario 64 PC Port': '/images/covers/mario64.svg'
-  };
-  const updateGameCover = database.prepare("UPDATE games SET cover_url = ? WHERE title = ? AND (cover_url IS NULL OR cover_url = '')");
-  for (const [title, url] of Object.entries(gameCovers)) {
-    updateGameCover.run(url, title);
-  }
-
-  const cinemaCovers = {
-    'Breaking Bad': '/images/covers/breaking_bad.jpg',
-    'Attack on Titan: The Final Season': '/images/covers/aot.svg',
-    'Jujutsu Kaisen': '/images/covers/jujutsu_kaisen.svg',
-    'Ada Apa Dengan Cinta?': '/images/covers/ada_apa_cinta.svg',
-    '22 Menit': '/images/covers/menit22.svg',
-    '3 Srikandi': '/images/covers/srikandi3.svg'
-  };
-  const updateCinemaCover = database.prepare("UPDATE cinema SET cover_url = ? WHERE title = ? AND (cover_url IS NULL OR cover_url = '')");
-  for (const [title, url] of Object.entries(cinemaCovers)) {
-    updateCinemaCover.run(url, title);
-  }
-
-  const musicCovers = {
-    'Bohemian Rhapsody': '/images/covers/bohemian_rhapsody.jpg',
-    'Hikaru Nara': '/images/covers/hikaru_nara.svg',
-    'Gurenge': '/images/covers/gurenge.svg',
-    'Time': '/images/covers/time_zimmer.svg'
-  };
-  const updateMusicCover = database.prepare("UPDATE music SET cover_url = ? WHERE title = ? AND (cover_url IS NULL OR cover_url = '')");
-  for (const [title, url] of Object.entries(musicCovers)) {
-    updateMusicCover.run(url, title);
-  }
+  // Jalankan skema & data master tambahan (taksonomi, moderasi, roles, API integration, seed sample data)
+  const { setupExtendedSchema } = require('./db_schema');
+  setupExtendedSchema(database);
 }
 
 function logActivity(database, action, module, itemId, itemTitle, details = '') {

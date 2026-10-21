@@ -110,13 +110,107 @@ router.get('/me', (req, res) => {
   if (!req.user) {
     return res.json({ authenticated: false, user: null });
   }
+  const db = getDb();
+  const user = db.prepare('SELECT id, username, display_name, email, role, created_at FROM users WHERE id = ?').get(req.user.id);
   res.json({
     authenticated: true,
-    user: {
+    user: user ? {
+      id: user.id,
+      username: user.username,
+      displayName: user.display_name,
+      email: user.email || '',
+      role: user.role || 'super_admin',
+      createdAt: user.created_at
+    } : {
       id: req.user.id,
       username: req.user.username,
-      displayName: req.user.display_name
+      displayName: req.user.display_name,
+      email: req.user.email || '',
+      role: req.user.role || 'super_admin'
     }
+  });
+});
+
+// Perbarui Profil Akun
+router.put('/profile', (req, res) => {
+  if (!req.user) {
+    return res.status(401).json({ error: 'Sesi login tidak valid atau telah berakhir.' });
+  }
+
+  const { displayName, email, username } = req.body;
+  const db = getDb();
+
+  if (displayName !== undefined && !displayName.trim()) {
+    return res.status(400).json({ error: 'Nama tampilan tidak boleh kosong.' });
+  }
+  if (username !== undefined && !username.trim()) {
+    return res.status(400).json({ error: 'Username tidak boleh kosong.' });
+  }
+
+  const newDisplayName = displayName !== undefined ? displayName.trim() : req.user.display_name;
+  const newEmail = email !== undefined ? email.trim() : (req.user.email || '');
+  const newUsername = username !== undefined ? username.trim() : req.user.username;
+
+  // Cek keunikan username jika diganti
+  if (newUsername.toLowerCase() !== req.user.username.toLowerCase()) {
+    const existing = db.prepare('SELECT id FROM users WHERE LOWER(username) = LOWER(?) AND id != ?').get(newUsername, req.user.id);
+    if (existing) {
+      return res.status(400).json({ error: `Username "${newUsername}" sudah digunakan oleh akun lain.` });
+    }
+  }
+
+  db.prepare('UPDATE users SET display_name = ?, email = ?, username = ? WHERE id = ?')
+    .run(newDisplayName, newEmail, newUsername, req.user.id);
+
+  logActivity(db, 'UPDATE_PROFILE', 'auth', req.user.id, newUsername, `Profil diperbarui: ${newDisplayName}`);
+
+  const updated = db.prepare('SELECT id, username, display_name, email, role, created_at FROM users WHERE id = ?').get(req.user.id);
+
+  res.json({
+    success: true,
+    message: 'Profil akun berhasil diperbarui.',
+    user: {
+      id: updated.id,
+      username: updated.username,
+      displayName: updated.display_name,
+      email: updated.email || '',
+      role: updated.role || 'super_admin',
+      createdAt: updated.created_at
+    }
+  });
+});
+
+// Ganti Password Akun
+router.put('/password', (req, res) => {
+  if (!req.user) {
+    return res.status(401).json({ error: 'Sesi login tidak valid atau telah berakhir.' });
+  }
+
+  const { currentPassword, newPassword, confirmPassword } = req.body;
+  if (!currentPassword || !newPassword) {
+    return res.status(400).json({ error: 'Password saat ini dan password baru wajib diisi.' });
+  }
+  if (newPassword.length < 6) {
+    return res.status(400).json({ error: 'Password baru minimal 6 karakter.' });
+  }
+  if (confirmPassword && newPassword !== confirmPassword) {
+    return res.status(400).json({ error: 'Konfirmasi password baru tidak cocok.' });
+  }
+
+  const db = getDb();
+  const user = db.prepare('SELECT * FROM users WHERE id = ?').get(req.user.id);
+  if (!user || !verifyPassword(currentPassword, user.password_hash)) {
+    return res.status(400).json({ error: 'Password saat ini salah.' });
+  }
+
+  const newHash = hashPassword(newPassword);
+  db.prepare('UPDATE users SET password_hash = ? WHERE id = ?').run(newHash, req.user.id);
+
+  logActivity(db, 'CHANGE_PASSWORD', 'auth', user.id, user.username, 'Password akun berhasil diubah');
+
+  res.json({
+    success: true,
+    message: 'Password akun berhasil diperbarui.'
   });
 });
 

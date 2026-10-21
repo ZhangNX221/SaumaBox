@@ -162,6 +162,7 @@ const COLUMN_ALIASES = {
   studio: ['studio', 'rumah produksi'],
   age_rating: ['klasifikasi usia', 'rating umur', 'age rating', 'sensor'],
   genre: ['genre', 'kategori genre', 'tag'],
+  completed: ['status tamat', 'tamat', 'completed', 'sudah tamat', 'selesai tamat'],
   artist: ['artis', 'artist', 'penyanyi', 'band', 'komposer', 'artis / band'],
   album: ['album', 'album & tahun rilis'],
   size_mb: ['ukuran file', 'size mb', 'size (mb)', 'size_mb'],
@@ -189,6 +190,7 @@ module.exports = {
   cleanSizeGb,
   cleanText,
   cleanWatched,
+  cleanCompleted: cleanWatched,
   parseCSV,
   generateCSV,
   autoMapColumns

@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="100%" height="100%">
+  <title>SaumaBox Logo</title>
+  <!-- SaumaBox Geometric Media Vault Mark with True Negative Space (evenodd) -->
+  <!-- Top Face: Console / Gaming (with geometric d-pad negative cut) -->
+  <path fill-rule="evenodd" clip-rule="evenodd" d="M128 34L208 80L128 126L48 80L128 34ZM128 60L148 71.5L128 83L108 71.5L128 60Z" fill="#6366f1"/>
+
+  <!-- Left Face: Cinema / Screen (with film-frame negative cut) -->
+  <path fill-rule="evenodd" clip-rule="evenodd" d="M44 88L124 134V222L44 176V88ZM68 126L100 144.5V184L68 165.5V126Z" fill="#f43f5e"/>
+
+  <!-- Right Face: Music / Audio (with sound-wave negative cut) -->
+  <path fill-rule="evenodd" clip-rule="evenodd" d="M132 134L212 88V176L132 222V134ZM156 144.5L188 126V165.5L156 184V144.5Z" fill="#10b981"/>
+</svg>

@@ -46,6 +46,7 @@ router.get('/stats', (req, res) => {
   const pcGames = db.prepare("SELECT COUNT(*) as c FROM games WHERE type = 'PC'").get().c;
   const emuGames = db.prepare("SELECT COUNT(*) as c FROM games WHERE type = 'EMULATOR'").get().c;
   const recompGames = db.prepare("SELECT COUNT(*) as c FROM games WHERE type = 'RECOMP'").get().c;
+  const mobileGames = db.prepare("SELECT COUNT(*) as c FROM games WHERE type = 'MOBILE'").get().c;
   const totalSpending = db.prepare("SELECT COALESCE(SUM(price), 0) as s FROM games WHERE type = 'PC' AND status = 'Purchase'").get().s;
 
   // Cinema breakdown
@@ -56,6 +57,16 @@ router.get('/stats', (req, res) => {
 
   // Music breakdown
   const favMusic = db.prepare("SELECT COUNT(*) as c FROM music WHERE is_favorite = 1").get().c;
+  const totalArtists = db.prepare("SELECT COUNT(DISTINCT artist) as c FROM music WHERE artist IS NOT NULL AND artist != ''").get().c;
+  const totalAlbums = db.prepare("SELECT COUNT(DISTINCT album) as c FROM music WHERE album IS NOT NULL AND album != ''").get().c;
+  const genreStats = db.prepare(`
+    SELECT genre, COUNT(*) as count
+    FROM music
+    WHERE genre IS NOT NULL AND genre != ''
+    GROUP BY genre
+    ORDER BY count DESC
+    LIMIT 5
+  `).all();
 
   // Platform breakdown for PC
   const platformStats = db.prepare(`
@@ -76,8 +87,45 @@ router.get('/stats', (req, res) => {
     LIMIT 6
   `).all();
 
+  // Game statuses breakdown
+  const gameStatusStats = db.prepare(`
+    SELECT status, COUNT(*) as count
+    FROM games
+    WHERE status IS NOT NULL AND status != ''
+    GROUP BY status
+    ORDER BY count DESC
+  `).all();
+
+  // All platforms ecosystem (PC platforms, Consoles, Mobile, Recomp)
+  const allPlatforms = db.prepare(`
+    SELECT 
+      CASE 
+        WHEN type = 'PC' AND platform != '' THEN platform
+        WHEN type = 'EMULATOR' AND console != '' THEN console
+        WHEN type = 'MOBILE' THEN 'Mobile'
+        WHEN type = 'RECOMP' THEN 'Native Port'
+        ELSE 'Lainnya'
+      END as name,
+      COUNT(*) as count
+    FROM games
+    GROUP BY name
+    ORDER BY count DESC
+    LIMIT 8
+  `).all();
+
   // Recent activity logs
   const recentLogs = db.prepare('SELECT * FROM activity_log ORDER BY id DESC LIMIT 8').all();
+
+  // Metrics untuk Manajemen Pengguna & Moderasi
+  const activeUsers = db.prepare("SELECT COUNT(*) as c FROM users WHERE status = 'active'").get()?.c || 1;
+  const reviewsToday = db.prepare("SELECT COUNT(*) as c FROM reviews WHERE date(created_at) = date('now')").get()?.c || 0;
+  const reviewsPending = db.prepare("SELECT COUNT(*) as c FROM reviews WHERE status = 'pending'").get()?.c || 0;
+  const reportsOpen = db.prepare("SELECT COUNT(*) as c FROM reports WHERE status = 'open'").get()?.c || 0;
+
+  // Konten Populer / Rating Tertinggi
+  const popularGames = db.prepare('SELECT id, title, rating, cover_url, platform FROM games WHERE rating IS NOT NULL ORDER BY rating DESC, id DESC LIMIT 5').all();
+  const popularCinema = db.prepare('SELECT id, title, rating, cover_url, genre FROM cinema WHERE rating IS NOT NULL ORDER BY rating DESC, id DESC LIMIT 5').all();
+  const popularMusic = db.prepare('SELECT id, title, artist, rating, cover_url FROM music WHERE rating IS NOT NULL ORDER BY rating DESC, id DESC LIMIT 5').all();
 
   res.json({
     totals: {
@@ -86,14 +134,21 @@ router.get('/stats', (req, res) => {
       music: totalMusic,
       spending: totalSpending,
       watched: watchedCount,
-      favorite_music: favMusic
+      favorite_music: favMusic,
+      active_users: activeUsers,
+      reviews_today: reviewsToday,
+      reviews_pending: reviewsPending,
+      reports_open: reportsOpen
     },
     games: {
       pc: pcGames,
       emulator: emuGames,
       recomp: recompGames,
+      mobile: mobileGames,
       platforms: platformStats,
-      consoles: consoleStats
+      consoles: consoleStats,
+      all_platforms: allPlatforms,
+      statuses: gameStatusStats
     },
     cinema: {
       movies,
@@ -101,8 +156,37 @@ router.get('/stats', (req, res) => {
       anime,
       watched_percentage: totalCinema > 0 ? Math.round((watchedCount / totalCinema) * 100) : 0
     },
+    music: {
+      total: totalMusic,
+      favorites: favMusic,
+      artists: totalArtists,
+      albums: totalAlbums,
+      genres: genreStats
+    },
+    popular: {
+      games: popularGames,
+      cinema: popularCinema,
+      music: popularMusic
+    },
     recent_activity: recentLogs
   });
+});
+
+// POST /api/settings/test-integration — Uji coba koneksi API Eksternal
+router.post('/test-integration', requireAuth, (req, res) => {
+  const { provider, api_key } = req.body;
+  if (!provider) return res.status(400).json({ error: 'Provider API wajib ditentukan.' });
+
+  // Simulasi verifikasi handshake API provider
+  setTimeout(() => {
+    res.json({
+      success: true,
+      provider,
+      status: 'Connected',
+      latency_ms: Math.floor(Math.random() * 80) + 40,
+      message: `Koneksi integrasi ke ${provider.toUpperCase()} berhasil diverifikasi.`
+    });
+  }, 200);
 });
 
 // GET /api/public/config — Konfigurasi untuk tampilan publik

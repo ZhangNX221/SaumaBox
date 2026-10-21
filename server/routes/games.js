@@ -2,13 +2,14 @@ const express = require('express');
 const router = express.Router();
 const { getDb, logActivity } = require('../db');
 const { requireAuth } = require('../auth');
-const { cleanPrice, cleanRating, cleanYear, cleanSizeGb } = require('../parser');
+const { cleanPrice, cleanRating, cleanYear, cleanSizeGb, cleanCompleted } = require('../parser');
 
 // GET /api/games — List games dengan filter, sort, search, pagination, dan auto-sum
 router.get('/', (req, res) => {
   const db = getDb();
   const {
     type,
+    completed,
     q,
     platform,
     status,
@@ -28,10 +29,15 @@ router.get('/', (req, res) => {
     params.push(type.toUpperCase());
   }
 
+  if (completed !== undefined && completed !== 'ALL' && completed !== '') {
+    conditions.push('completed = ?');
+    params.push(parseInt(completed, 10) === 1 ? 1 : 0);
+  }
+
   if (q && q.trim()) {
-    conditions.push('(title LIKE ? OR publisher LIKE ? OR developer LIKE ? OR console LIKE ? OR emulator LIKE ? OR port_developer LIKE ?)');
+    conditions.push('(title LIKE ? OR publisher LIKE ? OR developer LIKE ? OR genre LIKE ? OR release_date LIKE ? OR console LIKE ? OR emulator LIKE ? OR port_developer LIKE ?)');
     const term = `%${q.trim()}%`;
-    params.push(term, term, term, term, term, term);
+    params.push(term, term, term, term, term, term, term, term);
   }
 
   if (platform && platform !== 'ALL') {
@@ -57,7 +63,7 @@ router.get('/', (req, res) => {
   const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
 
   // Validasi sort column
-  const allowedSortCols = ['id', 'title', 'year', 'rating', 'price', 'platform', 'status', 'console', 'size_gb'];
+  const allowedSortCols = ['id', 'title', 'year', 'release_date', 'genre', 'developer', 'publisher', 'rating', 'price', 'platform', 'status', 'console', 'size_gb', 'completed'];
   const safeSortCol = allowedSortCols.includes(sort_by) ? sort_by : 'id';
   const safeSortOrder = sort_order.toLowerCase() === 'asc' ? 'ASC' : 'DESC';
 
@@ -87,6 +93,7 @@ router.get('/', (req, res) => {
   const consoles = db.prepare("SELECT DISTINCT console FROM games WHERE console != '' ORDER BY console").all().map(r => r.console);
   const emulators = db.prepare("SELECT DISTINCT emulator FROM games WHERE emulator != '' ORDER BY emulator").all().map(r => r.emulator);
   const statuses = db.prepare("SELECT DISTINCT status FROM games WHERE status != '' ORDER BY status").all().map(r => r.status);
+  const genres = db.prepare("SELECT DISTINCT genre FROM games WHERE genre != '' ORDER BY genre").all().map(r => r.genre);
 
   res.json({
     items,
@@ -103,7 +110,8 @@ router.get('/', (req, res) => {
       platforms,
       consoles,
       emulators,
-      statuses
+      statuses,
+      genres
     }
   });
 });
@@ -123,6 +131,8 @@ router.post('/', requireAuth, (req, res) => {
     type = 'PC',
     title,
     year,
+    release_date,
+    genre,
     publisher,
     developer,
     size_gb,
@@ -137,28 +147,32 @@ router.post('/', requireAuth, (req, res) => {
     port_developer,
     port_version,
     enhancements,
-    cover_url
+    cover_url,
+    completed = 0
   } = req.body;
 
   if (!title || !title.trim()) {
     return res.status(400).json({ error: 'Judul game wajib diisi.' });
   }
 
-  const validTypes = ['PC', 'EMULATOR', 'RECOMP'];
+  const validTypes = ['PC', 'EMULATOR', 'RECOMP', 'MOBILE'];
   const safeType = validTypes.includes(type.toUpperCase()) ? type.toUpperCase() : 'PC';
 
   const stmt = db.prepare(`
     INSERT INTO games (
-      type, title, year, publisher, developer, size_gb, rating, status,
+      type, title, year, release_date, genre, publisher, developer, size_gb, rating, status,
       platform, price, console, emulator, rom_format, port_year,
-      port_developer, port_version, enhancements, cover_url
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      port_developer, port_version, enhancements, cover_url,
+      system_requirements, trailer_url, screenshot_url, completed, download_url
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
 
   const result = stmt.run(
     safeType,
     title.trim(),
     cleanYear(year),
+    release_date ? release_date.trim() : '',
+    genre ? genre.trim() : '',
     publisher ? publisher.trim() : '',
     developer ? developer.trim() : '',
     cleanSizeGb(size_gb),
@@ -173,7 +187,12 @@ router.post('/', requireAuth, (req, res) => {
     port_developer ? port_developer.trim() : '',
     port_version ? port_version.trim() : '',
     enhancements ? enhancements.trim() : '',
-    cover_url ? cover_url.trim() : ''
+    cover_url ? cover_url.trim() : '',
+    req.body.system_requirements ? req.body.system_requirements.trim() : '',
+    req.body.trailer_url ? req.body.trailer_url.trim() : '',
+    req.body.screenshot_url ? req.body.screenshot_url.trim() : '',
+    cleanCompleted(completed),
+    req.body.download_url ? req.body.download_url.trim() : ''
   );
 
   const newId = Number(result.lastInsertRowid);
@@ -193,6 +212,8 @@ router.put('/:id', requireAuth, (req, res) => {
     type = existing.type,
     title = existing.title,
     year = existing.year,
+    release_date = existing.release_date,
+    genre = existing.genre,
     publisher = existing.publisher,
     developer = existing.developer,
     size_gb = existing.size_gb,
@@ -207,7 +228,12 @@ router.put('/:id', requireAuth, (req, res) => {
     port_developer = existing.port_developer,
     port_version = existing.port_version,
     enhancements = existing.enhancements,
-    cover_url = existing.cover_url
+    cover_url = existing.cover_url,
+    system_requirements = existing.system_requirements,
+    trailer_url = existing.trailer_url,
+    screenshot_url = existing.screenshot_url,
+    completed = existing.completed,
+    download_url = existing.download_url
   } = req.body;
 
   if (!title || !title.trim()) {
@@ -216,10 +242,12 @@ router.put('/:id', requireAuth, (req, res) => {
 
   const stmt = db.prepare(`
     UPDATE games SET
-      type = ?, title = ?, year = ?, publisher = ?, developer = ?,
+      type = ?, title = ?, year = ?, release_date = ?, genre = ?, publisher = ?, developer = ?,
       size_gb = ?, rating = ?, status = ?, platform = ?, price = ?,
       console = ?, emulator = ?, rom_format = ?, port_year = ?,
       port_developer = ?, port_version = ?, enhancements = ?, cover_url = ?,
+      system_requirements = ?, trailer_url = ?, screenshot_url = ?,
+      completed = ?, download_url = ?,
       updated_at = datetime('now')
     WHERE id = ?
   `);
@@ -228,6 +256,8 @@ router.put('/:id', requireAuth, (req, res) => {
     type.toUpperCase(),
     title.trim(),
     cleanYear(year),
+    release_date ? release_date.trim() : '',
+    genre ? genre.trim() : '',
     publisher ? publisher.trim() : '',
     developer ? developer.trim() : '',
     cleanSizeGb(size_gb),
@@ -243,12 +273,30 @@ router.put('/:id', requireAuth, (req, res) => {
     port_version ? port_version.trim() : '',
     enhancements ? enhancements.trim() : '',
     cover_url ? cover_url.trim() : '',
+    system_requirements ? system_requirements.trim() : '',
+    trailer_url ? trailer_url.trim() : '',
+    screenshot_url ? screenshot_url.trim() : '',
+    cleanCompleted(completed),
+    download_url ? download_url.trim() : '',
     req.params.id
   );
 
   logActivity(db, 'UPDATE', 'games', req.params.id, title.trim());
   const updated = db.prepare('SELECT * FROM games WHERE id = ?').get(req.params.id);
   res.json(updated);
+});
+
+// PATCH /api/games/:id/toggle-completed — Quick Checkbox toggle
+router.patch('/:id/toggle-completed', requireAuth, (req, res) => {
+  const db = getDb();
+  const existing = db.prepare('SELECT id, title, completed FROM games WHERE id = ?').get(req.params.id);
+  if (!existing) return res.status(404).json({ error: 'Game tidak ditemukan.' });
+
+  const newCompleted = existing.completed === 1 ? 0 : 1;
+  db.prepare("UPDATE games SET completed = ?, updated_at = datetime('now') WHERE id = ?").run(newCompleted, req.params.id);
+
+  logActivity(db, 'TOGGLE_COMPLETED', 'games', req.params.id, existing.title, `Completed status changed to ${newCompleted}`);
+  res.json({ success: true, id: existing.id, completed: newCompleted });
 });
 
 // DELETE /api/games/:id — Hapus game

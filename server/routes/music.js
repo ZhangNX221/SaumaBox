@@ -81,6 +81,67 @@ router.get('/', (req, res) => {
   });
 });
 
+// GET /api/music/albums — Ringkasan katalog per Album
+router.get('/albums', (req, res) => {
+  const db = getDb();
+  const { q } = req.query;
+
+  let sql = `
+    SELECT
+      album,
+      artist,
+      MIN(year) as year,
+      MIN(genre) as genre,
+      MAX(cover_url) as cover_url,
+      ROUND(AVG(CASE WHEN rating IS NOT NULL THEN rating END), 1) as avg_rating,
+      COUNT(*) as total_tracks
+    FROM music
+    WHERE album IS NOT NULL AND TRIM(album) != ''
+  `;
+  const params = [];
+
+  if (q && q.trim()) {
+    sql += ` AND (album LIKE ? OR artist LIKE ? OR genre LIKE ?)`;
+    const term = `%${q.trim()}%`;
+    params.push(term, term, term);
+  }
+
+  sql += ` GROUP BY album, artist ORDER BY album ASC`;
+
+  const albums = db.prepare(sql).all(...params);
+  res.json(albums);
+});
+
+// GET /api/music/artists — Ringkasan katalog per Penyanyi / Artis
+router.get('/artists', (req, res) => {
+  const db = getDb();
+  const { q } = req.query;
+
+  let sql = `
+    SELECT
+      artist,
+      COUNT(DISTINCT CASE WHEN album IS NOT NULL AND TRIM(album) != '' THEN album END) as total_albums,
+      COUNT(*) as total_tracks,
+      MIN(genre) as genre,
+      MAX(cover_url) as cover_url,
+      ROUND(AVG(CASE WHEN rating IS NOT NULL THEN rating END), 1) as avg_rating
+    FROM music
+    WHERE artist IS NOT NULL AND TRIM(artist) != ''
+  `;
+  const params = [];
+
+  if (q && q.trim()) {
+    sql += ` AND (artist LIKE ? OR genre LIKE ?)`;
+    const term = `%${q.trim()}%`;
+    params.push(term, term);
+  }
+
+  sql += ` GROUP BY artist ORDER BY artist ASC`;
+
+  const artists = db.prepare(sql).all(...params);
+  res.json(artists);
+});
+
 // GET /api/music/:id
 router.get('/:id', (req, res) => {
   const db = getDb();
@@ -113,8 +174,9 @@ router.post('/', requireAuth, (req, res) => {
   const stmt = db.prepare(`
     INSERT INTO music (
       title, artist, album, year, genre, platform,
-      size_mb, rating, is_favorite, notes, cover_url
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      size_mb, rating, is_favorite, notes, cover_url,
+      duration_secs, lyrics, stream_url, download_url
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
 
   const result = stmt.run(
@@ -128,7 +190,11 @@ router.post('/', requireAuth, (req, res) => {
     cleanRating(rating),
     is_favorite ? 1 : 0,
     notes ? notes.trim() : '',
-    cover_url ? cover_url.trim() : ''
+    cover_url ? cover_url.trim() : '',
+    req.body.duration_secs ? parseInt(req.body.duration_secs, 10) : null,
+    req.body.lyrics ? req.body.lyrics.trim() : '',
+    req.body.stream_url ? req.body.stream_url.trim() : '',
+    req.body.download_url ? req.body.download_url.trim() : ''
   );
 
   const newId = Number(result.lastInsertRowid);
@@ -155,7 +221,11 @@ router.put('/:id', requireAuth, (req, res) => {
     rating = existing.rating,
     is_favorite = existing.is_favorite,
     notes = existing.notes,
-    cover_url = existing.cover_url
+    cover_url = existing.cover_url,
+    duration_secs = existing.duration_secs,
+    lyrics = existing.lyrics,
+    stream_url = existing.stream_url,
+    download_url = existing.download_url
   } = req.body;
 
   if (!title || !title.trim()) {
@@ -166,7 +236,9 @@ router.put('/:id', requireAuth, (req, res) => {
     UPDATE music SET
       title = ?, artist = ?, album = ?, year = ?, genre = ?,
       platform = ?, size_mb = ?, rating = ?, is_favorite = ?,
-      notes = ?, cover_url = ?, updated_at = datetime('now')
+      notes = ?, cover_url = ?,
+      duration_secs = ?, lyrics = ?, stream_url = ?, download_url = ?,
+      updated_at = datetime('now')
     WHERE id = ?
   `);
 
@@ -182,6 +254,10 @@ router.put('/:id', requireAuth, (req, res) => {
     is_favorite ? 1 : 0,
     notes ? notes.trim() : '',
     cover_url ? cover_url.trim() : '',
+    duration_secs ? parseInt(duration_secs, 10) : null,
+    lyrics ? lyrics.trim() : '',
+    stream_url ? stream_url.trim() : '',
+    download_url ? download_url.trim() : '',
     req.params.id
   );
 

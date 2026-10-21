@@ -45,7 +45,7 @@ function getUserFromToken(token) {
   const now = new Date().toISOString();
 
   const stmt = db.prepare(`
-    SELECT u.id, u.username, u.display_name, s.token, s.expires_at
+    SELECT u.id, u.username, u.display_name, u.role, u.email, s.token, s.expires_at
     FROM sessions s
     JOIN users u ON u.id = s.user_id
     WHERE s.token = ? AND s.expires_at > ?

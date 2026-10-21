@@ -124,8 +124,9 @@ router.post('/', requireAuth, (req, res) => {
   const stmt = db.prepare(`
     INSERT INTO cinema (
       type, title, rating, year, country, studio, genre,
-      age_rating, total_episodes, total_seasons, watched, cover_url
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      age_rating, total_episodes, total_seasons, watched, cover_url,
+      duration_mins, director, cast, synopsis, trailer_url, download_url
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
 
   const result = stmt.run(
@@ -140,7 +141,13 @@ router.post('/', requireAuth, (req, res) => {
     total_episodes ? parseInt(total_episodes, 10) : null,
     total_seasons ? parseInt(total_seasons, 10) : null,
     cleanWatched(watched),
-    cover_url ? cover_url.trim() : ''
+    cover_url ? cover_url.trim() : '',
+    req.body.duration_mins ? parseInt(req.body.duration_mins, 10) : null,
+    req.body.director ? req.body.director.trim() : '',
+    req.body.cast ? req.body.cast.trim() : '',
+    req.body.synopsis ? req.body.synopsis.trim() : '',
+    req.body.trailer_url ? req.body.trailer_url.trim() : '',
+    req.body.download_url ? req.body.download_url.trim() : ''
   );
 
   const newId = Number(result.lastInsertRowid);
@@ -168,7 +175,13 @@ router.put('/:id', requireAuth, (req, res) => {
     total_episodes = existing.total_episodes,
     total_seasons = existing.total_seasons,
     watched = existing.watched,
-    cover_url = existing.cover_url
+    cover_url = existing.cover_url,
+    duration_mins = existing.duration_mins,
+    director = existing.director,
+    cast = existing.cast,
+    synopsis = existing.synopsis,
+    trailer_url = existing.trailer_url,
+    download_url = existing.download_url
   } = req.body;
 
   if (!title || !title.trim()) {
@@ -179,7 +192,10 @@ router.put('/:id', requireAuth, (req, res) => {
     UPDATE cinema SET
       type = ?, title = ?, rating = ?, year = ?, country = ?,
       studio = ?, genre = ?, age_rating = ?, total_episodes = ?,
-      total_seasons = ?, watched = ?, cover_url = ?, updated_at = datetime('now')
+      total_seasons = ?, watched = ?, cover_url = ?,
+      duration_mins = ?, director = ?, cast = ?, synopsis = ?, trailer_url = ?,
+      download_url = ?,
+      updated_at = datetime('now')
     WHERE id = ?
   `);
 
@@ -196,6 +212,12 @@ router.put('/:id', requireAuth, (req, res) => {
     total_seasons ? parseInt(total_seasons, 10) : null,
     cleanWatched(watched),
     cover_url ? cover_url.trim() : '',
+    duration_mins ? parseInt(duration_mins, 10) : null,
+    director ? director.trim() : '',
+    cast ? cast.trim() : '',
+    synopsis ? synopsis.trim() : '',
+    trailer_url ? trailer_url.trim() : '',
+    download_url ? download_url.trim() : '',
     req.params.id
   );
 
