@@ -1,7 +1,7 @@
 {
   "name": "saumabox",
   "version": "0.3.1",
-  "description": "All-in-One Personal Media Catalog & Archiving System (Games, Cinema, Music)",
+  "description": "SaumaBox — Modern Self-Hosted Personal Media Catalog & Archiving System for Games, Cinema & Music (Node.js, Express, SQLite, Vanilla JS)",
   "main": "server/index.js",
   "scripts": {
     "start": "node server/index.js",
