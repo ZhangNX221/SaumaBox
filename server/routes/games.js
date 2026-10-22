@@ -92,7 +92,7 @@ router.get('/', (req, res) => {
   const platforms = db.prepare("SELECT DISTINCT platform FROM games WHERE platform != '' AND type = 'PC' ORDER BY platform").all().map(r => r.platform);
   const consoles = db.prepare("SELECT DISTINCT console FROM games WHERE console != '' ORDER BY console").all().map(r => r.console);
   const emulators = db.prepare("SELECT DISTINCT emulator FROM games WHERE emulator != '' ORDER BY emulator").all().map(r => r.emulator);
-  const statuses = db.prepare("SELECT DISTINCT status FROM games WHERE status != '' ORDER BY status").all().map(r => r.status);
+  const statuses = db.prepare("SELECT name FROM ownership_statuses ORDER BY name ASC").all().map(r => r.name);
   const genres = db.prepare("SELECT DISTINCT genre FROM games WHERE genre != '' ORDER BY genre").all().map(r => r.genre);
 
   res.json({

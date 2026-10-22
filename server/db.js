@@ -36,6 +36,7 @@ function initDb(database) {
       username      TEXT NOT NULL UNIQUE,
       password_hash TEXT NOT NULL,
       display_name  TEXT DEFAULT '',
+      avatar_url    TEXT DEFAULT '',
       created_at    TEXT NOT NULL DEFAULT (datetime('now')),
       updated_at    TEXT NOT NULL DEFAULT (datetime('now'))
     );
@@ -221,6 +222,15 @@ function initDb(database) {
       PRAGMA foreign_keys = ON;
     `);
   }
+
+  // Migrasi penyelarasan status kepemilikan game ke daftar resmi ownership_statuses
+  try {
+    database.exec("UPDATE games SET completed = 1 WHERE status = 'Completed'");
+    database.exec("UPDATE games SET enhancements = 'Playable (60 FPS)' WHERE status = 'Playable (60 FPS)' AND (enhancements IS NULL OR enhancements = '')");
+    database.exec("UPDATE games SET status = 'Purchase' WHERE status IN ('Playable (60 FPS)', 'Completed')");
+    database.exec("UPDATE games SET status = 'Free' WHERE status IN ('Playable', 'Installed')");
+    database.exec("UPDATE games SET status = 'Purchase' WHERE status NOT IN ('Crack', 'Free', 'Free EGS', 'Free Ubisoft', 'Link EGS', 'Link Steam', 'Link Ubisoft', 'Purchase', 'Wishlist')");
+  } catch (_) {}
 
   // Default app settings
   const defaultSettings = [

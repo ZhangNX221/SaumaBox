@@ -104,13 +104,13 @@ const app = {
       if (appEl) appEl.classList.add('admin-mode');
 
       if (adminSidebar) {
-        const username = this.state.user.displayName || this.state.user.username;
-        const initial = username.charAt(0).toUpperCase();
+        const user = this.state.user, username = user.displayName || user.username;
+        const avatarMarkup = user.avatarUrl ? `<img src="${escapeHtml(user.avatarUrl)}" alt="Avatar" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">` : username.charAt(0).toUpperCase();
         const sec = [
           { title: '1. Ringkasan', links: [{ id: 'dashboard', icon: 'dashboard', label: 'Dashboard', active: curTab === 'dashboard', click: "app.navigate('dashboard')" }] },
           { title: '2. Katalog Media', links: [{ id: 'games', icon: 'games', label: 'Katalog Game', active: curTab === 'games', click: "app.navigate('games')" }, { id: 'cinema', icon: 'cinema', label: 'Katalog Cinema', active: curTab === 'cinema', click: "app.navigate('cinema')" }, { id: 'music', icon: 'music', label: 'Katalog Musik', active: curTab === 'music', click: "app.navigate('music')" }] },
           { title: '3. Kategori Data', links: [{ id: 'genres', icon: 'tag', label: 'Genre', active: curTab === 'taxonomy' && this.state.taxonomy?.subTab === 'genres', click: "app.navigate('taxonomy', 'genres')" }, { id: 'creators', icon: 'artist', label: 'Kreator', active: curTab === 'taxonomy' && this.state.taxonomy?.subTab === 'creators', click: "app.navigate('taxonomy', 'creators')" }, { id: 'platforms', icon: 'layers', label: 'Platform', active: curTab === 'taxonomy' && this.state.taxonomy?.subTab === 'platforms', click: "app.navigate('taxonomy', 'platforms')" }, { id: 'statuses', icon: 'shield', label: 'Status Milik', active: curTab === 'taxonomy' && this.state.taxonomy?.subTab === 'statuses', click: "app.navigate('taxonomy', 'statuses')" }] },
-          { title: '4. Pengaturan', links: [{ id: 'layout', icon: 'settings', label: 'Tampilan', active: curTab === 'settings' && this.state.settingsTab === 'layout', click: "app.navigate('settings', 'layout')" }, { id: 'api', icon: 'key', label: 'Kunci API', active: curTab === 'settings' && this.state.settingsTab === 'api', click: "app.navigate('settings', 'api')" }, { id: 'data', icon: 'download', label: 'Cadangan Data', active: curTab === 'settings' && this.state.settingsTab === 'data', click: "app.navigate('settings', 'data')" }] }
+          { title: '4. Pengaturan', links: [{ id: 'profile', icon: 'user', label: 'Profil Akun', active: curTab === 'settings' && this.state.settingsTab === 'profile', click: "app.navigate('settings', 'profile')" }, { id: 'layout', icon: 'settings', label: 'Tampilan', active: curTab === 'settings' && this.state.settingsTab === 'layout', click: "app.navigate('settings', 'layout')" }, { id: 'api', icon: 'key', label: 'Kunci API', active: curTab === 'settings' && this.state.settingsTab === 'api', click: "app.navigate('settings', 'api')" }, { id: 'data', icon: 'download', label: 'Cadangan Data', active: curTab === 'settings' && this.state.settingsTab === 'data', click: "app.navigate('settings', 'data')" }, { id: 'system', icon: 'sparkles', label: 'Pembaruan', active: curTab === 'settings' && this.state.settingsTab === 'system', click: "app.navigate('settings', 'system')" }] }
         ];
 
         const secHtml = sec.map(s => `
@@ -128,8 +128,8 @@ const app = {
             </a>
             <button class="sidebar-close-btn" onclick="app.toggleAdminSidebar(false)" title="Tutup menu">${getIcon('close', 'ui-icon', 18)}</button>
           </div>
-          <div class="sidebar-profile">
-            <div class="sidebar-avatar">${initial}</div>
+          <div class="sidebar-profile" onclick="app.navigate('settings', 'profile'); app.toggleAdminSidebar(false);" role="button" tabindex="0" title="Kelola Profil Akun" style="cursor:pointer;">
+            <div class="sidebar-avatar">${avatarMarkup}</div>
             <div class="sidebar-user-info">
               <div class="sidebar-user-name">${escapeHtml(username)}</div>
               <div class="sidebar-user-role"><span class="sidebar-status-dot"></span> Administrator</div>
@@ -144,7 +144,7 @@ const app = {
       }
 
       if (navLinks) navLinks.innerHTML = '';
-      if (authActions) authActions.innerHTML = '';
+      if (authActions) authActions.innerHTML = `<button class="btn btn-primary btn-sm btn-add-catalog" onclick="app.openAddCatalogModal()" title="Tambah Katalog Baru">${getIcon('plus', 'ui-icon-btn', 14)} <span>Tambah Katalog</span></button>`;
 
       if (bottomNav) {
         const bItems = [['dashboard','dashboard','Dashboard'],['games','games','Games'],['cinema','cinema','Cinema'],['music','music','Musik'],['settings','settings','Setelan']];
@@ -163,10 +163,10 @@ const app = {
         <button class="nav-btn ${curTab === 'music' ? 'active' : ''}" onclick="app.navigate('music')">Koleksi Musik</button>
       `;
 
-      authActions.innerHTML = `<button class="btn btn-primary btn-sm" onclick="app.openLoginModal()">Masuk Admin</button>`;
+      authActions.innerHTML = `<button class="btn btn-primary btn-sm btn-admin-demo" onclick="app.openLoginModal()" title="Masuk Mode Admin (Demo)">${getIcon('user', 'ui-icon-btn', 14)} <span>Masuk Admin</span></button>`;
 
       if (bottomNav) {
-        const bItems = [['landing','dashboard','Beranda'],['games','games','Games'],['cinema','cinema','Cinema'],['music','music','Musik']];
+        const bItems = [['landing','dashboard','Beranda'],['games','games','Games'],['cinema','cinema','Cinema'],['music','music','Musik'],['login','user','Admin']];
         bottomNav.innerHTML = `<div class="bottom-nav-inner">${bItems.map(([id, icon, txt]) => `
           <div class="bottom-nav-item ${curTab === id ? 'active' : ''}" onclick="app.navigate('${id}')">${getIcon(icon, 'ui-icon', 20)}<span>${txt}</span></div>
         `).join('')}</div>`;
@@ -363,6 +363,11 @@ const app = {
   },
 
   async navigate(tab, subTab = null) {
+    if (tab === 'profile') return this.navigate('settings', 'profile');
+    if (tab === 'login') {
+      this.openLoginModal();
+      return;
+    }
     this.state.currentTab = tab;
     if (subTab) {
       if (tab === 'taxonomy') this.state.taxonomy = { subTab, q: '', filter: 'all' };

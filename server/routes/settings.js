@@ -1,5 +1,7 @@
 const express = require('express');
 const router = express.Router();
+const { execSync } = require('child_process');
+const pkg = require('../../package.json');
 const { getDb, logActivity } = require('../db');
 const { requireAuth } = require('../auth');
 
@@ -68,6 +70,14 @@ router.get('/stats', (req, res) => {
     LIMIT 5
   `).all();
 
+  const musicPlatforms = db.prepare(`
+    SELECT platform, COUNT(*) as count
+    FROM music
+    WHERE platform IS NOT NULL AND platform != ''
+    GROUP BY platform
+    ORDER BY count DESC
+  `).all();
+
   // Platform breakdown for PC
   const platformStats = db.prepare(`
     SELECT platform, COUNT(*) as count
@@ -122,10 +132,10 @@ router.get('/stats', (req, res) => {
   const reviewsPending = db.prepare("SELECT COUNT(*) as c FROM reviews WHERE status = 'pending'").get()?.c || 0;
   const reportsOpen = db.prepare("SELECT COUNT(*) as c FROM reports WHERE status = 'open'").get()?.c || 0;
 
-  // Konten Populer / Rating Tertinggi
-  const popularGames = db.prepare('SELECT id, title, rating, cover_url, platform FROM games WHERE rating IS NOT NULL ORDER BY rating DESC, id DESC LIMIT 5').all();
-  const popularCinema = db.prepare('SELECT id, title, rating, cover_url, genre FROM cinema WHERE rating IS NOT NULL ORDER BY rating DESC, id DESC LIMIT 5').all();
-  const popularMusic = db.prepare('SELECT id, title, artist, rating, cover_url FROM music WHERE rating IS NOT NULL ORDER BY rating DESC, id DESC LIMIT 5').all();
+  // Konten Populer / Rating Tertinggi (Top 10)
+  const popularGames = db.prepare('SELECT id, title, rating, cover_url, platform FROM games WHERE rating IS NOT NULL ORDER BY rating DESC, id DESC LIMIT 10').all();
+  const popularCinema = db.prepare('SELECT id, title, rating, cover_url, genre FROM cinema WHERE rating IS NOT NULL ORDER BY rating DESC, id DESC LIMIT 10').all();
+  const popularMusic = db.prepare('SELECT id, title, artist, rating, cover_url FROM music WHERE rating IS NOT NULL ORDER BY rating DESC, id DESC LIMIT 10').all();
 
   res.json({
     totals: {
@@ -154,6 +164,7 @@ router.get('/stats', (req, res) => {
       movies,
       series,
       anime,
+      watched: watchedCount,
       watched_percentage: totalCinema > 0 ? Math.round((watchedCount / totalCinema) * 100) : 0
     },
     music: {
@@ -161,7 +172,8 @@ router.get('/stats', (req, res) => {
       favorites: favMusic,
       artists: totalArtists,
       albums: totalAlbums,
-      genres: genreStats
+      genres: genreStats,
+      platforms: musicPlatforms
     },
     popular: {
       games: popularGames,
@@ -235,6 +247,79 @@ router.get('/recent', (req, res) => {
   `).all(limit);
 
   res.json({ games, cinema, music });
+});
+
+// GET /api/settings/version — Dapatkan informasi versi aplikasi saat ini
+router.get('/version', (req, res) => {
+  let commitHash = 'unknown';
+  let branch = 'main';
+  try {
+    commitHash = execSync('git rev-parse --short HEAD', { encoding: 'utf8' }).trim();
+    branch = execSync('git rev-parse --abbrev-ref HEAD', { encoding: 'utf8' }).trim();
+  } catch (_) {}
+
+  res.json({
+    version: pkg.version,
+    commit: commitHash,
+    branch,
+    repoUrl: 'https://github.com/ZhangNX221/SaumaBox'
+  });
+});
+
+// GET /api/settings/check-update — Periksa apakah ada commit/versi baru dari remote GitHub
+router.get('/check-update', requireAuth, (req, res) => {
+  let localCommit = 'unknown';
+  let remoteCommit = '';
+  let branch = 'main';
+  let hasUpdate = false;
+  let remoteError = null;
+
+  try {
+    localCommit = execSync('git rev-parse --short HEAD', { encoding: 'utf8' }).trim();
+    branch = execSync('git rev-parse --abbrev-ref HEAD', { encoding: 'utf8' }).trim();
+  } catch (e) {
+    localCommit = 'unknown';
+  }
+
+  try {
+    const rawRemote = execSync(`git ls-remote origin refs/heads/${branch || 'main'}`, { encoding: 'utf8', timeout: 12000 });
+    if (rawRemote && rawRemote.trim()) {
+      remoteCommit = rawRemote.split('\t')[0].trim();
+      if (remoteCommit && !remoteCommit.startsWith(localCommit)) {
+        hasUpdate = true;
+      }
+    }
+  } catch (err) {
+    remoteError = err.message;
+  }
+
+  res.json({
+    currentVersion: pkg.version,
+    currentCommit: localCommit,
+    remoteCommit: remoteCommit ? remoteCommit.substring(0, 7) : '',
+    branch,
+    hasUpdate,
+    remoteError: remoteError ? 'Tidak dapat terhubung ke remote GitHub (periksa jaringan internet).' : null,
+    checkedAt: new Date().toISOString()
+  });
+});
+
+// POST /api/settings/apply-update — Lakukan git pull origin main untuk memperbarui aplikasi
+router.post('/apply-update', requireAuth, (req, res) => {
+  const db = getDb();
+  try {
+    const output = execSync('git pull origin main', { encoding: 'utf8', timeout: 30000 });
+    logActivity(db, 'SYSTEM_UPDATE', 'system', req.user.id, req.user.username, `Pembaruan sistem: ${output.substring(0, 100)}`);
+    res.json({
+      success: true,
+      message: 'Aplikasi berhasil diperbarui ke commit terbaru! Halaman akan dimuat ulang.',
+      output
+    });
+  } catch (err) {
+    res.status(500).json({
+      error: `Gagal memperbarui aplikasi: ${err.message}`
+    });
+  }
 });
 
 module.exports = router;

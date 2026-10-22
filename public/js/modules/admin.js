@@ -4,7 +4,7 @@
 
 Object.assign(app, {
   async renderSettings(container) {
-    if (!this.state.settingsTab || this.state.settingsTab === 'sharing') this.state.settingsTab = 'layout';
+    if (!this.state.settingsTab || this.state.settingsTab === 'sharing') this.state.settingsTab = 'profile';
     const settings = await api.get('/api/settings');
     const curTab = this.state.settingsTab;
 
@@ -16,18 +16,11 @@ Object.assign(app, {
         </p>
 
         <div class="sub-tabs" style="margin-bottom:20px;">
-          <button class="sub-tab-btn ${curTab === 'profile' ? 'active' : ''}" onclick="app.setSettingsSubTab('profile')">
-            ${getIcon('user', 'ui-icon-btn', 13)} Profil Akun
-          </button>
-          <button class="sub-tab-btn ${curTab === 'layout' ? 'active' : ''}" onclick="app.setSettingsSubTab('layout')">
-            ${getIcon('settings', 'ui-icon-btn', 13)} Tampilan
-          </button>
-          <button class="sub-tab-btn ${curTab === 'api' ? 'active' : ''}" onclick="app.setSettingsSubTab('api')">
-            ${getIcon('key', 'ui-icon-btn', 13)} Kunci API
-          </button>
-          <button class="sub-tab-btn ${curTab === 'data' ? 'active' : ''}" onclick="app.setSettingsSubTab('data')">
-            ${getIcon('download', 'ui-icon-btn', 13)} Cadangan Data
-          </button>
+          <button class="sub-tab-btn ${curTab === 'profile' ? 'active' : ''}" onclick="app.setSettingsSubTab('profile')">${getIcon('user', 'ui-icon-btn', 13)} Profil Akun</button>
+          <button class="sub-tab-btn ${curTab === 'layout' ? 'active' : ''}" onclick="app.setSettingsSubTab('layout')">${getIcon('settings', 'ui-icon-btn', 13)} Tampilan</button>
+          <button class="sub-tab-btn ${curTab === 'api' ? 'active' : ''}" onclick="app.setSettingsSubTab('api')">${getIcon('key', 'ui-icon-btn', 13)} Kunci API</button>
+          <button class="sub-tab-btn ${curTab === 'data' ? 'active' : ''}" onclick="app.setSettingsSubTab('data')">${getIcon('download', 'ui-icon-btn', 13)} Cadangan Data</button>
+          <button class="sub-tab-btn ${curTab === 'system' ? 'active' : ''}" onclick="app.setSettingsSubTab('system')">${getIcon('sparkles', 'ui-icon-btn', 13)} Pembaruan Sistem</button>
         </div>
 
         <div id="settings-content">
@@ -35,9 +28,11 @@ Object.assign(app, {
           ${curTab === 'layout' ? this.renderSettingsLayout(settings) : ''}
           ${curTab === 'api' ? this.renderSettingsApi(settings) : ''}
           ${curTab === 'data' ? this.renderSettingsData(settings) : ''}
+          ${curTab === 'system' ? (this.renderSettingsSystem ? this.renderSettingsSystem(settings) : '') : ''}
         </div>
       </div>
     `;
+    if (curTab === 'system' && this.initSystemVersionInfo) setTimeout(() => this.initSystemVersionInfo(), 30);
   },
 
   setSettingsSubTab(tab) {
@@ -53,7 +48,7 @@ Object.assign(app, {
       { name: 'public_show_prices', label: 'Tampilkan Informasi Estimasi Harga Game ke Publik' }
     ];
     return `
-      <div style="display:flex; flex-direction:column; gap:20px;">
+      <div class="settings-two-col-grid">
         <!-- Kustomisasi Tampilan & Identitas Brand -->
         <div class="module-card">
           <h2 style="font-size:1.15rem; margin-bottom:12px;">🎨 Kustomisasi Tampilan &amp; Banner Utama</h2>

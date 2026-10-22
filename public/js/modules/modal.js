@@ -11,7 +11,7 @@ Object.assign(app, {
     backdrop.id = id;
 
     backdrop.innerHTML = `
-      <div class="modal-dialog" role="dialog" aria-modal="true">
+      <div class="modal-dialog ${id === 'modal-login' ? 'modal-login-dialog' : ''}" role="dialog" aria-modal="true">
         <div class="modal-header">
           <h2 style="font-size:1.15rem;">${title}</h2>
           <button class="btn btn-secondary btn-sm btn-icon" onclick="app.closeModal('${id}')" aria-label="Tutup">${getIcon('close', 'ui-icon', 16)}</button>
@@ -95,27 +95,64 @@ Object.assign(app, {
     }
   },
 
-  // Login Modal
+  // Login Modal (Modern, Informatif, & Minimalis)
   openLoginModal() {
-    this.createModal('modal-login', 'Masuk ke Akun Admin', `
-      <form id="form-login" onsubmit="app.handleLoginSubmit(event)">
-        <div class="form-group">
-          <label class="form-label">Username</label>
-          <input type="text" class="form-input" name="username" required autofocus placeholder="admin">
+    this.createModal('modal-login', 'Masuk Portal Administrator', `
+      <div class="login-modal-wrapper">
+        <div class="login-modal-hero">
+          <div class="login-badge-portal"><span class="portal-dot"></span><span>PORTAL ADMINISTRATOR</span></div>
+          <div class="login-modal-title">Pusat Kendali SaumaBox</div>
+          <div class="login-modal-desc">Kelola pustaka Game, Cinema, Musik, taksonomi, serta konfigurasi sistem dalam satu dasbor.</div>
         </div>
-        <div class="form-group">
-          <label class="form-label">Password</label>
-          <input type="password" class="form-input" name="password" required placeholder="••••••••">
+
+        <div class="login-demo-card">
+          <div class="login-demo-header">
+            <div class="login-demo-title">${getIcon('key', 'ui-icon', 13)} <span>Kredensial Demo Cepat</span></div>
+            <span class="badge badge-success font-mono" style="font-size:0.65rem;">Super Admin</span>
+          </div>
+          <div class="login-demo-body">
+            <div class="login-demo-text">Akun: <strong>zhang</strong> • Sandi: <strong>admin123</strong></div>
+            <button type="button" class="btn-demo-fill" onclick="app.fillDemoLogin('zhang', 'admin123')" title="Otomatis isi formulir demo">${getIcon('sparkles', 'ui-icon', 12)} <span>Gunakan Demo</span></button>
+          </div>
         </div>
-        <div class="form-group">
-          <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
-            <input type="checkbox" name="rememberMe" value="true" checked>
-            <span>Ingat saya (30 hari)</span>
-          </label>
-        </div>
-        <button type="submit" class="btn btn-primary" style="width:100%;">Masuk</button>
-      </form>
+
+        <form id="form-login" onsubmit="app.handleLoginSubmit(event)">
+          <div class="form-group">
+            <label class="form-label" style="display:flex; justify-content:space-between;"><span>Username atau ID Akun</span><span style="font-size:0.7rem; color:var(--text-muted);">Wajib</span></label>
+            <div class="input-with-icon-wrap">
+              <span class="input-leading-icon">${getIcon('user', 'ui-icon', 16)}</span>
+              <input type="text" class="form-input input-with-icon" id="login-username" name="username" required autofocus placeholder="Masukkan username..." value="zhang">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" style="display:flex; justify-content:space-between;"><span>Kata Sandi (Password)</span><span style="font-size:0.7rem; color:var(--text-muted);">Terenkripsi</span></label>
+            <div class="input-with-icon-wrap">
+              <span class="input-leading-icon">${getIcon('lock', 'ui-icon', 16)}</span>
+              <input type="password" class="form-input input-with-icon" id="login-password" name="password" required placeholder="Masukkan kata sandi..." value="admin123">
+              <button type="button" class="input-trailing-action" onclick="app.toggleLoginPasswordVisibility()" title="Tampilkan/sembunyikan kata sandi" aria-label="Toggle password visibility">${getIcon('eye', 'ui-icon', 15)}</button>
+            </div>
+          </div>
+
+          <div class="login-options-row">
+            <label class="login-remember-label"><input type="checkbox" name="rememberMe" value="true" checked><span>Ingat saya di perangkat ini (30 hari)</span></label>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-login-submit">${getIcon('shield', 'ui-icon-btn', 15)} <span>Masuk Akun Administrator</span></button>
+          <div class="login-security-footer">${getIcon('lock', 'ui-icon', 12)} <span>Sesi aman terenkripsi PBKDF2 &amp; SQLite Session Token</span></div>
+        </form>
+      </div>
     `);
+  },
+
+  fillDemoLogin(u = 'zhang', p = 'admin123') {
+    const uInput = document.getElementById('login-username'), pInput = document.getElementById('login-password');
+    if (uInput && pInput) { uInput.value = u; pInput.value = p; showToast(`Kredensial demo (${u}) diisikan.`, 'info'); }
+  },
+
+  toggleLoginPasswordVisibility() {
+    const input = document.getElementById('login-password');
+    if (input) input.type = input.type === 'password' ? 'text' : 'password';
   },
 
   async handleLoginSubmit(e) {
@@ -310,22 +347,8 @@ Object.assign(app, {
     }
     if (item.rating) setVal('rating', item.rating);
 
-    if (type === 'games') {
-      if (item.developer) setVal('developer', item.developer);
-      if (item.publisher) setVal('publisher', item.publisher);
-      if (item.platform) setVal('platform', item.platform);
-      if (item.price) setVal('price', item.price);
-    } else if (type === 'cinema') {
-      if (item.studio) setVal('studio', item.studio);
-      if (item.country) setVal('country', item.country);
-      if (item.synopsis) setVal('synopsis', item.synopsis);
-      if (item.type) setVal('type', item.type);
-    } else if (type === 'music') {
-      if (item.artist) setVal('artist', item.artist);
-      if (item.album) setVal('album', item.album);
-      if (item.duration_secs) setVal('duration_secs', item.duration_secs);
-      if (item.platform) setVal('platform', item.platform);
-    }
+    const fMap = { games: ['developer', 'publisher', 'platform', 'price'], cinema: ['studio', 'country', 'synopsis', 'type'], music: ['artist', 'album', 'duration_secs', 'platform'] };
+    (fMap[type] || []).forEach(f => { if (item[f]) setVal(f, item[f]); });
 
     const container = document.getElementById('meta-fetch-results');
     if (container) container.style.display = 'none';
@@ -404,45 +427,27 @@ Object.assign(app, {
       cinema: ['Aksi', 'Petualangan', 'Animasi', 'Anime', 'Biografi', 'Drama', 'Dokumenter', 'Fantasi', 'Horor', 'Kejahatan', 'Komedi', 'Misteri', 'Musikal', 'Romansa', 'Sci-Fi', 'Supernatural', 'Shounen', 'Thriller'],
       music: ['Akustik', 'Anime OST', 'Blues', 'Country', 'Dangdut', 'EDM / Elektronik', 'Folk', 'Hip-Hop', 'Indie', 'J-Pop', 'J-Rock', 'Jazz', 'Klasik', 'K-Pop', 'Metal', 'Orkestra', 'Pop', 'Pop Rock', 'R&B', 'Reggae', 'Rock', 'Rock Ballad', 'Soundtrack']
     };
-
     const taxNames = Array.isArray(customTaxonomy) ? customTaxonomy.map(x => x.name || x) : [];
     const allPresets = Array.from(new Set([...taxNames, ...(defaultGenres[mediaType] || defaultGenres.game)])).sort((a, b) => a.localeCompare('id'));
-
     const selectedList = currentGenreStr ? currentGenreStr.split(',').map(s => s.trim()).filter(Boolean) : [];
-    const chipsHtml = selectedList.map(g => `
-      <span class="genre-chip">
-        <span>${escapeHtml(g)}</span>
-        <button type="button" class="genre-chip-remove" onclick="app.removeGenreTag('${escapeHtml(g)}')" title="Hapus ${escapeHtml(g)}">✕</button>
-      </span>
-    `).join('');
-
+    const chipsHtml = selectedList.map(g => `<span class="genre-chip"><span>${escapeHtml(g)}</span><button type="button" class="genre-chip-remove" onclick="app.removeGenreTag('${escapeHtml(g)}')" title="Hapus ${escapeHtml(g)}">✕</button></span>`).join('');
     const optionsHtml = allPresets.map(g => `<option value="${escapeHtml(g)}">${escapeHtml(g)}</option>`).join('');
     const quickPresets = (defaultGenres[mediaType] || defaultGenres.game).slice(0, 14);
     const quickList = Array.from(new Set([...taxNames.slice(0, 5), ...quickPresets]));
-    const pillsHtml = quickList.map(g => {
-      const isActive = selectedList.some(s => s.toLowerCase() === g.toLowerCase());
-      return `<button type="button" class="genre-pill-btn ${isActive ? 'active' : ''}" data-genre="${escapeHtml(g)}" onclick="app.toggleGenrePill('${escapeHtml(g)}')">${escapeHtml(g)}</button>`;
-    }).join('');
+    const pillsHtml = quickList.map(g => `<button type="button" class="genre-pill-btn ${selectedList.some(s => s.toLowerCase() === g.toLowerCase()) ? 'active' : ''}" data-genre="${escapeHtml(g)}" onclick="app.toggleGenrePill('${escapeHtml(g)}')">${escapeHtml(g)}</button>`).join('');
 
     return `
       <div class="form-group">
         <label class="form-label">Genre ${mediaType === 'game' ? 'Game' : mediaType === 'cinema' ? 'Tayangan' : 'Musik'}</label>
         <input type="hidden" name="genre" id="modal-genre-input" value="${escapeHtml(currentGenreStr || '')}">
         <div class="genre-selector-wrapper">
-          <div id="modal-genre-chips" class="genre-chips-box">
-            ${chipsHtml || '<span class="genre-empty-hint">Belum ada genre dipilih. Pilih dari menu atau tombol di bawah:</span>'}
-          </div>
+          <div id="modal-genre-chips" class="genre-chips-box">${chipsHtml || '<span class="genre-empty-hint">Belum ada genre dipilih. Pilih dari menu atau tombol di bawah:</span>'}</div>
           <div style="display:flex; gap:8px;">
-            <select class="form-select" id="genre-select-dropdown" onchange="app.selectGenreFromDropdown(this)" aria-label="Pilih genre untuk ditambahkan">
-              <option value="">➕ Pilih Genre untuk Ditambahkan...</option>
-              ${optionsHtml}
-            </select>
+            <select class="form-select" id="genre-select-dropdown" onchange="app.selectGenreFromDropdown(this)" aria-label="Pilih genre untuk ditambahkan"><option value="">➕ Pilih Genre untuk Ditambahkan...</option>${optionsHtml}</select>
           </div>
           <div>
             <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:4px;">Pilihan Cepat (klik untuk memilih / membatalkan):</div>
-            <div class="genre-quick-pills-wrap">
-              ${pillsHtml}
-            </div>
+            <div class="genre-quick-pills-wrap">${pillsHtml}</div>
           </div>
         </div>
       </div>

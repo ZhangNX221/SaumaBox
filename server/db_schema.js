@@ -90,6 +90,7 @@ function setupExtendedSchema(database) {
   if (!userCols.includes('role')) database.exec("ALTER TABLE users ADD COLUMN role TEXT DEFAULT 'super_admin'");
   if (!userCols.includes('status')) database.exec("ALTER TABLE users ADD COLUMN status TEXT DEFAULT 'active'");
   if (!userCols.includes('email')) database.exec("ALTER TABLE users ADD COLUMN email TEXT DEFAULT ''");
+  if (!userCols.includes('avatar_url')) database.exec("ALTER TABLE users ADD COLUMN avatar_url TEXT DEFAULT ''");
 
   // App settings untuk Integrasi API & Layout
   const extraSettings = [

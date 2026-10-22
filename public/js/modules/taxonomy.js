@@ -21,10 +21,10 @@ Object.assign(app, {
             </div>
           </div>
           <div class="toolbar-right">
-            ${subTab === 'genres' ? `<button class="btn btn-primary" onclick="app.openAddGenreModal()">${getIcon('plus', 'ui-icon-btn', 14)} Tambah Genre</button>` : ''}
-            ${subTab === 'creators' ? `<button class="btn btn-primary" onclick="app.openAddCreatorModal()">${getIcon('plus', 'ui-icon-btn', 14)} Tambah Tokoh</button>` : ''}
-            ${subTab === 'platforms' ? `<button class="btn btn-primary" onclick="app.openAddPlatformModal()">${getIcon('plus', 'ui-icon-btn', 14)} Tambah Platform</button>` : ''}
-            ${subTab === 'statuses' ? `<button class="btn btn-primary" onclick="app.openAddStatusModal()">${getIcon('plus', 'ui-icon-btn', 14)} Tambah Status</button>` : ''}
+            ${subTab === 'genres' ? `<button class="btn btn-primary btn-icon" onclick="app.openAddGenreModal()" title="Tambah Genre" aria-label="Tambah Genre">${getIcon('plus', 'ui-icon-btn', 16)}</button>` : ''}
+            ${subTab === 'creators' ? `<button class="btn btn-primary btn-icon" onclick="app.openAddCreatorModal()" title="Tambah Tokoh" aria-label="Tambah Tokoh">${getIcon('plus', 'ui-icon-btn', 16)}</button>` : ''}
+            ${subTab === 'platforms' ? `<button class="btn btn-primary btn-icon" onclick="app.openAddPlatformModal()" title="Tambah Platform" aria-label="Tambah Platform">${getIcon('plus', 'ui-icon-btn', 16)}</button>` : ''}
+            ${subTab === 'statuses' ? `<button class="btn btn-primary btn-icon" onclick="app.openAddStatusModal()" title="Tambah Status" aria-label="Tambah Status">${getIcon('plus', 'ui-icon-btn', 16)}</button>` : ''}
           </div>
         </div>
 

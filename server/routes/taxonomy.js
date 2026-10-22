@@ -13,7 +13,7 @@ router.get('/genres', (req, res) => {
   const params = [];
 
   if (media_type && media_type !== 'all') {
-    sql += ' AND (media_type = ? OR media_type = "all")';
+    sql += " AND (media_type = ? OR media_type = 'all')";
     params.push(media_type);
   }
   if (q) {
@@ -176,7 +176,7 @@ router.get('/statuses', (req, res) => {
     sql += ' AND (name LIKE ? OR description LIKE ?)';
     params.push(`%${q}%`, `%${q}%`);
   }
-  sql += ' ORDER BY id ASC';
+  sql += ' ORDER BY name ASC';
   res.json(db.prepare(sql).all(...params));
 });
 

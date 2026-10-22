@@ -180,9 +180,9 @@ Object.assign(app, {
 
             ${isAdmin ? `
               <div class="toolbar-actions-group">
-                <button class="btn btn-primary" onclick="app.openAddCinemaModal()">${getIcon('plus', 'ui-icon-btn', 14)} <span>Tambah Cinema</span></button>
-                <button class="btn btn-secondary btn-icon-mobile" onclick="app.openImportModal('cinema')" title="Import Data">${getIcon('upload', 'ui-icon-btn', 14)} <span class="btn-text-label">Import</span></button>
-                <button class="btn btn-secondary btn-icon-mobile" onclick="app.openExportModal('cinema')" title="Ekspor Data">${getIcon('download', 'ui-icon-btn', 14)} <span class="btn-text-label">Ekspor</span></button>
+                <button class="btn btn-primary btn-icon" onclick="app.openAddCinemaModal()" title="Tambah Cinema" aria-label="Tambah Cinema">${getIcon('plus', 'ui-icon-btn', 16)}</button>
+                <button class="btn btn-secondary btn-icon" onclick="app.openImportModal('cinema')" title="Import Data" aria-label="Import Data">${getIcon('upload', 'ui-icon-btn', 16)}</button>
+                <button class="btn btn-secondary btn-icon" onclick="app.openExportModal('cinema')" title="Ekspor Data" aria-label="Ekspor Data">${getIcon('download', 'ui-icon-btn', 16)}</button>
               </div>
             ` : ''}
           </div>

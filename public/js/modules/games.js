@@ -20,8 +20,8 @@ Object.assign(app, {
     const allPlatforms = Array.from(new Set([...defaultPlatforms, ...(res.filter_options.platforms || [])]));
     const platformOpts = ['ALL', ...allPlatforms].map(p => `<option value="${p}" ${platform === p ? 'selected' : ''}>${p === 'ALL' ? 'Semua Platform' : p}</option>`).join('');
 
-    const defaultStatuses = ['Purchase', 'Free', 'Free Ubisoft', 'Free EGS', 'Crack', 'Link Ubisoft', 'Link EGS', 'Link Steam', 'Wishlist'];
-    const allStatuses = Array.from(new Set([...defaultStatuses, ...(res.filter_options.statuses || [])]));
+    const defaultStatuses = ['Crack', 'Free', 'Free EGS', 'Free Ubisoft', 'Link EGS', 'Link Steam', 'Link Ubisoft', 'Purchase', 'Wishlist'];
+    const allStatuses = Array.from(new Set([...defaultStatuses, ...(res.filter_options.statuses || [])])).sort();
     const statusOpts = ['ALL', ...allStatuses].map(s => `<option value="${s}" ${status === s ? 'selected' : ''}>${s === 'ALL' ? 'Semua Status' : s}</option>`).join('');
     const completedOpts = `<option value="ALL" ${!completed || completed === 'ALL' ? 'selected' : ''}>Status Tamat (Semua)</option><option value="1" ${completed === '1' ? 'selected' : ''}>Sudah Tamat</option><option value="0" ${completed === '0' ? 'selected' : ''}>Belum Tamat</option>`;
 
@@ -114,8 +114,10 @@ Object.assign(app, {
 
     const gridCards = res.items.map(g => {
       const coverSrc = g.cover_url || '/images/covers/cyberpunk2077.svg';
-      const initial = (g.title || 'G').charAt(0).toUpperCase();
-      const avatarBg = getAvatarColor(initial);
+      const devPubParts = [];
+      if (g.developer) devPubParts.push(escapeHtml(g.developer));
+      if (g.publisher && g.publisher !== g.developer) devPubParts.push(escapeHtml(g.publisher));
+      const devPubHtml = devPubParts.length > 0 ? devPubParts.map(p => `<span>${p}</span>`).join('<span>•</span>') : '<span>-</span>';
       const isCompleted = g.completed === 1;
 
       let platformPill = '';
@@ -146,15 +148,9 @@ Object.assign(app, {
           </div>
           <div class="ps-card-body">
             <div class="ps-header-row">
-              <div class="ps-avatar-badge" style="background:${avatarBg};">${initial}</div>
               <div style="flex:1; min-width:0;">
                 <h3 class="ps-card-title" title="${escapeHtml(g.title)}">${escapeHtml(g.title)}</h3>
-                <div class="ps-card-meta">
-                  <span>${escapeHtml(g.release_date || (g.year ? String(g.year) : '-'))}</span>
-                  <span>•</span>
-                  <span>${escapeHtml(g.developer || g.publisher || g.console || 'Game')}</span>
-                  ${g.genre ? `<span>•</span><span>${escapeHtml(g.genre)}</span>` : ''}
-                </div>
+                <div class="ps-card-meta">${devPubHtml}</div>
               </div>
             </div>
             <div class="ps-card-footer">
@@ -188,9 +184,9 @@ Object.assign(app, {
             </div>
             ${isAdmin ? `
               <div class="toolbar-actions-group">
-                <button class="btn btn-primary" onclick="app.openAddGameModal()">${getIcon('plus', 'ui-icon-btn', 14)} <span>Tambah Game</span></button>
-                <button class="btn btn-secondary btn-icon-mobile" onclick="app.openImportModal('games')" title="Import Data">${getIcon('upload', 'ui-icon-btn', 14)} <span class="btn-text-label">Import</span></button>
-                <button class="btn btn-secondary btn-icon-mobile" onclick="app.openExportModal('games')" title="Ekspor Data">${getIcon('download', 'ui-icon-btn', 14)} <span class="btn-text-label">Ekspor</span></button>
+                <button class="btn btn-primary btn-icon" onclick="app.openAddGameModal()" title="Tambah Game" aria-label="Tambah Game">${getIcon('plus', 'ui-icon-btn', 16)}</button>
+                <button class="btn btn-secondary btn-icon" onclick="app.openImportModal('games')" title="Import Data" aria-label="Import Data">${getIcon('upload', 'ui-icon-btn', 16)}</button>
+                <button class="btn btn-secondary btn-icon" onclick="app.openExportModal('games')" title="Ekspor Data" aria-label="Ekspor Data">${getIcon('download', 'ui-icon-btn', 16)}</button>
               </div>` : ''}
           </div>
         </div>
@@ -281,7 +277,7 @@ Object.assign(app, {
       console: '', emulator: '', port_developer: '', port_version: '', enhancements: '', cover_url: '', completed: 0
     };
 
-    let customStatuses = ['Purchase', 'Free', 'Free Ubisoft', 'Free EGS', 'Crack', 'Link Ubisoft', 'Link EGS', 'Link Steam', 'Wishlist'];
+    let customStatuses = ['Crack', 'Free', 'Free EGS', 'Free Ubisoft', 'Link EGS', 'Link Steam', 'Link Ubisoft', 'Purchase', 'Wishlist'];
     let customPlatforms = ['Steam', 'GOG', 'EGS', 'Ubisoft', 'EA Origin'];
     let customGenres = [];
     try {
@@ -290,7 +286,7 @@ Object.assign(app, {
         api.get('/api/taxonomy/platforms'),
         api.get('/api/taxonomy/genres?media_type=game')
       ]);
-      if (Array.isArray(stRes) && stRes.length) customStatuses = Array.from(new Set([...stRes.map(x => x.name), ...customStatuses]));
+      if (Array.isArray(stRes) && stRes.length) customStatuses = stRes.map(x => x.name);
       if (Array.isArray(plRes) && plRes.length) customPlatforms = Array.from(new Set([...plRes.filter(x => !x.category || x.category === 'Game Platform').map(x => x.name), ...customPlatforms]));
       if (Array.isArray(gnRes) && gnRes.length) customGenres = gnRes;
     } catch (_) {}
@@ -406,8 +402,7 @@ Object.assign(app, {
         <div class="form-group">
           <label class="form-label">Status Kepemilikan</label>
           <select class="form-select" name="status">
-            ${customStatuses.map(s => `<option value="${s}" ${g.status === s || (!g.status && s === 'Purchase') ? 'selected' : ''}>${s}</option>`).join('')}
-            ${g.status && !customStatuses.includes(g.status) ? `<option value="${escapeHtml(g.status)}" selected>${escapeHtml(g.status)}</option>` : ''}
+            ${customStatuses.map(s => `<option value="${s}" ${g.status === s || (!customStatuses.includes(g.status) && s === 'Purchase') ? 'selected' : ''}>${s}</option>`).join('')}
           </select>
         </div>
 

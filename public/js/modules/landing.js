@@ -71,9 +71,15 @@ Object.assign(app, {
               <button class="btn btn-primary btn-hero-cta" onclick="app.scrollToShowcase()">
                 ${getIcon('sparkles', 'ui-icon-btn', 16)} Jelajahi Koleksi
               </button>
-              <button class="btn btn-secondary" onclick="app.navigate('games')">
-                ${getIcon('layers', 'ui-icon-btn', 16)} Buka Pustaka
-              </button>
+              ${!this.state.user ? `
+                <button class="btn btn-secondary btn-hero-admin" onclick="app.openLoginModal()" title="Masuk Mode Admin (Demo)">
+                  ${getIcon('user', 'ui-icon-btn', 16)} Masuk Admin (Demo)
+                </button>
+              ` : `
+                <button class="btn btn-secondary" onclick="app.navigate('games')">
+                  ${getIcon('layers', 'ui-icon-btn', 16)} Buka Pustaka
+                </button>
+              `}
             </div>
           </div>
 
@@ -118,19 +124,6 @@ Object.assign(app, {
               <button class="showcase-tab-btn ${this.state.recentCategory === 'games' ? 'active' : ''}" onclick="app.setRecentCategory('games')" role="tab">Games <span class="tab-count">${allGames.length}</span></button>
               <button class="showcase-tab-btn ${this.state.recentCategory === 'cinema' ? 'active' : ''}" onclick="app.setRecentCategory('cinema')" role="tab">Sinema <span class="tab-count">${allCinema.length}</span></button>
               <button class="showcase-tab-btn ${this.state.recentCategory === 'music' ? 'active' : ''}" onclick="app.setRecentCategory('music')" role="tab">Musik <span class="tab-count">${allMusic.length}</span></button>
-            </div>
-
-            <div class="showcase-filter-row">
-              <div class="search-input-wrap showcase-search-wrap">
-                <span class="search-icon">${getIcon('search', 'ui-icon', 16)}</span>
-                <input type="search" class="search-input showcase-search-input" placeholder="Cari judul, artis, pengembang, genre..." value="${escapeHtml(this.state.landingSearch)}" oninput="app.handleLandingSearch(this.value)" aria-label="Pencarian Cepat">
-              </div>
-
-              <select class="form-select showcase-sort-select" onchange="app.handleLandingSort(this.value)" aria-label="Urutkan Koleksi">
-                <option value="newest" ${this.state.landingSort === 'newest' ? 'selected' : ''}>Terbaru Ditambahkan</option>
-                <option value="rating" ${this.state.landingSort === 'rating' ? 'selected' : ''}>Penilaian Tertinggi</option>
-                <option value="title" ${this.state.landingSort === 'title' ? 'selected' : ''}>Berdasarkan Abjad (A-Z)</option>
-              </select>
             </div>
           </div>
         </div>

@@ -1,7 +1,34 @@
 const express = require('express');
 const router = express.Router();
+const path = require('path');
+const fs = require('fs');
+const multer = require('multer');
 const { getDb, logActivity } = require('../db');
-const { hashPassword, verifyPassword, createSession, deleteSession } = require('../auth');
+const { hashPassword, verifyPassword, createSession, deleteSession, requireAuth } = require('../auth');
+
+const AVATARS_DIR = path.join(__dirname, '..', '..', 'public', 'images', 'avatars');
+if (!fs.existsSync(AVATARS_DIR)) fs.mkdirSync(AVATARS_DIR, { recursive: true });
+
+const avatarStorage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, AVATARS_DIR),
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase() || '.jpg';
+    cb(null, `avatar-${req.user ? req.user.id : 'user'}-${Date.now()}${ext}`);
+  }
+});
+
+const avatarUpload = multer({
+  storage: avatarStorage,
+  limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml'];
+    if (allowed.includes(file.mimetype) || /\.(jpe?g|png|webp|gif|svg)$/i.test(file.originalname)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Hanya berkas gambar (JPG, PNG, WebP, GIF, SVG) yang diperbolehkan.'));
+    }
+  }
+});
 
 // Cek apakah sistem butuh initial setup (belum ada admin)
 router.get('/setup-status', (req, res) => {
@@ -111,7 +138,7 @@ router.get('/me', (req, res) => {
     return res.json({ authenticated: false, user: null });
   }
   const db = getDb();
-  const user = db.prepare('SELECT id, username, display_name, email, role, created_at FROM users WHERE id = ?').get(req.user.id);
+  const user = db.prepare('SELECT id, username, display_name, email, role, avatar_url, created_at FROM users WHERE id = ?').get(req.user.id);
   res.json({
     authenticated: true,
     user: user ? {
@@ -120,13 +147,15 @@ router.get('/me', (req, res) => {
       displayName: user.display_name,
       email: user.email || '',
       role: user.role || 'super_admin',
+      avatarUrl: user.avatar_url || '',
       createdAt: user.created_at
     } : {
       id: req.user.id,
       username: req.user.username,
       displayName: req.user.display_name,
       email: req.user.email || '',
-      role: req.user.role || 'super_admin'
+      role: req.user.role || 'super_admin',
+      avatarUrl: req.user.avatar_url || ''
     }
   });
 });
@@ -164,7 +193,7 @@ router.put('/profile', (req, res) => {
 
   logActivity(db, 'UPDATE_PROFILE', 'auth', req.user.id, newUsername, `Profil diperbarui: ${newDisplayName}`);
 
-  const updated = db.prepare('SELECT id, username, display_name, email, role, created_at FROM users WHERE id = ?').get(req.user.id);
+  const updated = db.prepare('SELECT id, username, display_name, email, role, avatar_url, created_at FROM users WHERE id = ?').get(req.user.id);
 
   res.json({
     success: true,
@@ -175,6 +204,7 @@ router.put('/profile', (req, res) => {
       displayName: updated.display_name,
       email: updated.email || '',
       role: updated.role || 'super_admin',
+      avatarUrl: updated.avatar_url || '',
       createdAt: updated.created_at
     }
   });
@@ -214,4 +244,78 @@ router.put('/password', (req, res) => {
   });
 });
 
+// POST /api/auth/avatar — Unggah foto profil
+router.post('/avatar', requireAuth, avatarUpload.single('avatar'), (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ error: 'Berkas foto profil wajib dipilih.' });
+  }
+
+  const db = getDb();
+  const avatarUrl = `/images/avatars/${req.file.filename}`;
+
+  try {
+    const prev = db.prepare('SELECT avatar_url FROM users WHERE id = ?').get(req.user.id);
+    if (prev && prev.avatar_url && prev.avatar_url.startsWith('/images/avatars/')) {
+      const oldPath = path.join(__dirname, '..', '..', 'public', prev.avatar_url);
+      if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+    }
+  } catch (err) {
+    // Abaikan error cleanup berkas lama
+  }
+
+  db.prepare('UPDATE users SET avatar_url = ? WHERE id = ?').run(avatarUrl, req.user.id);
+  logActivity(db, 'UPDATE_AVATAR', 'auth', req.user.id, req.user.username, 'Foto profil berhasil diperbarui');
+
+  const updated = db.prepare('SELECT id, username, display_name, email, role, avatar_url, created_at FROM users WHERE id = ?').get(req.user.id);
+
+  res.json({
+    success: true,
+    message: 'Foto profil berhasil diperbarui.',
+    avatarUrl,
+    user: {
+      id: updated.id,
+      username: updated.username,
+      displayName: updated.display_name,
+      email: updated.email || '',
+      role: updated.role || 'super_admin',
+      avatarUrl: updated.avatar_url || '',
+      createdAt: updated.created_at
+    }
+  });
+});
+
+// DELETE /api/auth/avatar — Hapus foto profil
+router.delete('/avatar', requireAuth, (req, res) => {
+  const db = getDb();
+  try {
+    const prev = db.prepare('SELECT avatar_url FROM users WHERE id = ?').get(req.user.id);
+    if (prev && prev.avatar_url && prev.avatar_url.startsWith('/images/avatars/')) {
+      const oldPath = path.join(__dirname, '..', '..', 'public', prev.avatar_url);
+      if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+    }
+  } catch (err) {
+    // Abaikan error cleanup berkas lama
+  }
+
+  db.prepare("UPDATE users SET avatar_url = '' WHERE id = ?").run(req.user.id);
+  logActivity(db, 'DELETE_AVATAR', 'auth', req.user.id, req.user.username, 'Foto profil dihapus');
+
+  const updated = db.prepare('SELECT id, username, display_name, email, role, avatar_url, created_at FROM users WHERE id = ?').get(req.user.id);
+
+  res.json({
+    success: true,
+    message: 'Foto profil berhasil dihapus.',
+    user: {
+      id: updated.id,
+      username: updated.username,
+      displayName: updated.display_name,
+      email: updated.email || '',
+      role: updated.role || 'super_admin',
+      avatarUrl: '',
+      createdAt: updated.created_at
+    }
+  });
+});
+
 module.exports = router;
+

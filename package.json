@@ -1,6 +1,6 @@
 {
   "name": "saumabox",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "All-in-One Personal Media Catalog & Archiving System (Games, Cinema, Music)",
   "main": "server/index.js",
   "scripts": {
