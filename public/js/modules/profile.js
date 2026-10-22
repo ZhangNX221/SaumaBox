@@ -67,8 +67,8 @@ Object.assign(app, {
         </div>
 
         <!-- 2. Grid Pengaturan: Informasi Akun & Keamanan Kata Sandi -->
-        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(320px, 1fr)); gap:20px;">
-          <!-- Card Kiri: Form Informasi Pribadi -->
+        <div style="display:flex; flex-direction:column; gap:20px;">
+          <!-- Card Atas: Form Informasi Pribadi -->
           <div class="module-card">
             <h3 style="font-size:1.1rem; margin-bottom:6px; display:flex; align-items:center; gap:8px;">
               <span style="color:var(--accent-color);">${getIcon('user', 'ui-icon', 18)}</span>
@@ -144,7 +144,7 @@ Object.assign(app, {
             </form>
           </div>
 
-          <!-- Card Kanan: Form Keamanan & Kata Sandi -->
+          <!-- Card Bawah: Form Keamanan & Kata Sandi -->
           <div class="module-card">
             <h3 style="font-size:1.1rem; margin-bottom:6px; display:flex; align-items:center; gap:8px;">
               <span style="color:var(--accent-color);">${getIcon('key', 'ui-icon', 18)}</span>
@@ -384,9 +384,13 @@ Object.assign(app, {
   },
 
   async handleDeleteProfilePhoto() {
-    if (!confirm('Apakah Anda yakin ingin menghapus foto profil dan kembali menggunakan inisial?')) {
-      return;
-    }
+    const ok = await showConfirmModal({
+      title: 'Hapus Foto Profil',
+      message: 'Apakah Anda yakin ingin menghapus foto profil dan kembali menggunakan inisial avatar?',
+      confirmText: 'Ya, Hapus',
+      type: 'danger'
+    });
+    if (!ok) return;
     try {
       showToast('Menghapus foto profil...', 'info');
       const res = await api.delete('/api/auth/avatar');

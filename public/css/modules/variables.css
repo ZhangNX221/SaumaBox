@@ -1,0 +1,97 @@
+/* ============================================================
+   SaumaBox: Personal Media Catalog Design System
+   Sesuai pedoman: docs/design/design.md & docs/prd
+   ============================================================ */
+
+:root {
+  --font-sans: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  /* Dark Theme Tokens (Default) - Contrast Verified WCAG AA */
+  --bg-primary: #09090b;
+  --bg-surface: #121316;
+  --bg-surface-elevated: #1a1b20;
+  --bg-surface-hover: #22242b;
+  --border-color: #272830;
+  --border-subtle: #1e1f26;
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1; /* Contrast 11.5:1 (AAA) */
+  --text-muted: #94a3b8;     /* Contrast 7.76:1 (AA) */
+  --accent-color: #d4af37;    /* Royal Gold metallic */
+  --accent-inverse: #090a0f;  /* Deep obsidian/onyx masculine contrast */
+  --focus-ring: #d4af37;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.2);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.18);
+  --grid-line: rgba(255, 255, 255, 0.02);
+
+  /* Intentional Geometry Tokens */
+  --radius-card: 12px;
+  --radius-control: 8px;
+  --radius-badge: 6px;
+  --radius-pill: 9999px;
+
+  /* Spacing */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-2xl: 48px;
+
+  /* Badges */
+  --badge-steam-bg: #1e3a8a;
+  --badge-steam-text: #bfdbfe;
+  --badge-epic-bg: #27272a;
+  --badge-epic-text: #e4e4e7;
+  --badge-ubisoft-bg: #312e81;
+  --badge-ubisoft-text: #c7d2fe;
+  --badge-gog-bg: #7c2d12;
+  --badge-gog-text: #fed7aa;
+  --badge-repack-bg: #78350f;
+  --badge-repack-text: #fef08a;
+
+  --badge-success-bg: #064e3b;
+  --badge-success-text: #6ee7b7;
+  --badge-info-bg: #075985;
+  --badge-info-text: #7dd3fc;
+  --badge-purple-bg: #4c1d95;
+  --badge-purple-text: #ddd6fe;
+  --badge-mobile-bg: #0e7490;
+  --badge-mobile-text: #67e8f9;
+  --badge-danger-bg: #4c0519;
+  --badge-danger-text: #fecdd3;
+  --badge-warning-bg: #451a03;
+  --badge-warning-text: #fde68a;
+}
+
+/* Reset & Base */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  min-height: 100vh;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-primary);
+  background-color: var(--bg-primary);
+  background-image: radial-gradient(var(--grid-line) 1px, transparent 1px);
+  background-size: 24px 24px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+}
+
+.font-mono {
+  font-family: var(--font-mono);
+}

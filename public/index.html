@@ -9,8 +9,8 @@
 
   <!-- PWA Manifest & Icons -->
   <link rel="manifest" href="/manifest.json">
-  <link rel="icon" type="image/svg+xml" href="/images/logo.svg">
-  <link rel="apple-touch-icon" href="/images/logo.svg">
+  <link rel="icon" type="image/png" href="/images/logo-icon.png">
+  <link rel="apple-touch-icon" href="/images/logo-icon.png">
 
   <!-- Google Fonts: Outfit & JetBrains Mono -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -40,7 +40,7 @@
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
             </button>
             <a class="brand-logo" onclick="app.navigate(app.state.user ? 'dashboard' : 'landing')" aria-label="Beranda SaumaBox">
-              <img src="/images/logo.svg" class="brand-logo-img" alt="Logo SaumaBox" width="28" height="28">
+              <img src="/images/logo-icon.png" class="brand-logo-img" alt="Logo SaumaBox" width="28" height="28">
               <span class="brand-name">SaumaBox</span>
               <span class="brand-badge" id="header-brand-badge">Catalog</span>
             </a>
@@ -86,11 +86,6 @@
                 </div>
               </div>
             </div>
-
-            <!-- Theme Switcher -->
-            <button class="btn btn-secondary btn-icon" id="btn-toggle-theme" onclick="app.toggleTheme()" title="Ganti Tema Tampilan" aria-label="Ganti Tema Tampilan">
-              <span id="theme-toggle-icon">☀️</span>
-            </button>
             <div id="auth-actions">
               <!-- Diisi dinamis oleh app.updateNavbar() -->
             </div>
@@ -100,10 +95,13 @@
 
       <!-- Main View Dynamic Container -->
       <main class="main-content" id="view-container" role="main">
-        <div class="state-container">
-          <div class="state-spinner" aria-hidden="true"></div>
-          <div class="state-title">Menyiapkan SaumaBox...</div>
-          <div class="state-desc">Memuat data koleksi dan preferensi Anda.</div>
+        <div class="state-container modern-loading-state" role="status" aria-live="polite">
+          <div class="modern-loader-visual" aria-hidden="true">
+            <div class="modern-loader-ring"></div>
+            <div class="modern-loader-core"></div>
+          </div>
+          <div class="state-title loader-shimmer-text">Menyiapkan SaumaBox...</div>
+          <div class="state-desc loader-subtext">Memuat data koleksi dan preferensi Anda.</div>
         </div>
       </main>
 
@@ -128,7 +126,9 @@
   <script src="/js/modules/cinema.js"></script>
   <script src="/js/modules/music.js"></script>
   <script src="/js/modules/admin.js"></script>
+  <script src="/js/modules/import-export.js"></script>
   <script src="/js/modules/taxonomy.js"></script>
+  <script src="/js/modules/posters.js"></script>
   <script src="/js/modules/profile.js"></script>
   <script src="/js/modules/updater.js"></script>
 

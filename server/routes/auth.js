@@ -117,7 +117,8 @@ router.post('/login', (req, res) => {
     user: {
       id: user.id,
       username: user.username,
-      displayName: user.display_name
+      displayName: user.display_name,
+      avatarUrl: user.avatar_url || ''
     }
   });
 });

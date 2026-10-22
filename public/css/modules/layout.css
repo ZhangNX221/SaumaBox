@@ -1,0 +1,161 @@
+/* Layout Container */
+#app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  min-height: 100vh;
+}
+
+.header-brand-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Sidebar Toggle Button */
+#btn-toggle-sidebar {
+  display: none;
+}
+
+#app.admin-mode #btn-toggle-sidebar {
+  display: inline-flex;
+}
+
+/* Default Sidebar Hidden for Guest / Non-Admin */
+.admin-sidebar {
+  display: none;
+}
+
+.sidebar-backdrop {
+  display: none;
+}
+
+/* Admin Mode Layout Foundation */
+@media (min-width: 769px) {
+  #app.admin-mode {
+    flex-direction: row;
+  }
+}
+
+/* Main Content Wrapper */
+.main-content {
+  flex: 1;
+  max-width: 1440px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+/* ============================================================
+   Mobile Bottom Navigation Bar & Drawer (/antislop-ui)
+   ============================================================ */
+.bottom-nav {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  #app.admin-mode {
+    flex-direction: column;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 998;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+  }
+
+  .sidebar-backdrop.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* Ruang nyaman agar konten halaman tidak tertutup oleh bottom nav */
+  .main-content {
+    padding: 16px 12px calc(76px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  /* Mobile Bottom Navigation Bar: Pengganti Sidebar pada Ponsel */
+  .bottom-nav {
+    display: block !important;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: calc(58px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    background: rgba(18, 18, 21, 0.94);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-top: 1px solid var(--border-color);
+    z-index: 900;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.45);
+  }
+
+  .bottom-nav-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    height: 58px;
+    max-width: 540px;
+    margin: 0 auto;
+    padding: 0 4px;
+  }
+
+  .bottom-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    height: 100%;
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 0.7rem;
+    font-weight: 500;
+    gap: 3px;
+    cursor: pointer;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    transition: color 0.15s ease, transform 0.15s ease;
+  }
+
+  .bottom-nav-item .ui-icon {
+    transition: transform 0.15s ease, color 0.15s ease;
+  }
+
+  .bottom-nav-item:hover {
+    color: var(--text-primary);
+  }
+
+  .bottom-nav-item.active {
+    color: var(--accent-color, #e5c07b);
+    font-weight: 700;
+  }
+
+  .bottom-nav-item.active .ui-icon {
+    transform: translateY(-1px) scale(1.08);
+    color: var(--accent-color, #e5c07b);
+  }
+
+  .bottom-nav-item:active {
+    transform: scale(0.95);
+  }
+}
+
+/* ============================================================

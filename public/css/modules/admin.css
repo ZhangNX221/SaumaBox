@@ -1,0 +1,217 @@
+/* ============================================================
+   Settings 2-Column Responsive Grid Layout (Kiri - Kanan)
+   ============================================================ */
+.settings-two-col-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+  align-items: start;
+}
+
+@media (max-width: 960px) {
+  .settings-two-col-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+   System Updater & Version Management Styles
+   ============================================================ */
+.system-update-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border-color);
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+
+.system-update-icon-box {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-card);
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.15), rgba(212, 175, 55, 0.05));
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.system-version-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.system-version-tile {
+  background: var(--bg-card-subtle, rgba(255, 255, 255, 0.03));
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-control);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.system-tile-label {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 600;
+}
+
+.system-tile-val {
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.system-update-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: var(--radius-control);
+  margin-bottom: 18px;
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.system-update-banner.info {
+  background: rgba(59, 130, 246, 0.08);
+  border-color: rgba(59, 130, 246, 0.25);
+  color: #3b82f6;
+}
+
+.system-update-banner.info .banner-title {
+  color: #60a5fa;
+}
+
+.system-update-banner.info .banner-desc {
+  color: var(--text-secondary);
+}
+
+.system-update-banner.warning {
+  background: rgba(245, 158, 11, 0.1);
+  border-color: rgba(245, 158, 11, 0.35);
+  color: #f59e0b;
+}
+
+.system-update-banner.warning .banner-title {
+  color: #fbbf24;
+}
+
+.system-update-banner.warning .banner-desc {
+  color: var(--text-secondary);
+}
+
+.system-update-banner.success {
+  background: rgba(16, 185, 129, 0.08);
+  border-color: rgba(16, 185, 129, 0.3);
+  color: #10b981;
+}
+
+.system-update-banner.success .banner-title {
+  color: #34d399;
+}
+
+.system-update-banner.success .banner-desc {
+  color: var(--text-secondary);
+}
+
+.system-update-banner.error {
+  background: rgba(239, 68, 68, 0.08);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+}
+
+.system-update-banner.error .banner-title {
+  color: #f87171;
+}
+
+.system-update-banner.error .banner-desc {
+  color: var(--text-secondary);
+}
+
+.banner-icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.banner-content {
+  flex: 1;
+}
+
+.banner-title {
+  font-size: 0.92rem;
+  font-weight: 700;
+  margin-bottom: 3px;
+}
+
+.banner-desc {
+  font-size: 0.83rem;
+  line-height: 1.45;
+}
+
+.banner-desc code {
+  background: rgba(0, 0, 0, 0.2);
+  padding: 2px 5px;
+  border-radius: 4px;
+  font-size: 0.78rem;
+}
+
+.system-update-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding-top: 6px;
+}
+
+.changelog-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.changelog-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 0.86rem;
+  color: var(--text-secondary);
+  line-height: 1.45;
+}
+
+.changelog-tag {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.changelog-tag.tag-new {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.changelog-tag.tag-ui {
+  background: rgba(168, 85, 247, 0.15);
+  color: #c084fc;
+  border: 1px solid rgba(168, 85, 247, 0.3);
+}
+
+.changelog-tag.tag-system {
+  background: rgba(212, 175, 55, 0.15);
+  color: #d4af37;
+  border: 1px solid rgba(212, 175, 55, 0.3);
+}

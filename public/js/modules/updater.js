@@ -4,7 +4,7 @@
 
 Object.assign(app, {
   renderSettingsSystem(s) {
-    const curVer = 'v0.2.0';
+    const curVer = 'v0.3.0';
     return `
       <div style="display:flex; flex-direction:column; gap:20px;">
         <!-- Card Utama: Status & Pembaruan Sistem -->
@@ -12,7 +12,7 @@ Object.assign(app, {
           <div class="system-update-header">
             <div style="display:flex; align-items:center; gap:12px;">
               <div class="system-update-icon-box">
-                <img src="/images/logo.svg" alt="SaumaBox Logo" width="30" height="30">
+                <img src="/images/logo-icon.png" alt="SaumaBox Logo" width="30" height="30" style="border-radius:6px; object-fit:cover;">
               </div>
               <div>
                 <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
@@ -81,7 +81,7 @@ Object.assign(app, {
         <div class="module-card">
           <h3 style="font-size:1.05rem; margin-bottom:6px; display:flex; align-items:center; gap:8px;">
             <span style="color:var(--accent-color);">${getIcon('layers', 'ui-icon', 16)}</span>
-            Catatan Pembaruan Terkini (v0.2.0)
+            Catatan Pembaruan Terkini (v0.3.0)
           </h3>
           <p style="font-size:0.83rem; color:var(--text-secondary); margin-bottom:14px;">
             Peningkatan fitur dan stabilitas yang disertakan pada rilis ini:
@@ -89,23 +89,23 @@ Object.assign(app, {
           <div class="changelog-list">
             <div class="changelog-item">
               <span class="changelog-tag tag-new">Fitur Baru</span>
-              <span><strong>Distribusi Cinema &amp; Musik:</strong> Visualisasi breakdown kategori film, serial anime, serta platform format lossless.</span>
+              <span><strong>Dropdown Tambah Data &amp; Konfirmasi UI Card:</strong> Menu tambah katalog berlabuh di bawah tombol dan modal konfirmasi hapus kustom menggantikan browser alert.</span>
             </div>
             <div class="changelog-item">
               <span class="changelog-tag tag-new">Fitur Baru</span>
-              <span><strong>Top 10 Populer Slider:</strong> Tampilan 5 item teratas dengan fitur slide geser interaktif untuk peringkat 6–10.</span>
+              <span><strong>Mobile Bottom Nav &amp; Hero Banner:</strong> Navigasi jempol bawah untuk mobile dan ilustrasi 3D vault multimedia pada landing publik.</span>
             </div>
             <div class="changelog-item">
               <span class="changelog-tag tag-new">Fitur Baru</span>
-              <span><strong>Upload Foto Profil:</strong> Dukungan ganti foto profil avatar admin langsung dari perangkat (JPG/PNG/WebP).</span>
+              <span><strong>Manajemen Poster &amp; Ekspor/Impor:</strong> Ekspor ZIP kumpulan poster, katalog vertikal, dan sampel trek audio populer.</span>
             </div>
             <div class="changelog-item">
               <span class="changelog-tag tag-ui">Antarmuka</span>
-              <span><strong>Pop-up Login Administrator:</strong> Desain modern minimalis lengkap dengan kredensial demo 1-klik dan toggle kata sandi.</span>
+              <span><strong>Header Icon Actions Detail Media:</strong> Tombol edit dan tutup dipindahkan ke header modal dalam bentuk tombol ikon yang bersih.</span>
             </div>
             <div class="changelog-item">
-              <span class="changelog-tag tag-system">Sistem</span>
-              <span><strong>Pembaruan In-App:</strong> Tombol periksa update dan instalasi otomatis langsung dari antarmuka pengaturan.</span>
+              <span class="changelog-tag tag-system">Perbaikan</span>
+              <span><strong>Stabilisasi Rerender Dashboard:</strong> Perbaikan bug reload saat mengedit atau menghapus konten dari peringkat terpopuler.</span>
             </div>
           </div>
         </div>
@@ -176,9 +176,14 @@ Object.assign(app, {
   },
 
   async applySystemUpdate() {
-    if (!confirm('Apakah Anda yakin ingin menerapkan pembaruan sistem sekarang?\n\nSistem akan menjalankan sinkronisasi kode terbaru dan memuat ulang aplikasi.')) {
-      return;
-    }
+    const ok = await showConfirmModal({
+      title: 'Terapkan Pembaruan Sistem',
+      message: 'Apakah Anda yakin ingin menerapkan pembaruan sistem sekarang?',
+      subtext: 'Sistem akan menjalankan sinkronisasi kode terbaru dan memuat ulang aplikasi.',
+      confirmText: 'Terapkan Update',
+      type: 'warning'
+    });
+    if (!ok) return;
 
     const btnApply = document.getElementById('btn-apply-update');
     const btnText = document.getElementById('btn-apply-text');

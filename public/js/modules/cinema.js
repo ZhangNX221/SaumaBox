@@ -59,8 +59,6 @@ Object.assign(app, {
 
     const gridCards = res.items.map(c => {
       const isWatched = c.watched === 1;
-      const initial = (c.title || 'C').charAt(0).toUpperCase();
-      const avatarBg = getAvatarColor(initial);
       const coverSrc = c.cover_url || '/images/covers/breaking_bad.jpg';
 
       const adminActions = isAdmin ? `
@@ -94,7 +92,6 @@ Object.assign(app, {
           </div>
           <div class="ps-card-body">
             <div class="ps-header-row">
-              <div class="ps-avatar-badge" style="background:${avatarBg};">${initial}</div>
               <div style="flex:1; min-width:0;">
                 <h3 class="ps-card-title" title="${escapeHtml(c.title)}">${escapeHtml(c.title)}</h3>
                 <div class="ps-card-meta">
@@ -414,22 +411,30 @@ Object.assign(app, {
         showToast('Tayangan baru berhasil ditambahkan', 'success');
       }
       this.closeModal('modal-cinema-form');
-      if (this.state.currentTab === 'cinema') {
-        this.renderCinema(document.getElementById('view-container'));
-      } else {
-        this.renderLanding(document.getElementById('view-container'));
-      }
+      const c = document.getElementById('view-container');
+      const tab = this.state.currentTab;
+      if (tab === 'dashboard') this.renderDashboard(c);
+      else if (tab === 'cinema') this.renderCinema(c);
+      else this.renderLanding(c);
     } catch (err) {
       showToast(err.message, 'error');
     }
   },
 
   confirmDeleteCinema(id, title) {
-    if (confirm(`Yakin ingin menghapus tayangan "${title}"?`)) {
-      api.delete(`/api/cinema/${id}`).then(() => {
-        showToast('Tayangan berhasil dihapus', 'success');
-        this.renderCinema(document.getElementById('view-container'));
-      }).catch(err => showToast(err.message, 'error'));
-    }
+    showConfirmModal({
+      title: 'Hapus Tayangan Cinema',
+      message: `Yakin ingin menghapus tayangan "<strong>${escapeHtml(title)}</strong>"?`,
+      subtext: 'Data tayangan film/serial ini akan dihapus permanen dari pustaka SaumaBox.',
+      confirmText: 'Ya, Hapus',
+      onConfirm: () => {
+        api.delete(`/api/cinema/${id}`).then(() => {
+          showToast('Tayangan berhasil dihapus', 'success');
+          const c = document.getElementById('view-container');
+          if (this.state.currentTab === 'dashboard') this.renderDashboard(c);
+          else this.renderCinema(c);
+        }).catch(err => showToast(err.message, 'error'));
+      }
+    });
   }
 });

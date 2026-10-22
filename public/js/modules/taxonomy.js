@@ -15,21 +15,26 @@ Object.assign(app, {
           <div class="toolbar-left">
             <div class="sub-tabs">
               <button class="sub-tab-btn ${subTab === 'genres' ? 'active' : ''}" onclick="app.setTaxonomyTab('genres')">Genre</button>
-              <button class="sub-tab-btn ${subTab === 'creators' ? 'active' : ''}" onclick="app.setTaxonomyTab('creators')">Kreator</button>
+              <button class="sub-tab-btn ${subTab === 'posters' ? 'active' : ''}" onclick="app.setTaxonomyTab('posters')">Poster & Album</button>
               <button class="sub-tab-btn ${subTab === 'platforms' ? 'active' : ''}" onclick="app.setTaxonomyTab('platforms')">Platform</button>
               <button class="sub-tab-btn ${subTab === 'statuses' ? 'active' : ''}" onclick="app.setTaxonomyTab('statuses')">Status</button>
             </div>
           </div>
           <div class="toolbar-right">
             ${subTab === 'genres' ? `<button class="btn btn-primary btn-icon" onclick="app.openAddGenreModal()" title="Tambah Genre" aria-label="Tambah Genre">${getIcon('plus', 'ui-icon-btn', 16)}</button>` : ''}
-            ${subTab === 'creators' ? `<button class="btn btn-primary btn-icon" onclick="app.openAddCreatorModal()" title="Tambah Tokoh" aria-label="Tambah Tokoh">${getIcon('plus', 'ui-icon-btn', 16)}</button>` : ''}
+            ${subTab === 'posters' ? `
+              <div style="display:flex; gap:8px; align-items:center;">
+                <button class="btn btn-secondary btn-sm" onclick="app.exportPostersZip()" title="Ekspor semua poster dalam berkas ZIP">${getIcon('download', 'ui-icon-btn', 14)} <span>Ekspor ZIP</span></button>
+                <button class="btn btn-primary btn-sm" onclick="app.openImportPosterModal()" title="Import gambar poster baru">${getIcon('upload', 'ui-icon-btn', 14)} <span>Import Poster</span></button>
+              </div>
+            ` : ''}
             ${subTab === 'platforms' ? `<button class="btn btn-primary btn-icon" onclick="app.openAddPlatformModal()" title="Tambah Platform" aria-label="Tambah Platform">${getIcon('plus', 'ui-icon-btn', 16)}</button>` : ''}
             ${subTab === 'statuses' ? `<button class="btn btn-primary btn-icon" onclick="app.openAddStatusModal()" title="Tambah Status" aria-label="Tambah Status">${getIcon('plus', 'ui-icon-btn', 16)}</button>` : ''}
           </div>
         </div>
 
         <div id="taxonomy-content" style="padding-top:12px;">
-          <div class="state-container"><div class="state-icon">⏳</div><div class="state-title">Memuat data master...</div></div>
+          ${getLoadingHtml('Memuat data master...', 'Menghubungkan kategori dan label')}
         </div>
       </div>
     `;
@@ -154,48 +159,8 @@ Object.assign(app, {
         </div>
         ${renderFooter(total, curPage, totalPages, 'genre')}
       `;
-    } else if (subTab === 'creators') {
-      const creators = await api.get('/api/taxonomy/creators', { q });
-      const { paged, total, totalPages, curPage } = paginateAndSort(creators);
-      const rows = paged.map((c, idx) => {
-        const initial = (c.name || 'C').charAt(0).toUpperCase();
-        const avatarBg = getAvatarColor(initial);
-        return `
-          <tr>
-            <td class="font-mono" style="width:40px; text-align:center; color:var(--text-muted);">${(curPage - 1) * limit + idx + 1}</td>
-            <td>
-              <div style="display:flex; align-items:center; gap:10px;">
-                <div class="ps-avatar-badge" style="background:${avatarBg}; width:32px; height:32px; font-size:0.85rem;">${initial}</div>
-                <strong>${escapeHtml(c.name)}</strong>
-              </div>
-            </td>
-            <td style="text-align:center;"><span class="badge badge-neutral">${escapeHtml(c.role)}</span></td>
-            <td style="color:var(--text-secondary); max-width:320px; font-size:0.85rem;">${escapeHtml(c.bio || '-')}</td>
-            <td style="text-align:right; white-space:nowrap;">
-              <button class="btn btn-secondary btn-sm" onclick="app.openEditCreatorModal(${c.id}, '${escapeHtml(c.name)}', '${escapeHtml(c.role)}', '${escapeHtml(c.bio || '')}')">Edit</button>
-              <button class="btn btn-secondary btn-sm" onclick="app.confirmDeleteTaxonomy('creators', ${c.id}, '${escapeHtml(c.name)}')">${getIcon('trash', 'ui-icon', 13)}</button>
-            </td>
-          </tr>
-        `;
-      }).join('');
-
-      content.innerHTML = `
-        <div class="table-responsive data-table-wrapper">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th style="width:40px;">#</th>
-                ${sortTh('name', 'Nama Tokoh / Entitas')}
-                ${sortTh('role', 'Peran / Profesi')}
-                ${sortTh('bio', 'Biografi Singkat')}
-                <th style="text-align:right;">Aksi</th>
-              </tr>
-            </thead>
-            <tbody>${rows || '<tr><td colspan="5" style="text-align:center; padding:32px;">Tidak ada tokoh ditemukan.</td></tr>'}</tbody>
-          </table>
-        </div>
-        ${renderFooter(total, curPage, totalPages, 'tokoh')}
-      `;
+    } else if (subTab === 'posters') {
+      return this.renderPostersTab(content);
     } else if (subTab === 'platforms') {
       const platforms = await api.get('/api/taxonomy/platforms', { q });
       const { paged, total, totalPages, curPage } = paginateAndSort(platforms);
@@ -311,52 +276,6 @@ Object.assign(app, {
     } catch (err) { showToast(err.message, 'error'); }
   },
 
-  openAddCreatorModal() { this.openCreatorModal(null); },
-  openEditCreatorModal(id, name, role, bio) { this.openCreatorModal({ id, name, role, bio }); },
-  openCreatorModal(item) {
-    const isEdit = !!item;
-    const c = item || { name: '', role: 'Aktor', bio: '' };
-    this.createModal('modal-creator', isEdit ? 'Edit Tokoh' : 'Tambah Tokoh / Kreator', `
-      <form onsubmit="app.handleSaveCreator(event, ${isEdit ? c.id : 'null'})">
-        <div class="form-group">
-          <label class="form-label">Nama Tokoh / Entitas *</label>
-          <input type="text" class="form-input" name="name" required value="${escapeHtml(c.name)}" placeholder="Contoh: Christopher Nolan">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Peran / Profesi *</label>
-          <select class="form-select" name="role">
-            <option value="Aktor" ${c.role === 'Aktor' ? 'selected' : ''}>Aktor / Pemeran</option>
-            <option value="Sutradara" ${c.role === 'Sutradara' ? 'selected' : ''}>Sutradara</option>
-            <option value="Musisi / Band" ${c.role.includes('Musisi') ? 'selected' : ''}>Musisi / Band</option>
-            <option value="Komposer" ${c.role === 'Komposer' ? 'selected' : ''}>Komposer Musik</option>
-            <option value="Developer / Game Director" ${c.role.includes('Developer') ? 'selected' : ''}>Developer Game</option>
-            <option value="Studio Animasi" ${c.role.includes('Studio') ? 'selected' : ''}>Studio Animasi / Film</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Biografi Singkat</label>
-          <textarea class="form-input" name="bio" rows="3" placeholder="Profil atau karya legendaris...">${escapeHtml(c.bio || '')}</textarea>
-        </div>
-        <div style="display:flex; justify-content:flex-end; gap:8px;">
-          <button type="button" class="btn btn-secondary" onclick="app.closeModal('modal-creator')">Batal</button>
-          <button type="submit" class="btn btn-primary">${isEdit ? 'Simpan' : 'Tambah'}</button>
-        </div>
-      </form>
-    `);
-  },
-  async handleSaveCreator(e, id) {
-    e.preventDefault();
-    const form = e.target;
-    const body = { name: form.name.value, role: form.role.value, bio: form.bio.value };
-    try {
-      if (id) await api.put(`/api/taxonomy/creators/${id}`, body);
-      else await api.post('/api/taxonomy/creators', body);
-      showToast('Data tokoh berhasil disimpan', 'success');
-      this.closeModal('modal-creator');
-      this.loadTaxonomyData();
-    } catch (err) { showToast(err.message, 'error'); }
-  },
-
   openAddPlatformModal() { this.openPlatformModal(null); },
   openEditPlatformModal(id, name, category, notes) { this.openPlatformModal({ id, name, category, notes }); },
   openPlatformModal(item) {
@@ -455,11 +374,17 @@ Object.assign(app, {
   },
 
   confirmDeleteTaxonomy(endpoint, id, name) {
-    if (confirm(`Hapus "${name}" dari data master?`)) {
-      api.delete(`/api/taxonomy/${endpoint}/${id}`).then(() => {
-        showToast('Berhasil dihapus', 'success');
-        this.loadTaxonomyData();
-      }).catch(err => showToast(err.message, 'error'));
-    }
+    showConfirmModal({
+      title: 'Hapus Data Master',
+      message: `Hapus "<strong>${escapeHtml(name)}</strong>" dari data master?`,
+      subtext: 'Data master ini akan dihapus dari sistem.',
+      confirmText: 'Ya, Hapus',
+      onConfirm: () => {
+        api.delete(`/api/taxonomy/${endpoint}/${id}`).then(() => {
+          showToast('Berhasil dihapus', 'success');
+          this.loadTaxonomyData();
+        }).catch(err => showToast(err.message, 'error'));
+      }
+    });
   }
 });

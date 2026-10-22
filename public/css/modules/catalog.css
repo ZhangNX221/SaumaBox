@@ -1,0 +1,360 @@
+/* ============================================================
+   Catalog View Switcher & PS Plus / Educatech Card Grid
+   ============================================================ */
+.view-toggle-group {
+  display: inline-flex;
+  align-items: center;
+  background-color: var(--bg-surface-elevated);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-pill);
+  padding: 3px;
+  gap: 2px;
+}
+
+.view-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 10px;
+  min-width: 38px;
+  min-height: 36px;
+  font-family: var(--font-sans);
+  color: var(--text-secondary);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.view-toggle-btn .ui-icon {
+  margin: 0;
+}
+
+.view-toggle-btn:hover {
+  color: var(--text-primary);
+}
+
+.view-toggle-btn.active {
+  background-color: var(--accent-color);
+  color: var(--accent-inverse);
+  font-weight: 700;
+}
+
+.view-toggle-btn:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* Catalog Grid Container */
+.catalog-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 20px;
+  padding: 20px;
+}
+
+/* PS Plus & Educatech Inspired Card */
+.ps-card {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-card);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.22s cubic-bezier(0.2, 0, 0, 1), border-color 0.2s ease, box-shadow 0.2s ease;
+  cursor: pointer;
+  position: relative;
+  text-align: left;
+  user-select: none;
+}
+
+.ps-card:hover {
+  transform: translateY(-5px);
+  border-color: var(--text-secondary);
+  box-shadow: var(--shadow-md);
+}
+
+.ps-card:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* Media Box */
+.ps-card-media {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+  background-color: var(--bg-surface-elevated);
+}
+
+.ps-card-media.cinema-aspect {
+  aspect-ratio: 2 / 3;
+}
+
+.ps-card-media.music-aspect {
+  aspect-ratio: 1 / 1;
+}
+
+.ps-card-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.35s ease;
+}
+
+.ps-card:hover .ps-card-img {
+  transform: scale(1.06);
+}
+
+.ps-overlay-top {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  pointer-events: none;
+  z-index: 2;
+  gap: 6px;
+}
+
+.ps-overlay-badges-left {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.ps-overlay-action-right {
+  pointer-events: auto;
+}
+
+.ps-heart-btn {
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  border-radius: 50%;
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.15s ease;
+  backdrop-filter: blur(4px);
+}
+
+.ps-heart-btn:hover {
+  background: rgba(0, 0, 0, 0.85);
+  transform: scale(1.1);
+}
+
+.ps-heart-btn.active {
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.5);
+  background: rgba(239, 68, 68, 0.15);
+}
+
+.ps-overlay-gradient {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 70px;
+  background: linear-gradient(to top, rgba(9, 9, 11, 0.92), transparent);
+  pointer-events: none;
+}
+
+/* Card Content (Educatech + PS Plus) */
+.ps-card-body {
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 10px;
+  justify-content: space-between;
+}
+
+.ps-header-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.ps-avatar-badge {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 0.9rem;
+  color: #ffffff;
+  flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+
+.ps-card-title {
+  font-size: 1.02rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  min-height: 2.6em;
+}
+
+.ps-card-meta {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ps-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-subtle);
+  gap: 8px;
+  margin-top: auto;
+}
+
+.ps-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+@media (max-width: 640px) {
+  .catalog-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    padding: 12px;
+  }
+  .ps-card-body {
+    padding: 10px;
+  }
+  .ps-card-title {
+    font-size: 0.92rem;
+    min-height: 2.4em;
+  }
+  .ps-avatar-badge {
+    width: 26px;
+    height: 26px;
+    font-size: 0.78rem;
+    border-radius: 8px;
+  }
+}
+
+@media (max-width: 420px) {
+  .catalog-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Genre Selector Component */
+.genre-selector-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.genre-chips-box {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-height: 44px;
+  padding: 8px 12px;
+  background-color: var(--bg-surface-elevated);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-control);
+  align-items: center;
+}
+
+.genre-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: rgba(99, 102, 241, 0.15);
+  border: 1px solid var(--accent-color);
+  color: var(--text-primary);
+  border-radius: 16px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  user-select: none;
+}
+
+.genre-chip-remove {
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  color: inherit;
+  font-size: 11px;
+  line-height: 1;
+  transition: all 0.15s ease;
+}
+
+.genre-chip-remove:hover {
+  background: var(--danger, #ef4444);
+  color: #ffffff;
+}
+
+.genre-empty-hint {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.genre-quick-pills-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-height: 100px;
+  overflow-y: auto;
+  padding: 2px 0;
+}
+
+.genre-pill-btn {
+  cursor: pointer;
+  padding: 4px 10px;
+  font-size: 0.76rem;
+  border-radius: 12px;
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.genre-pill-btn:hover {
+  border-color: var(--accent-color);
+  color: var(--text-primary);
+}
+
+.genre-pill-btn.active {
+  background: var(--accent-color);
+  color: var(--accent-inverse, #ffffff);
+  border-color: var(--accent-color);
+  font-weight: 600;
+}

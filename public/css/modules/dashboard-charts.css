@@ -1,0 +1,292 @@
+/* Donut Chart Component */
+.donut-chart-layout {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  padding: 8px 0;
+}
+
+.donut-segment {
+  cursor: pointer;
+  transition: stroke-width 0.2s ease, opacity 0.2s ease;
+}
+
+.donut-segment:hover {
+  stroke-width: 28;
+  opacity: 0.9;
+}
+
+.donut-center-text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.donut-center-val {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+.donut-center-sub {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 4px;
+}
+
+.donut-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+  min-width: 140px;
+}
+
+.donut-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-control);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.donut-legend-item:hover {
+  border-color: var(--text-secondary);
+  background: var(--bg-surface-hover);
+  transform: translateX(3px);
+}
+
+.legend-swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.legend-info {
+  flex: 1;
+}
+
+.legend-name {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.legend-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+.legend-pct {
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+/* Segmented Strip Bar */
+.segmented-bar-track {
+  display: flex;
+  width: 100%;
+  height: 10px;
+  border-radius: 5px;
+  overflow: hidden;
+  background: var(--bg-surface-elevated);
+  margin-bottom: 16px;
+}
+
+.segmented-bar-segment {
+  height: 100%;
+  transition: width 0.3s ease;
+}
+
+/* Category Bar Rows */
+.chart-category-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.chart-category-row {
+  cursor: pointer;
+  padding: 6px 8px;
+  border-radius: var(--radius-control);
+  transition: background 0.15s ease;
+}
+
+.chart-category-row:hover {
+  background: var(--bg-surface-elevated);
+}
+
+.category-row-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+  font-size: 0.85rem;
+}
+
+.category-row-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-primary);
+}
+
+.category-row-val {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.chart-progress-track {
+  width: 100%;
+  height: 8px;
+  border-radius: 4px;
+  background: var(--bg-surface-elevated);
+  overflow: hidden;
+}
+
+.chart-progress-track.track-sm {
+  height: 6px;
+}
+
+.chart-progress-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Platform Rank Rows */
+.platform-rank-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.platform-rank-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.platform-rank-badge {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  background: var(--bg-surface-elevated);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+}
+
+.platform-rank-badge.rank-gold {
+  background: rgba(234, 179, 8, 0.15);
+  color: #fbbf24;
+  border-color: rgba(234, 179, 8, 0.4);
+}
+
+.platform-rank-badge.rank-silver {
+  background: rgba(203, 213, 225, 0.15);
+  color: #cbd5e1;
+  border-color: rgba(203, 213, 225, 0.4);
+}
+
+.platform-rank-badge.rank-bronze {
+  background: rgba(217, 119, 6, 0.15);
+  color: #f59e0b;
+  border-color: rgba(217, 119, 6, 0.4);
+}
+
+/* Compact Unified Donut Layout */
+.donut-chart-layout.compact {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding-bottom: 12px;
+}
+
+.donut-legend.compact {
+  gap: 6px;
+}
+
+.donut-legend.compact .donut-legend-item {
+  padding: 6px 10px;
+}
+
+/* Compact Platform Distribution Container inside Card 1 */
+.platform-distributions-wrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 12px;
+  border-top: 1px solid var(--border-subtle);
+  padding-top: 10px;
+}
+
+.platform-distribution-compact {
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.platform-distribution-compact:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+
+.platform-distribution-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.platform-sub-title {
+  font-size: 0.84rem;
+  color: var(--text-primary);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.chart-category-list.compact {
+  gap: 6px;
+}
+
+.chart-category-list.compact .chart-category-row {
+  padding: 4px 6px;
+  margin-bottom: 0;
+}
+
+.chart-category-list.compact .category-row-header {
+  margin-bottom: 3px;
+  font-size: 0.8rem;
+}
+
+.chart-category-list.compact .chart-progress-track {
+  height: 5px;
+}

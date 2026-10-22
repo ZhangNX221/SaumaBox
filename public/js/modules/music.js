@@ -109,8 +109,6 @@ Object.assign(app, {
 
       const gridCards = res.items.map(m => {
         const isFav = m.is_favorite === 1;
-        const initial = (m.artist || m.title || 'M').charAt(0).toUpperCase();
-        const avatarBg = getAvatarColor(initial);
         const coverSrc = m.cover_url || '/images/covers/bohemian_rhapsody.jpg';
 
         const adminActions = isAdmin ? `
@@ -142,7 +140,6 @@ Object.assign(app, {
             </div>
             <div class="ps-card-body">
               <div class="ps-header-row">
-                <div class="ps-avatar-badge" style="background:${avatarBg};">${initial}</div>
                 <div style="flex:1; min-width:0;">
                   <h3 class="ps-card-title" title="${escapeHtml(m.title)}">${escapeHtml(m.title)}</h3>
                   <div class="ps-card-meta"><span>${escapeHtml(m.artist || 'Artis')}</span>${m.album ? `<span>•</span><span>${escapeHtml(m.album)}</span>` : ''}</div>
@@ -441,22 +438,30 @@ Object.assign(app, {
         showToast('Musik berhasil ditambahkan', 'success');
       }
       this.closeModal('modal-music-form');
-      if (this.state.currentTab === 'music') {
-        this.renderMusic(document.getElementById('view-container'));
-      } else {
-        this.renderLanding(document.getElementById('view-container'));
-      }
+      const c = document.getElementById('view-container');
+      const tab = this.state.currentTab;
+      if (tab === 'dashboard') this.renderDashboard(c);
+      else if (tab === 'music') this.renderMusic(c);
+      else this.renderLanding(c);
     } catch (err) {
       showToast(err.message, 'error');
     }
   },
 
   confirmDeleteMusic(id, title) {
-    if (confirm(`Yakin ingin menghapus musik "${title}"?`)) {
-      api.delete(`/api/music/${id}`).then(() => {
-        showToast('Musik berhasil dihapus', 'success');
-        this.renderMusic(document.getElementById('view-container'));
-      }).catch(err => showToast(err.message, 'error'));
-    }
+    showConfirmModal({
+      title: 'Hapus Koleksi Musik',
+      message: `Yakin ingin menghapus musik "<strong>${escapeHtml(title)}</strong>"?`,
+      subtext: 'Data trek audio atau album ini akan dihapus permanen dari pustaka SaumaBox.',
+      confirmText: 'Ya, Hapus',
+      onConfirm: () => {
+        api.delete(`/api/music/${id}`).then(() => {
+          showToast('Musik berhasil dihapus', 'success');
+          const c = document.getElementById('view-container');
+          if (this.state.currentTab === 'dashboard') this.renderDashboard(c);
+          else this.renderMusic(c);
+        }).catch(err => showToast(err.message, 'error'));
+      }
+    });
   }
 });

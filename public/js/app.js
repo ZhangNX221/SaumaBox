@@ -6,7 +6,7 @@ const app = {
   state: {
     user: null,
     currentTab: 'landing',
-    theme: localStorage.getItem('saumabox_theme') || 'dark',
+    theme: 'dark',
     publicConfig: { app_name: 'SaumaBox', public_sharing_enabled: true, public_games_enabled: true, public_cinema_enabled: true, public_music_enabled: true, public_show_prices: true, public_show_ratings: true },
     games: { items: [], type: 'ALL', completed: 'ALL', q: '', platform: 'ALL', status: 'ALL', console: 'ALL', sortBy: 'id', sortOrder: 'desc', page: 1, limit: 10, totalPages: 1, totalPrice: 0, filterOptions: {}, viewMode: localStorage.getItem('saumabox_view_games') || 'grid' },
     cinema: { items: [], type: 'ALL', watched: 'ALL', genre: 'ALL', q: '', sortBy: 'id', sortOrder: 'desc', page: 1, limit: 10, totalPages: 1, filterOptions: {}, viewMode: localStorage.getItem('saumabox_view_cinema') || 'grid' },
@@ -42,18 +42,10 @@ const app = {
     }
   },
 
-  applyTheme(theme) {
-    this.state.theme = theme;
-    document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem('saumabox_theme', theme);
-    const themeIcon = document.getElementById('theme-toggle-icon');
-    if (themeIcon) {
-      themeIcon.innerHTML = theme === 'dark' ? getIcon('sun', 'ui-icon', 16) : getIcon('moon', 'ui-icon', 16);
-    }
-  },
-
-  toggleTheme() {
-    this.applyTheme(this.state.theme === 'dark' ? 'light' : 'dark');
+  applyTheme() {
+    this.state.theme = 'dark';
+    document.documentElement.setAttribute('data-theme', 'dark');
+    localStorage.removeItem('saumabox_theme');
   },
 
   bindGlobalEvents() {
@@ -68,27 +60,25 @@ const app = {
       if (e.key === 'Escape') {
         this.closeAllModals();
         this.toggleAdminSidebar(false);
-        const notifDropdown = document.getElementById('notifications-dropdown');
-        if (notifDropdown) notifDropdown.classList.add('hidden');
+        const nd = document.getElementById('notifications-dropdown');
+        if (nd) nd.classList.add('hidden');
+        const ad = document.getElementById('add-catalog-dropdown');
+        if (ad) ad.classList.add('hidden');
       }
     });
 
     document.addEventListener('click', (e) => {
-      const notifWrapper = document.getElementById('notifications-wrapper');
-      const notifDropdown = document.getElementById('notifications-dropdown');
-      if (notifDropdown && !notifDropdown.classList.contains('hidden')) {
-        if (notifWrapper && !notifWrapper.contains(e.target)) {
-          notifDropdown.classList.add('hidden');
-        }
-      }
+      const nw = document.getElementById('notifications-wrapper');
+      const nd = document.getElementById('notifications-dropdown');
+      if (nd && !nd.classList.contains('hidden') && nw && !nw.contains(e.target)) nd.classList.add('hidden');
+      const aw = document.getElementById('add-catalog-wrapper');
+      const ad = document.getElementById('add-catalog-dropdown');
+      if (ad && !ad.classList.contains('hidden') && aw && !aw.contains(e.target)) ad.classList.add('hidden');
     });
 
     window.addEventListener('resize', () => {
       this.applySidebarState();
     });
-
-    const themeBtn = document.getElementById('btn-toggle-theme');
-    if (themeBtn) themeBtn.addEventListener('click', () => this.toggleTheme());
   },
 
   updateNavbar() {
@@ -109,7 +99,7 @@ const app = {
         const sec = [
           { title: '1. Ringkasan', links: [{ id: 'dashboard', icon: 'dashboard', label: 'Dashboard', active: curTab === 'dashboard', click: "app.navigate('dashboard')" }] },
           { title: '2. Katalog Media', links: [{ id: 'games', icon: 'games', label: 'Katalog Game', active: curTab === 'games', click: "app.navigate('games')" }, { id: 'cinema', icon: 'cinema', label: 'Katalog Cinema', active: curTab === 'cinema', click: "app.navigate('cinema')" }, { id: 'music', icon: 'music', label: 'Katalog Musik', active: curTab === 'music', click: "app.navigate('music')" }] },
-          { title: '3. Kategori Data', links: [{ id: 'genres', icon: 'tag', label: 'Genre', active: curTab === 'taxonomy' && this.state.taxonomy?.subTab === 'genres', click: "app.navigate('taxonomy', 'genres')" }, { id: 'creators', icon: 'artist', label: 'Kreator', active: curTab === 'taxonomy' && this.state.taxonomy?.subTab === 'creators', click: "app.navigate('taxonomy', 'creators')" }, { id: 'platforms', icon: 'layers', label: 'Platform', active: curTab === 'taxonomy' && this.state.taxonomy?.subTab === 'platforms', click: "app.navigate('taxonomy', 'platforms')" }, { id: 'statuses', icon: 'shield', label: 'Status Milik', active: curTab === 'taxonomy' && this.state.taxonomy?.subTab === 'statuses', click: "app.navigate('taxonomy', 'statuses')" }] },
+          { title: '3. Kategori Data', links: [{ id: 'genres', icon: 'tag', label: 'Genre', active: curTab === 'taxonomy' && this.state.taxonomy?.subTab === 'genres', click: "app.navigate('taxonomy', 'genres')" }, { id: 'posters', icon: 'image', label: 'Poster & Album', active: curTab === 'taxonomy' && this.state.taxonomy?.subTab === 'posters', click: "app.navigate('taxonomy', 'posters')" }, { id: 'platforms', icon: 'layers', label: 'Platform', active: curTab === 'taxonomy' && this.state.taxonomy?.subTab === 'platforms', click: "app.navigate('taxonomy', 'platforms')" }, { id: 'statuses', icon: 'shield', label: 'Status Milik', active: curTab === 'taxonomy' && this.state.taxonomy?.subTab === 'statuses', click: "app.navigate('taxonomy', 'statuses')" }] },
           { title: '4. Pengaturan', links: [{ id: 'profile', icon: 'user', label: 'Profil Akun', active: curTab === 'settings' && this.state.settingsTab === 'profile', click: "app.navigate('settings', 'profile')" }, { id: 'layout', icon: 'settings', label: 'Tampilan', active: curTab === 'settings' && this.state.settingsTab === 'layout', click: "app.navigate('settings', 'layout')" }, { id: 'api', icon: 'key', label: 'Kunci API', active: curTab === 'settings' && this.state.settingsTab === 'api', click: "app.navigate('settings', 'api')" }, { id: 'data', icon: 'download', label: 'Cadangan Data', active: curTab === 'settings' && this.state.settingsTab === 'data', click: "app.navigate('settings', 'data')" }, { id: 'system', icon: 'sparkles', label: 'Pembaruan', active: curTab === 'settings' && this.state.settingsTab === 'system', click: "app.navigate('settings', 'system')" }] }
         ];
 
@@ -123,7 +113,7 @@ const app = {
         adminSidebar.innerHTML = `
           <div class="sidebar-brand">
             <a class="sidebar-brand-link" onclick="app.navigate('dashboard'); app.toggleAdminSidebar(false);" aria-label="Beranda Dashboard">
-              <img src="/images/logo.svg" class="brand-logo-img" alt="Logo" width="26" height="26">
+              <img src="/images/logo-icon.png" class="brand-logo-img" alt="Logo" width="26" height="26">
               <span>SaumaBox</span><span class="brand-badge">Admin</span>
             </a>
             <button class="sidebar-close-btn" onclick="app.toggleAdminSidebar(false)" title="Tutup menu">${getIcon('close', 'ui-icon', 18)}</button>
@@ -144,12 +134,13 @@ const app = {
       }
 
       if (navLinks) navLinks.innerHTML = '';
-      if (authActions) authActions.innerHTML = `<button class="btn btn-primary btn-sm btn-add-catalog" onclick="app.openAddCatalogModal()" title="Tambah Katalog Baru">${getIcon('plus', 'ui-icon-btn', 14)} <span>Tambah Katalog</span></button>`;
+      if (authActions) authActions.innerHTML = typeof this.renderAddCatalogDropdown === 'function' ? this.renderAddCatalogDropdown() : '';
 
       if (bottomNav) {
         const bItems = [['dashboard','dashboard','Dashboard'],['games','games','Games'],['cinema','cinema','Cinema'],['music','music','Musik'],['settings','settings','Setelan']];
+        const isAct = (id) => curTab === id || (id === 'settings' && curTab === 'taxonomy');
         bottomNav.innerHTML = `<div class="bottom-nav-inner">${bItems.map(([id, icon, txt]) => `
-          <div class="bottom-nav-item ${curTab === id ? 'active' : ''}" onclick="app.navigate('${id}')">${getIcon(icon, 'ui-icon', 20)}<span>${txt}</span></div>
+          <div class="bottom-nav-item ${isAct(id) ? 'active' : ''}" onclick="app.navigate('${id}')">${getIcon(icon, 'ui-icon', 20)}<span>${txt}</span></div>
         `).join('')}</div>`;
       }
     } else {
@@ -377,7 +368,7 @@ const app = {
     this.updateNavbar();
     this.syncTopbarSearch(tab);
     const container = document.getElementById('view-container');
-    container.innerHTML = `<div class="state-container"><div class="state-icon">⏳</div><div class="state-title">Memuat data...</div></div>`;
+    container.innerHTML = getLoadingHtml('Memuat data katalog...', 'Menyiapkan koleksi media dan preferensi Anda');
 
     try {
       if (tab === 'landing') await this.renderLanding(container);

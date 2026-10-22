@@ -1,0 +1,339 @@
+/* Horizontal Poster Showcase inside 2-Petak Card */
+.popular-catalog-section {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 10px;
+  flex: 1;
+}
+
+.popular-posters-row {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  padding-top: 2px;
+  scrollbar-width: thin;
+}
+
+.popular-posters-row::-webkit-scrollbar {
+  height: 4px;
+}
+
+.popular-posters-row::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+}
+
+.popular-poster-card {
+  flex: 0 0 calc((100% - 40px) / 5);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  outline: none;
+  min-width: 0;
+}
+
+.popular-poster-card:hover {
+  transform: translateY(-3px);
+}
+
+.popular-poster-card:focus-visible {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+.popular-poster-media {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  height: auto;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.popular-poster-card.is-music .popular-poster-media {
+  aspect-ratio: 1 / 1;
+  height: auto;
+  width: 100%;
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+.popular-poster-card.is-music .popular-poster-info {
+  text-align: center;
+}
+
+.popular-poster-card:hover .popular-poster-media {
+  border-color: var(--accent-color);
+  box-shadow: 0 6px 16px rgba(212, 175, 55, 0.25);
+}
+
+.popular-poster-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  display: block;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.popular-poster-card:hover .popular-poster-img {
+  transform: scale(1.04);
+}
+
+.popular-poster-gradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0) 40%, rgba(0,0,0,0.65) 100%);
+  pointer-events: none;
+}
+
+.popular-poster-rank {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  font-family: var(--font-sans);
+  font-size: 0.62rem;
+  font-weight: 800;
+  padding: 1px 5px;
+  border-radius: 3px;
+  color: #f8fafc;
+  background: rgba(9, 10, 15, 0.8);
+  backdrop-filter: blur(4px);
+  z-index: 2;
+  letter-spacing: 0.02em;
+}
+
+.popular-poster-rank.rank-gold {
+  background: linear-gradient(135deg, #e5c07b, #d4af37, #b8860b);
+  color: #090a0f;
+  box-shadow: 0 2px 6px rgba(212, 175, 55, 0.45);
+}
+
+.popular-poster-rank.rank-silver {
+  background: linear-gradient(135deg, #f8fafc, #94a3b8);
+  color: #090a0f;
+}
+
+.popular-poster-rank.rank-bronze {
+  background: linear-gradient(135deg, #fed7aa, #c2410c);
+  color: #090a0f;
+}
+
+.popular-poster-rating {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  z-index: 2;
+}
+
+.popular-poster-rating .rating-badge {
+  background: rgba(9, 10, 15, 0.85);
+  backdrop-filter: blur(6px);
+  color: #f8fafc;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.popular-poster-rating .rating-badge .icon-star {
+  color: #f59e0b;
+}
+
+.popular-poster-info {
+  padding: 4px 1px 0;
+  min-width: 0;
+}
+
+.popular-poster-title {
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.popular-poster-sub {
+  font-size: 0.66rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 1px;
+}
+
+.platform-rank-body {
+  flex: 1;
+}
+
+.platform-rank-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  margin-bottom: 4px;
+}
+
+.platform-name {
+  color: var(--text-primary);
+}
+
+.platform-count {
+  color: var(--text-secondary);
+}
+
+/* Popular Content Item Row & Group Labels (/antislop-ui) */
+.popular-item-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border-subtle);
+  border-radius: var(--radius-control);
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.15s ease;
+  min-height: 48px;
+}
+
+.popular-item-row:hover {
+  background: var(--bg-surface-elevated);
+}
+
+.popular-item-row:active {
+  transform: scale(0.99);
+}
+
+/* ============================================================
+   Top 10 Popular Media Slider / Carousel Styles
+   ============================================================ */
+.popular-group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 6px;
+  margin-bottom: 4px;
+}
+
+.popular-group-header:first-child {
+  margin-top: 0;
+}
+
+.popular-group-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.slider-nav-btns {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.slider-btn {
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-surface-elevated);
+  color: var(--text-secondary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  padding: 0;
+}
+
+.slider-btn:hover {
+  background: var(--bg-surface-hover);
+  border-color: var(--accent-color);
+  color: var(--accent-color);
+  transform: scale(1.05);
+}
+
+.slider-btn:active {
+  transform: scale(0.92);
+}
+
+.slider-page-indicator {
+  font-size: 0.66rem;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  color: var(--accent-color);
+  background: rgba(212, 175, 55, 0.1);
+  border: 1px solid rgba(212, 175, 55, 0.25);
+  padding: 1px 6px;
+  border-radius: 4px;
+  letter-spacing: 0.03em;
+  user-select: none;
+}
+
+.popular-slider-container {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.popular-slider-track {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 4px;
+  scrollbar-width: none;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.popular-slider-track::-webkit-scrollbar {
+  display: none;
+}
+
+.popular-slider-track .popular-poster-card {
+  flex: 0 0 calc((100% - (4 * 10px)) / 5);
+  width: calc((100% - (4 * 10px)) / 5);
+  min-width: calc((100% - (4 * 10px)) / 5);
+  max-width: calc((100% - (4 * 10px)) / 5);
+  scroll-snap-align: start;
+}
+
+@media (max-width: 860px) {
+  .popular-slider-track .popular-poster-card {
+    flex: 0 0 calc((100% - (2 * 10px)) / 3);
+    width: calc((100% - (2 * 10px)) / 3);
+    min-width: calc((100% - (2 * 10px)) / 3);
+    max-width: calc((100% - (2 * 10px)) / 3);
+  }
+}
+
+@media (max-width: 520px) {
+  .popular-slider-track .popular-poster-card {
+    flex: 0 0 calc((100% - 10px) / 2);
+    width: calc((100% - 10px) / 2);
+    min-width: calc((100% - 10px) / 2);
+    max-width: calc((100% - 10px) / 2);
+  }
+}

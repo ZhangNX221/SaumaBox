@@ -4,7 +4,7 @@
 
 Object.assign(app, {
   // Modal Base Manager
-  createModal(id, title, bodyHtml) {
+  createModal(id, title, bodyHtml, headerActionsHtml = '') {
     this.closeModal(id);
     const backdrop = document.createElement('div');
     backdrop.className = 'modal-backdrop open';
@@ -14,7 +14,10 @@ Object.assign(app, {
       <div class="modal-dialog ${id === 'modal-login' ? 'modal-login-dialog' : ''}" role="dialog" aria-modal="true">
         <div class="modal-header">
           <h2 style="font-size:1.15rem;">${title}</h2>
-          <button class="btn btn-secondary btn-sm btn-icon" onclick="app.closeModal('${id}')" aria-label="Tutup">${getIcon('close', 'ui-icon', 16)}</button>
+          <div class="modal-header-actions" style="display:inline-flex; align-items:center; gap:8px;">
+            ${headerActionsHtml}
+            <button class="btn btn-secondary btn-sm btn-icon" onclick="app.closeModal('${id}')" title="Tutup" aria-label="Tutup">${getIcon('close', 'ui-icon', 16)}</button>
+          </div>
         </div>
         <div class="modal-body">
           ${bodyHtml}
@@ -29,14 +32,8 @@ Object.assign(app, {
     document.body.appendChild(backdrop);
   },
 
-  closeModal(id) {
-    const el = document.getElementById(id);
-    if (el) el.remove();
-  },
-
-  closeAllModals() {
-    document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
-  },
+  closeModal(id) { const el = document.getElementById(id); if (el) el.remove(); },
+  closeAllModals() { document.querySelectorAll('.modal-backdrop').forEach(el => el.remove()); },
 
   // First-Time Setup Wizard
   openSetupModal() {
@@ -262,8 +259,9 @@ Object.assign(app, {
 
     container.style.display = 'block';
     container.innerHTML = `
-      <div style="padding:10px; text-align:center; color:var(--text-secondary); font-size:0.82rem;">
-        <span>⏳ Mencari metadata dari open database...</span>
+      <div style="padding:12px; text-align:center; color:var(--text-secondary); font-size:0.85rem; display:flex; align-items:center; justify-content:center; gap:10px;">
+        <span class="state-spinner" style="width:16px; height:16px; border-width:2px; margin:0;" aria-hidden="true"></span>
+        <span>Mencari metadata dari open database...</span>
       </div>
     `;
 

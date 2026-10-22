@@ -19,19 +19,6 @@ Object.assign(app, {
     const allMusic = recent.music || [];
     const totalCount = allGames.length + allCinema.length + allMusic.length;
 
-    // Pick top spotlight item (highest rating or featured)
-    const candidates = [
-      ...allGames.map(g => ({ ...g, _cat: 'games', _type: g.type, _sub: g.developer || g.publisher || 'PC / Console' })),
-      ...allCinema.map(c => ({ ...c, _cat: 'cinema', _type: c.type, _sub: c.studio || c.country || 'Cinema' })),
-      ...allMusic.map(m => ({ ...m, _cat: 'music', _type: 'Audio', _sub: `${m.artist} • ${m.album}` }))
-    ].sort((a, b) => (b.rating || 0) - (a.rating || 0));
-
-    const spotlight = candidates[0] || {
-      id: 3, _cat: 'games', title: 'Cyberpunk 2077', rating: 9.2, _type: 'PC',
-      _sub: 'CD PROJEKT RED', cover_url: '/images/covers/cyberpunk2077.jpg',
-      genre: 'Action RPG, Open World', year: 2020
-    };
-
     container.innerHTML = `
       <section class="editorial-hero">
         <div class="hero-glow-bg" aria-hidden="true"></div>
@@ -66,45 +53,23 @@ Object.assign(app, {
                 <span class="metric-lbl">Investasi Koleksi</span>
               </div>
             </div>
-
-            <div class="hero-action-cluster">
-              <button class="btn btn-primary btn-hero-cta" onclick="app.scrollToShowcase()">
-                ${getIcon('sparkles', 'ui-icon-btn', 16)} Jelajahi Koleksi
-              </button>
-              ${!this.state.user ? `
-                <button class="btn btn-secondary btn-hero-admin" onclick="app.openLoginModal()" title="Masuk Mode Admin (Demo)">
-                  ${getIcon('user', 'ui-icon-btn', 16)} Masuk Admin (Demo)
-                </button>
-              ` : `
-                <button class="btn btn-secondary" onclick="app.navigate('games')">
-                  ${getIcon('layers', 'ui-icon-btn', 16)} Buka Pustaka
-                </button>
-              `}
-            </div>
           </div>
 
-          <div class="hero-spotlight-col">
-            <div class="spotlight-card" onclick="app.openMediaDetail('${spotlight._cat}', ${spotlight.id})" tabindex="0" onkeydown="if(event.key==='Enter')app.openMediaDetail('${spotlight._cat}', ${spotlight.id})" title="Buka rincian ${escapeHtml(spotlight.title)}">
-              <div class="spotlight-badge-floating">
-                <span class="spotlight-star">${getIcon('star', 'icon-star', 12)}</span>
-                <span>Sorotan Pilihan</span>
+          <div class="hero-illustration-col">
+            <div class="hero-app-showcase-card">
+              <div class="app-illustration-frame">
+                <img src="/images/logo.png" alt="Ilustrasi SaumaBox Media Hub" class="app-illustration-img" loading="eager">
               </div>
-              <div class="spotlight-poster-frame ${spotlight._cat === 'music' ? 'aspect-square' : ''}">
-                <img src="${escapeHtml(spotlight.cover_url || '/images/covers/cyberpunk2077.jpg')}" alt="${escapeHtml(spotlight.title)}" class="spotlight-img" loading="eager">
-                <div class="spotlight-gradient-scrim"></div>
+              <div class="app-showcase-badge">
+                ${getIcon('sparkles', 'ui-icon', 13)}
+                <span>Pustaka Terpadu</span>
               </div>
-              <div class="spotlight-caption">
-                <div class="spotlight-tags">
-                  <span class="badge badge-primary">${escapeHtml(spotlight._type)}</span>
-                  ${spotlight.genre ? `<span class="badge badge-neutral">${escapeHtml(spotlight.genre)}</span>` : ''}
-                  <span class="badge badge-rating">${formatRating(spotlight.rating)}</span>
-                </div>
-                <h2 class="spotlight-title">${escapeHtml(spotlight.title)}</h2>
-                <p class="spotlight-sub">${escapeHtml(spotlight._sub)} ${spotlight.year ? `• ${spotlight.year}` : ''}</p>
-                <div class="spotlight-action-link">
-                  <span>Lihat Rincian Lengkap</span>
-                  ${getIcon('arrowRight', 'ui-icon-btn', 14)}
-                </div>
+              <h2 class="app-showcase-title">SaumaBox Hub</h2>
+              <p class="app-showcase-desc">Pusat arsip media pribadi: Permainan, Sinema, dan Musik Resolusi Tinggi.</p>
+              <div class="app-showcase-pillars">
+                <span class="pillar-tag">${getIcon('games', 'ui-icon', 14)} Games</span>
+                <span class="pillar-tag">${getIcon('cinema', 'ui-icon', 14)} Sinema</span>
+                <span class="pillar-tag">${getIcon('music', 'ui-icon', 14)} Musik</span>
               </div>
             </div>
           </div>
@@ -115,15 +80,15 @@ Object.assign(app, {
         <div class="showcase-control-bar">
           <div class="showcase-heading-group">
             <h2 class="showcase-title">Pilihan Koleksi Terbaru</h2>
-            <p class="showcase-subtitle">Eksplorasi entri media yang baru ditambahkan lengkap dengan sampul otentik</p>
+            <p class="showcase-subtitle">Eksplorasi entri media yang baru ditambahkan lengkap dengan sampul otentik (Maksimal 20 poster)</p>
           </div>
 
           <div class="showcase-toolbar-group">
             <div class="showcase-tabs" role="tablist" aria-label="Filter Kategori Media">
-              <button class="showcase-tab-btn ${this.state.recentCategory === 'all' ? 'active' : ''}" onclick="app.setRecentCategory('all')" role="tab">Semua <span class="tab-count">${totalCount}</span></button>
-              <button class="showcase-tab-btn ${this.state.recentCategory === 'games' ? 'active' : ''}" onclick="app.setRecentCategory('games')" role="tab">Games <span class="tab-count">${allGames.length}</span></button>
-              <button class="showcase-tab-btn ${this.state.recentCategory === 'cinema' ? 'active' : ''}" onclick="app.setRecentCategory('cinema')" role="tab">Sinema <span class="tab-count">${allCinema.length}</span></button>
-              <button class="showcase-tab-btn ${this.state.recentCategory === 'music' ? 'active' : ''}" onclick="app.setRecentCategory('music')" role="tab">Musik <span class="tab-count">${allMusic.length}</span></button>
+              <button class="showcase-tab-btn ${this.state.recentCategory === 'all' ? 'active' : ''}" onclick="app.setRecentCategory('all')" role="tab">Semua <span class="tab-count">${Math.min(totalCount, 20)}</span></button>
+              <button class="showcase-tab-btn ${this.state.recentCategory === 'games' ? 'active' : ''}" onclick="app.setRecentCategory('games')" role="tab">Games <span class="tab-count">${Math.min(allGames.length, 20)}</span></button>
+              <button class="showcase-tab-btn ${this.state.recentCategory === 'cinema' ? 'active' : ''}" onclick="app.setRecentCategory('cinema')" role="tab">Sinema <span class="tab-count">${Math.min(allCinema.length, 20)}</span></button>
+              <button class="showcase-tab-btn ${this.state.recentCategory === 'music' ? 'active' : ''}" onclick="app.setRecentCategory('music')" role="tab">Musik <span class="tab-count">${Math.min(allMusic.length, 20)}</span></button>
             </div>
           </div>
         </div>
@@ -243,6 +208,9 @@ Object.assign(app, {
     } else if (sortBy === 'title') {
       list.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
     }
+
+    // Batasi koleksi terbaru maksimal 20 poster sesuai permintaan pengguna
+    list = list.slice(0, 20);
 
     if (list.length === 0) {
       return `
@@ -423,11 +391,15 @@ Object.assign(app, {
 
       const modalId = 'modal-media-detail';
       const isAdmin = !!this.state.user;
-      const editButton = isAdmin ? `
-        <button class="btn btn-secondary" onclick="app.closeModal('${modalId}'); ${category === 'games' ? `app.openEditGameModal(${item.id})` : category === 'cinema' ? `app.openEditCinemaModal(${item.id})` : `app.openEditMusicModal(${item.id})`}">${getIcon('edit', 'ui-icon-btn', 14)} Edit Data</button>
+      const editHeaderBtn = isAdmin ? `
+        <button class="btn btn-secondary btn-sm btn-icon" onclick="app.closeModal('${modalId}'); ${category === 'games' ? `app.openEditGameModal(${item.id})` : category === 'cinema' ? `app.openEditCinemaModal(${item.id})` : `app.openEditMusicModal(${item.id})`}" title="Edit Data" aria-label="Edit Data">
+          ${getIcon('edit', 'ui-icon', 16)}
+        </button>
       ` : '';
       const downloadAction = item.download_url ? `
-        <a href="${escapeHtml(item.download_url)}" target="_blank" rel="noopener noreferrer" class="btn btn-primary" style="display:inline-flex; align-items:center; gap:6px; text-decoration:none;">${getIcon('download', 'ui-icon-btn', 14)} Unduh Media</a>
+        <div class="media-detail-actions" style="margin-top:8px;">
+          <a href="${escapeHtml(item.download_url)}" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm" style="display:inline-flex; align-items:center; gap:6px; text-decoration:none;">${getIcon('download', 'ui-icon-btn', 14)} Unduh Media</a>
+        </div>
       ` : '';
 
       this.createModal(modalId, title, `
@@ -437,14 +409,10 @@ Object.assign(app, {
           </div>
           <div class="media-detail-info">
             ${detailsHtml}
-            <div class="media-detail-actions">
-              ${downloadAction}
-              ${editButton}
-              <button class="btn btn-secondary" onclick="app.closeModal('${modalId}')">Tutup</button>
-            </div>
+            ${downloadAction}
           </div>
         </div>
-      `);
+      `, editHeaderBtn);
     } catch (err) {
       showToast('Rincian media belum dapat dimuat saat ini. Silakan coba kembali.', 'error');
     }

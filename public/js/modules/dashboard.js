@@ -147,12 +147,12 @@ Object.assign(app, {
                 : (type === 'cinema' ? (item.genre ? item.genre.split(',')[0].trim() : 'Cinema') : (item.artist || 'Musik'));
               const rankClass = idx === 0 ? 'rank-gold' : (idx === 1 ? 'rank-silver' : (idx === 2 ? 'rank-bronze' : ''));
               return `
-                <div class="popular-poster-card ${type === 'music' ? 'is-music' : ''}" onclick="app.openMediaDetail('${type}', ${item.id})" role="button" tabindex="0" onkeydown="if(event.key==='Enter')app.openMediaDetail('${type}', ${item.id})" title="Buka rincian ${escapeHtml(item.title)}">
+                <div class="popular-poster-card ${type === 'music' ? 'is-music' : ''}" onclick="app.openMediaDetail('${type}', ${item.id})" role="button" tabindex="0" onkeydown="if(event.key==='Enter')app.openMediaDetail('${type}', ${item.id})" aria-label="${escapeHtml(item.title)}">
                   <div class="popular-poster-media">
                     <img src="${escapeHtml(item.cover_url || fallback)}" alt="${escapeHtml(item.title)}" class="popular-poster-img" loading="lazy" onerror="this.onerror=null; this.src='${fallback}';">
                     <div class="popular-poster-gradient"></div>
                     <span class="popular-poster-rank ${rankClass}">#${idx + 1}</span>
-                    <span class="popular-poster-rating font-mono"><span class="star-icon">★</span> ${formatRating(item.rating)}</span>
+                    <span class="popular-poster-rating">${formatRating(item.rating)}</span>
                   </div>
                   <div class="popular-poster-info">
                     <div class="popular-poster-title" title="${escapeHtml(item.title)}">${escapeHtml(item.title)}</div>
@@ -166,16 +166,26 @@ Object.assign(app, {
       `;
     };
 
-    // Activity log rows
-    const activityRows = stats.recent_activity.map(log => `
-      <tr>
-        <td class="font-mono" style="font-size:0.75rem;">${formatDate(log.created_at)}</td>
-        <td><span class="badge badge-neutral">${escapeHtml(log.action)}</span></td>
-        <td><strong>${escapeHtml(log.module)}</strong></td>
-        <td>${escapeHtml(log.item_title || '-')}</td>
-        <td style="color:var(--text-secondary); font-size:0.8rem;">${escapeHtml(log.details || '')}</td>
-      </tr>
-    `).join('');
+    // Activity log rows with clean semantic badges and accurate timestamps (/antislop-ui)
+    const activityRows = (stats.recent_activity || []).map(log => {
+      let badgeClass = 'badge-neutral';
+      if (log.action.includes('UPDATE') || log.action.includes('EDIT') || log.action.includes('AVATAR')) {
+        badgeClass = 'badge-info';
+      } else if (log.action.includes('DELETE') || log.action.includes('REMOVE')) {
+        badgeClass = 'badge-danger';
+      } else if (log.action.includes('SYSTEM')) {
+        badgeClass = 'badge-purple';
+      }
+      return `
+        <tr>
+          <td class="font-mono" style="font-size:0.75rem; white-space:nowrap;">${formatDateTime(log.created_at)}</td>
+          <td><span class="badge ${badgeClass}">${escapeHtml(log.action)}</span></td>
+          <td><strong>${escapeHtml(log.module)}</strong></td>
+          <td>${escapeHtml(log.item_title || '-')}</td>
+          <td style="color:var(--text-secondary); font-size:0.8rem;">${escapeHtml(log.details || '')}</td>
+        </tr>
+      `;
+    }).join('');
 
     container.innerHTML = `
       <div class="dashboard-header-wrap">
@@ -236,18 +246,16 @@ Object.assign(app, {
             <div class="dashboard-section-title">${getIcon('dashboard', 'ui-icon-header', 18)} Analisis Grafik &amp; Konten Terpopuler</div>
             <div style="font-size:0.82rem; color:var(--text-secondary);">Proporsi media dan peringkat item dengan rating tertinggi</div>
           </div>
-          <span class="badge badge-neutral font-mono">Live Ranking</span>
         </div>
 
         <div class="dashboard-charts-grid">
-          <!-- Card 1: Komposisi & Distribusi Media (1 Petak, Ringkas & Terintegrasi) -->
+          <!-- Card 1: Komposisi & Distribusi Media (Ringkas, Terintegrasi & Sejajar) -->
           <div class="chart-card">
             <div class="chart-card-header">
               <div>
                 <div class="chart-card-title">${getIcon('album', 'ui-icon', 16)} Komposisi &amp; Distribusi Media</div>
                 <div class="chart-card-sub">Total ${totalMedia} item (${stats.totals.games} game terkelola)</div>
               </div>
-              <span class="badge badge-info font-mono">${totalMedia} Item</span>
             </div>
             
             <div class="donut-chart-layout compact">
@@ -255,50 +263,51 @@ Object.assign(app, {
               <div class="donut-legend compact">${donutLegendHtml}</div>
             </div>
 
-            <div class="platform-distribution-compact">
-              <div class="platform-distribution-header">
-                <span class="platform-sub-title">${getIcon('games', 'ui-icon', 14)} <strong>Distribusi Platform Game</strong></span>
-                <span class="badge badge-steam font-mono" style="font-size:0.7rem; padding:1px 6px;">${stats.totals.games} Game</span>
+            <div class="platform-distributions-wrap">
+              <div class="platform-distribution-compact">
+                <div class="platform-distribution-header">
+                  <span class="platform-sub-title">${getIcon('games', 'ui-icon', 14)} <strong>Distribusi Platform Game</strong></span>
+                  <span class="badge badge-steam font-mono" style="font-size:0.7rem; padding:1px 6px;">${stats.totals.games} Game</span>
+                </div>
+                <div class="segmented-bar-track" style="margin: 6px 0 8px;">${categoryStripHtml}</div>
+                <div class="chart-category-list compact">${categoryBarsHtml}</div>
               </div>
-              <div class="segmented-bar-track" style="margin: 8px 0 10px;">${categoryStripHtml}</div>
-              <div class="chart-category-list compact">${categoryBarsHtml}</div>
-            </div>
 
-            <div class="platform-distribution-compact">
-              <div class="platform-distribution-header">
-                <span class="platform-sub-title">${getIcon('cinema', 'ui-icon', 14)} <strong>Distribusi Kategori Cinema</strong></span>
-                <span class="badge badge-purple font-mono" style="font-size:0.7rem; padding:1px 6px;">${stats.totals.cinema} Item</span>
+              <div class="platform-distribution-compact">
+                <div class="platform-distribution-header">
+                  <span class="platform-sub-title">${getIcon('cinema', 'ui-icon', 14)} <strong>Distribusi Kategori Cinema</strong></span>
+                  <span class="badge badge-purple font-mono" style="font-size:0.7rem; padding:1px 6px;">${stats.totals.cinema} Item</span>
+                </div>
+                <div class="segmented-bar-track" style="margin: 6px 0 8px;">${cinemaStripHtml}</div>
+                <div class="chart-category-list compact">${cinemaBarsHtml}</div>
+                <div style="font-size:0.75rem; color:var(--text-muted); margin-top:6px; display:flex; justify-content:space-between; align-items:center;">
+                  <span>Tontonan Selesai: <strong>${stats.totals.watched || 0} dari ${stats.totals.cinema}</strong></span>
+                  <span class="font-mono" style="color:#10b981; font-weight:700;">${stats.cinema.watched_percentage || 0}%</span>
+                </div>
               </div>
-              <div class="segmented-bar-track" style="margin: 8px 0 10px;">${cinemaStripHtml}</div>
-              <div class="chart-category-list compact">${cinemaBarsHtml}</div>
-              <div style="font-size:0.75rem; color:var(--text-muted); margin-top:8px; display:flex; justify-content:space-between; align-items:center;">
-                <span>Tontonan Selesai: <strong>${stats.totals.watched || 0} dari ${stats.totals.cinema}</strong></span>
-                <span class="font-mono" style="color:#10b981; font-weight:700;">${stats.cinema.watched_percentage || 0}%</span>
-              </div>
-            </div>
 
-            <div class="platform-distribution-compact">
-              <div class="platform-distribution-header">
-                <span class="platform-sub-title">${getIcon('music', 'ui-icon', 14)} <strong>Distribusi Platform &amp; Format Musik</strong></span>
-                <span class="badge badge-success font-mono" style="font-size:0.7rem; padding:1px 6px;">${stats.totals.music} Trek</span>
-              </div>
-              <div class="segmented-bar-track" style="margin: 8px 0 10px;">${musicStripHtml}</div>
-              <div class="chart-category-list compact">${musicBarsHtml}</div>
-              <div style="font-size:0.75rem; color:var(--text-muted); margin-top:8px; display:flex; justify-content:space-between; align-items:center;">
-                <span>Koleksi Favorit: <strong>${stats.totals.favorite_music || 0} lagu</strong></span>
-                <span>${stats.music.albums || 0} Album • ${stats.music.artists || 0} Artis</span>
+              <div class="platform-distribution-compact">
+                <div class="platform-distribution-header">
+                  <span class="platform-sub-title">${getIcon('music', 'ui-icon', 14)} <strong>Distribusi Platform &amp; Format Musik</strong></span>
+                  <span class="badge badge-success font-mono" style="font-size:0.7rem; padding:1px 6px;">${stats.totals.music} Trek</span>
+                </div>
+                <div class="segmented-bar-track" style="margin: 6px 0 8px;">${musicStripHtml}</div>
+                <div class="chart-category-list compact">${musicBarsHtml}</div>
+                <div style="font-size:0.75rem; color:var(--text-muted); margin-top:6px; display:flex; justify-content:space-between; align-items:center;">
+                  <span>Koleksi Favorit: <strong>${stats.totals.favorite_music || 0} lagu</strong></span>
+                  <span>${stats.music.albums || 0} Album • ${stats.music.artists || 0} Artis</span>
+                </div>
               </div>
             </div>
           </div>
 
-          <!-- Card 2: Konten Populer / Rating Tertinggi (2 Petak, 10 Besar dengan Fitur Slide) -->
+          <!-- Card 2: Konten Populer / Rating Tertinggi (Sejajar & Kompak) -->
           <div class="chart-card chart-card-2x">
             <div class="chart-card-header">
               <div>
                 <div class="chart-card-title">${getIcon('star', 'ui-icon', 16)} Konten Terpopuler (Rating Tertinggi)</div>
                 <div class="chart-card-sub">Menampilkan 5 teratas • Geser panah untuk melihat peringkat #6–10</div>
               </div>
-              <span class="badge badge-purple font-mono">Top 10 Slide</span>
             </div>
             <div class="popular-catalog-section">
               <div class="popular-group-header">
@@ -367,40 +376,63 @@ Object.assign(app, {
     `;
   },
 
-  openAddCatalogModal() {
-    this.createModal('modal-add-catalog', 'Tambah Katalog', `
-      <div class="add-catalog-modal-content">
-        <p class="add-catalog-intro">Pilih jenis katalog media yang ingin ditambahkan ke dalam pustaka SaumaBox:</p>
-        <div class="add-catalog-options-grid">
-          <div class="add-catalog-option-card" onclick="app.closeModal('modal-add-catalog'); app.openAddGameModal();" role="button" tabindex="0">
-            <div class="option-card-icon icon-game">${getIcon('games', 'ui-icon', 22)}</div>
-            <div class="option-card-body">
-              <div class="option-card-title">Koleksi Game</div>
-              <div class="option-card-desc">Tambahkan arsip game PC, Emulator retro (PS2, Switch), rom hack, &amp; native port.</div>
-            </div>
-            <div class="option-card-arrow">${getIcon('arrowRight', 'ui-icon', 16)}</div>
-          </div>
-
-          <div class="add-catalog-option-card" onclick="app.closeModal('modal-add-catalog'); app.openAddCinemaModal();" role="button" tabindex="0">
-            <div class="option-card-icon icon-cinema">${getIcon('cinema', 'ui-icon', 22)}</div>
-            <div class="option-card-body">
-              <div class="option-card-title">Koleksi Cinema</div>
-              <div class="option-card-desc">Tambahkan film layar lebar, serial TV multi-season, &amp; anime dengan rating IMDb.</div>
-            </div>
-            <div class="option-card-arrow">${getIcon('arrowRight', 'ui-icon', 16)}</div>
-          </div>
-
-          <div class="add-catalog-option-card" onclick="app.closeModal('modal-add-catalog'); app.openAddMusicModal();" role="button" tabindex="0">
-            <div class="option-card-icon icon-music">${getIcon('music', 'ui-icon', 22)}</div>
-            <div class="option-card-body">
-              <div class="option-card-title">Koleksi Musik</div>
-              <div class="option-card-desc">Tambahkan master rekaman audio lossless FLAC, trek favorit komunitas, &amp; album.</div>
-            </div>
-            <div class="option-card-arrow">${getIcon('arrowRight', 'ui-icon', 16)}</div>
+  renderAddCatalogDropdown() {
+    return `
+      <div class="add-catalog-wrapper" id="add-catalog-wrapper">
+        <button class="btn btn-primary btn-sm btn-add-catalog" id="btn-add-catalog" onclick="app.toggleAddCatalogMenu(event)" title="Tambah Katalog Baru" aria-haspopup="true" aria-expanded="false">
+          ${getIcon('plus', 'ui-icon-btn', 14)}<span class="btn-text">Tambah Katalog</span>
+          <span class="btn-caret">${getIcon('chevronDown', 'ui-icon-btn', 12)}</span>
+        </button>
+        <div class="add-catalog-dropdown hidden" id="add-catalog-dropdown" role="menu">
+          <div class="add-catalog-menu-header">Pilih Jenis Katalog</div>
+          <div class="add-catalog-menu-items">
+            <button type="button" class="add-catalog-menu-item" onclick="app.selectAddCatalog('game')" role="menuitem">
+              <span class="menu-item-icon icon-game">${getIcon('games', 'ui-icon', 18)}</span>
+              <div class="menu-item-text">
+                <span class="menu-item-title">Koleksi Game</span>
+                <span class="menu-item-desc">PC, emulator retro &amp; native port</span>
+              </div>
+            </button>
+            <button type="button" class="add-catalog-menu-item" onclick="app.selectAddCatalog('cinema')" role="menuitem">
+              <span class="menu-item-icon icon-cinema">${getIcon('cinema', 'ui-icon', 18)}</span>
+              <div class="menu-item-text">
+                <span class="menu-item-title">Koleksi Cinema</span>
+                <span class="menu-item-desc">Film layar lebar, serial &amp; anime</span>
+              </div>
+            </button>
+            <button type="button" class="add-catalog-menu-item" onclick="app.selectAddCatalog('music')" role="menuitem">
+              <span class="menu-item-icon icon-music">${getIcon('music', 'ui-icon', 18)}</span>
+              <div class="menu-item-text">
+                <span class="menu-item-title">Koleksi Musik</span>
+                <span class="menu-item-desc">Audio lossless FLAC &amp; album</span>
+              </div>
+            </button>
           </div>
         </div>
       </div>
-    `);
+    `;
+  },
+
+  openAddCatalogModal(e) {
+    this.toggleAddCatalogMenu(e);
+  },
+
+  toggleAddCatalogMenu(forceOrEvent) {
+    if (forceOrEvent && forceOrEvent.stopPropagation) forceOrEvent.stopPropagation();
+    const dd = document.getElementById('add-catalog-dropdown');
+    if (!dd) return;
+    const isHidden = dd.classList.contains('hidden');
+    const show = typeof forceOrEvent === 'boolean' ? forceOrEvent : isHidden;
+    dd.classList.toggle('hidden', !show);
+    const btn = document.getElementById('btn-add-catalog');
+    if (btn) btn.setAttribute('aria-expanded', String(show));
+  },
+
+  selectAddCatalog(type) {
+    this.toggleAddCatalogMenu(false);
+    if (type === 'game') this.openAddGameModal();
+    else if (type === 'cinema') this.openAddCinemaModal();
+    else if (type === 'music') this.openAddMusicModal();
   },
 
   slidePopularRow(sliderId, direction) {

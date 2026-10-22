@@ -466,22 +466,30 @@ Object.assign(app, {
         showToast('Game baru berhasil ditambahkan', 'success');
       }
       this.closeModal('modal-game-form');
-      if (this.state.currentTab === 'games') {
-        this.renderGames(document.getElementById('view-container'));
-      } else {
-        this.renderLanding(document.getElementById('view-container'));
-      }
+      const c = document.getElementById('view-container');
+      const tab = this.state.currentTab;
+      if (tab === 'dashboard') this.renderDashboard(c);
+      else if (tab === 'games') this.renderGames(c);
+      else this.renderLanding(c);
     } catch (err) {
       showToast(err.message, 'error');
     }
   },
 
   confirmDeleteGame(id, title) {
-    if (confirm(`Yakin ingin menghapus game "${title}"?`)) {
-      api.delete(`/api/games/${id}`).then(() => {
-        showToast('Game berhasil dihapus', 'success');
-        this.renderGames(document.getElementById('view-container'));
-      }).catch(err => showToast(err.message, 'error'));
-    }
+    showConfirmModal({
+      title: 'Hapus Game',
+      message: `Yakin ingin menghapus game "<strong>${escapeHtml(title)}</strong>"?`,
+      subtext: 'Data game ini akan dihapus permanen dari pustaka SaumaBox.',
+      confirmText: 'Ya, Hapus',
+      onConfirm: () => {
+        api.delete(`/api/games/${id}`).then(() => {
+          showToast('Game berhasil dihapus', 'success');
+          const c = document.getElementById('view-container');
+          if (this.state.currentTab === 'dashboard') this.renderDashboard(c);
+          else this.renderGames(c);
+        }).catch(err => showToast(err.message, 'error'));
+      }
+    });
   }
 });
