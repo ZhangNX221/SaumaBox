@@ -1,14 +1,13 @@
 # Dependency directories
 node_modules/
 
-# SQLite runtime database & backup snapshots
-data/*.sqlite
+# SQLite runtime temporary lock files (WAL / SHM)
 data/*.sqlite-shm
 data/*.sqlite-wal
+
+# Backups snapshots
 data/backups/*
 !data/backups/.gitkeep
-data/uploads/*
-!data/uploads/.gitkeep
 
 # Environment files
 .env

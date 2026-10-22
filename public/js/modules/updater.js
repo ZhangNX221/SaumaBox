@@ -4,7 +4,7 @@
 
 Object.assign(app, {
   renderSettingsSystem(s) {
-    const curVer = 'v0.3.1';
+    const curVer = 'v0.4.0';
     return `
       <div style="display:flex; flex-direction:column; gap:20px;">
         <!-- Card Utama: Status & Pembaruan Sistem -->
@@ -81,12 +81,20 @@ Object.assign(app, {
         <div class="module-card">
           <h3 style="font-size:1.05rem; margin-bottom:6px; display:flex; align-items:center; gap:8px;">
             <span style="color:var(--accent-color);">${getIcon('layers', 'ui-icon', 16)}</span>
-            Catatan Pembaruan Terkini (v0.3.1)
+            Catatan Pembaruan Terkini (v0.4.0)
           </h3>
           <p style="font-size:0.83rem; color:var(--text-secondary); margin-bottom:14px;">
             Peningkatan fitur dan stabilitas yang disertakan pada rilis ini:
           </p>
           <div class="changelog-list">
+            <div class="changelog-item">
+              <span class="changelog-tag tag-new">Fitur Baru</span>
+              <span><strong>Dukungan Penuh Docker &amp; Cloud Deployment:</strong> Konfigurasi Dockerfile Alpine, docker-compose.yml persisten, PM2 ecosystem.config.js, Procfile Cloud PaaS (Render, Railway, Fly.io), serta healthcheck endpoint otomatis.</span>
+            </div>
+            <div class="changelog-item">
+              <span class="changelog-tag tag-system">Database</span>
+              <span><strong>Bundling Database &amp; Asset Koleksi:</strong> Penyatuan database lokal SQLite aktif beserta seluruh aset poster cover media ke dalam repositori.</span>
+            </div>
             <div class="changelog-item">
               <span class="changelog-tag tag-new">Fitur Baru</span>
               <span><strong>Horizontal Category Sliders (Games, Sinema, Musik):</strong> Pemisahan koleksi media menjadi baris slider horizontal mandiri dengan 5 poster di desktop (10 data dimuat) dan 4 poster kompak pada mode mobile.</span>
