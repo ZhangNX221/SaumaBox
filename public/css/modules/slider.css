@@ -1,0 +1,257 @@
+/* ============================================================
+   SaumaBox — Horizontal Media Showcase Slider Module
+   Decentralized CSS: Responsive 5 items (Desktop) / 4 items (Mobile)
+   ============================================================ */
+
+.showcase-rows-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  width: 100%;
+}
+
+.showcase-category-row {
+  margin-bottom: 8px;
+}
+
+.showcase-row-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+  padding: 0 4px;
+}
+
+.showcase-row-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.showcase-row-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-control);
+  background: rgba(229, 192, 123, 0.12);
+  color: var(--accent-color, #e5c07b);
+  border: 1px solid rgba(229, 192, 123, 0.25);
+}
+
+.showcase-row-title {
+  font-family: 'Outfit', var(--font-sans);
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.showcase-row-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.slider-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.slider-nav-btn:hover {
+  background: var(--bg-surface-hover);
+  color: var(--text-primary);
+  border-color: var(--accent-color);
+  transform: scale(1.06);
+}
+
+.slider-nav-btn:active {
+  transform: scale(0.96);
+}
+
+.showcase-view-all-link {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--accent-color, #e5c07b);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  padding: 4px 8px;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-control);
+  transition: all 0.15s ease;
+  text-decoration: none;
+}
+
+.showcase-view-all-link:hover {
+  color: var(--text-primary);
+  background: rgba(229, 192, 123, 0.12);
+}
+
+/* Horizontal Slider Track */
+.media-slider-container {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+}
+
+.media-slider-track {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding: 4px 2px 14px;
+}
+
+.media-slider-track::-webkit-scrollbar {
+  display: none;
+}
+
+/* Desktop: 5 items visible on screen */
+.media-slider-track .media-card {
+  flex: 0 0 calc((100% - 64px) / 5);
+  min-width: calc((100% - 64px) / 5);
+  max-width: calc((100% - 64px) / 5);
+  scroll-snap-align: start;
+}
+
+@media (max-width: 1024px) {
+  .media-slider-track .media-card {
+    flex: 0 0 calc((100% - 36px) / 4);
+    min-width: calc((100% - 36px) / 4);
+    max-width: calc((100% - 36px) / 4);
+  }
+}
+
+/* Mobile: poster scaled down, 4 items visible on 1 screen */
+@media (max-width: 768px) {
+  .showcase-rows-wrapper {
+    gap: 20px;
+  }
+
+  .media-slider-track {
+    gap: 6px;
+    padding-bottom: 8px;
+  }
+
+  .media-slider-track .media-card {
+    flex: 0 0 calc((100% - 18px) / 4);
+    min-width: calc((100% - 18px) / 4);
+    max-width: calc((100% - 18px) / 4);
+    border-radius: 8px;
+  }
+
+  .media-slider-track .media-card-body {
+    padding: 5px 6px 6px;
+    gap: 2px;
+  }
+
+  .media-slider-track .card-type-tag {
+    font-size: 0.52rem;
+    letter-spacing: 0.01em;
+  }
+
+  .media-slider-track .card-media-title {
+    font-size: 0.70rem;
+    line-height: 1.2;
+    min-height: 2.4em;
+    -webkit-line-clamp: 2;
+    word-break: break-word;
+  }
+
+  .media-slider-track .card-media-sub {
+    display: none;
+  }
+
+  .media-slider-track .media-card-footer {
+    padding-top: 3px;
+    gap: 2px;
+    flex-wrap: nowrap;
+    justify-content: space-between;
+  }
+
+  .media-slider-track .media-card-footer .badge {
+    font-size: 0.52rem;
+    padding: 1px 3px;
+    max-width: 55%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .media-slider-track .media-card-footer .card-media-extra {
+    font-size: 0.56rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .media-slider-track .poster-overlay-top {
+    top: 3px;
+    left: 3px;
+    right: 3px;
+    gap: 2px;
+  }
+
+  .media-slider-track .poster-overlay-top .badge {
+    font-size: 0.52rem;
+    padding: 1px 3px;
+    max-width: 50%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .media-slider-track .poster-overlay-top .badge-rating {
+    font-size: 0.55rem;
+    padding: 1px 3px;
+  }
+
+  .showcase-row-header {
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  .showcase-row-title-wrap {
+    gap: 6px;
+  }
+
+  .showcase-row-title {
+    font-size: 0.98rem;
+  }
+
+  .showcase-row-icon,
+  .slider-nav-btn {
+    width: 26px;
+    height: 26px;
+  }
+
+  .showcase-row-icon svg,
+  .slider-nav-btn svg {
+    width: 13px;
+    height: 13px;
+  }
+
+  .showcase-view-all-link {
+    font-size: 0.70rem;
+    padding: 2px 4px;
+  }
+}

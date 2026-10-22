@@ -384,9 +384,8 @@
 .brand-logo-img {
   display: block;
   flex-shrink: 0;
-  border-radius: 6px;
-  object-fit: cover;
-  box-shadow: 0 2px 8px rgba(212, 175, 55, 0.25);
+  object-fit: contain;
+  filter: drop-shadow(0 2px 6px rgba(212, 175, 55, 0.3));
 }
 
 /* Rating Badge with Star */

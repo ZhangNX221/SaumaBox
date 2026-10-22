@@ -46,24 +46,28 @@ Object.assign(app, {
 
       return `
         <tr>
-          <td class="font-mono" style="color:var(--text-muted); width:40px;">${rowNum}</td>
-          <td style="text-align:center; width:44px;">${completedCheckbox}</td>
-          <td><span class="badge badge-neutral">${g.type}</span></td>
+          <td class="font-mono td-center" style="color:var(--text-muted); width:32px;">${rowNum}</td>
+          <td class="td-center" style="width:36px;">${completedCheckbox}</td>
+          <td style="width:52px;"><span class="badge badge-neutral">${g.type}</span></td>
           <td>
             <strong>${escapeHtml(g.title)}</strong>
-            ${g.type === 'RECOMP' && g.enhancements ? `<div style="font-size:0.75rem; color:var(--text-secondary);">${escapeHtml(g.enhancements)}</div>` : ''}
+            ${g.genre ? `<div class="cell-sub">${escapeHtml(g.genre)}</div>` : ''}
+            ${g.type === 'RECOMP' && g.enhancements ? `<div class="cell-sub" style="color:var(--accent-color);">${escapeHtml(g.enhancements)}</div>` : ''}
           </td>
-          <td class="font-mono">${escapeHtml(g.release_date || (g.year ? String(g.year) : '-'))}</td>
-          <td>${g.genre ? `<span class="badge badge-neutral">${escapeHtml(g.genre)}</span>` : '<span style="color:var(--text-muted);">-</span>'}</td>
-          <td>${escapeHtml(g.developer || '-')}</td>
-          <td>${escapeHtml(g.publisher || '-')}</td>
+          <td class="font-mono cell-nowrap">${escapeHtml(g.release_date || (g.year ? String(g.year) : '-'))}</td>
+          <td>
+            <div>${escapeHtml(g.developer || '-')}</div>
+            ${g.publisher && g.publisher !== g.developer ? `<div class="cell-sub">${escapeHtml(g.publisher)}</div>` : ''}
+          </td>
           <td>${platformOrConsole}</td>
-          <td class="font-mono">${escapeHtml(g.size_gb ? g.size_gb + ' GB' : '-')}</td>
-          <td class="font-mono">${formatRating(g.rating)}</td>
-          <td>${statusBadge}</td>
-          <td class="font-mono" style="font-weight:600;">${priceText}</td>
-          <td style="text-align:center;">${g.download_url ? `<a href="${escapeHtml(g.download_url)}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm" title="Akses Halaman Download" style="display:inline-flex; align-items:center; gap:4px; text-decoration:none;">${getIcon('download', 'ui-icon', 13)} Unduh</a>` : '<span style="color:var(--text-muted); font-size:0.8rem;">-</span>'}</td>
-          ${isAdmin ? `<td style="white-space:nowrap; text-align:right;">${actionButtons}</td>` : ''}
+          <td class="font-mono cell-nowrap">${escapeHtml(g.size_gb ? g.size_gb + ' GB' : '-')}</td>
+          <td class="font-mono cell-nowrap">${formatRating(g.rating)}</td>
+          <td>
+            ${statusBadge}
+            ${priceText !== '-' ? `<div class="font-mono cell-sub" style="font-weight:700;">${priceText}</div>` : ''}
+          </td>
+          <td class="td-center cell-nowrap">${g.download_url ? `<a href="${escapeHtml(g.download_url)}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm" title="Akses Halaman Download" style="display:inline-flex; align-items:center; gap:3px; text-decoration:none;">${getIcon('download', 'ui-icon', 12)} Unduh</a>` : '<span style="color:var(--text-muted); font-size:0.8rem;">-</span>'}</td>
+          ${isAdmin ? `<td class="td-right cell-nowrap">${actionButtons}</td>` : ''}
         </tr>`;
     }).join('');
 
@@ -199,21 +203,22 @@ Object.assign(app, {
             <table class="data-table">
               <thead>
                 <tr>
-                  <th style="width:40px;">#</th>
-                  <th style="width:44px; text-align:center;">Tamat</th>
-                  <th>Tipe</th>
-                  <th class="sortable ${this.state.games.sortBy === 'title' ? 'sorted' : ''}" onclick="app.sortCatalog('games', 'title')">Judul Game <span class="sort-indicator">${this.state.games.sortBy === 'title' ? (this.state.games.sortOrder === 'asc' ? '▲' : '▼') : '↕'}</span></th>
+                  <th class="th-center" style="width:32px;">#</th>
+                  <th class="th-center" style="width:36px;">Tamat</th>
+                  <th style="width:52px;">Tipe</th>
+                  <th class="sortable ${this.state.games.sortBy === 'title' ? 'sorted' : ''}" onclick="app.sortCatalog('games', 'title')">Judul &amp; Genre <span class="sort-indicator">${this.state.games.sortBy === 'title' ? (this.state.games.sortOrder === 'asc' ? '▲' : '▼') : '↕'}</span></th>
                   <th class="sortable ${this.state.games.sortBy === 'release_date' ? 'sorted' : ''}" onclick="app.sortCatalog('games', 'release_date')">Tgl Rilis <span class="sort-indicator">${this.state.games.sortBy === 'release_date' ? (this.state.games.sortOrder === 'asc' ? '▲' : '▼') : '↕'}</span></th>
-                  <th>Genre</th><th>Pengembang</th><th>Penerbit</th><th>Platform / Konsol</th><th>Ukuran</th>
+                  <th>Studio &amp; Penerbit</th>
+                  <th>Platform</th>
+                  <th>Ukuran</th>
                   <th class="sortable ${this.state.games.sortBy === 'rating' ? 'sorted' : ''}" onclick="app.sortCatalog('games', 'rating')">Rating <span class="sort-indicator">${this.state.games.sortBy === 'rating' ? (this.state.games.sortOrder === 'asc' ? '▲' : '▼') : '↕'}</span></th>
-                  <th>Status</th>
-                  <th class="sortable ${this.state.games.sortBy === 'price' ? 'sorted' : ''}" onclick="app.sortCatalog('games', 'price')">Harga <span class="sort-indicator">${this.state.games.sortBy === 'price' ? (this.state.games.sortOrder === 'asc' ? '▲' : '▼') : '↕'}</span></th>
-                  <th>Link Download</th>
-                  ${isAdmin ? '<th style="text-align:right;">Aksi</th>' : ''}
+                  <th class="sortable ${this.state.games.sortBy === 'price' ? 'sorted' : ''}" onclick="app.sortCatalog('games', 'price')">Status &amp; Harga <span class="sort-indicator">${this.state.games.sortBy === 'price' ? (this.state.games.sortOrder === 'asc' ? '▲' : '▼') : '↕'}</span></th>
+                  <th class="th-center">Unduh</th>
+                  ${isAdmin ? '<th class="th-right">Aksi</th>' : ''}
                 </tr>
               </thead>
               <tbody>
-                ${tableRows || '<tr><td colspan="15" style="text-align:center; padding:40px; color:var(--text-muted);">Tidak ada game yang cocok dengan kriteria pencarian.</td></tr>'}
+                ${tableRows || '<tr><td colspan="12" style="text-align:center; padding:40px; color:var(--text-muted);">Tidak ada game yang cocok dengan kriteria pencarian.</td></tr>'}
               </tbody>
             </table>
           </div>
@@ -235,9 +240,7 @@ Object.assign(app, {
               </span>` : '<span style="font-size:0.85rem; color:var(--text-secondary);">Koleksi game terkurasi.</span>'}
           </div>
           <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
-            <span style="font-size:0.85rem; color:var(--text-secondary);">
-              Menampilkan <strong>${res.pagination.total > 0 ? (page - 1) * limit + 1 : 0}-${Math.min(page * limit, res.pagination.total)}</strong> dari total <strong>${res.pagination.total}</strong> game
-            </span>
+            <span style="font-size:0.85rem; color:var(--text-secondary);">Menampilkan <strong>${res.pagination.total > 0 ? (page - 1) * limit + 1 : 0}-${Math.min(page * limit, res.pagination.total)}</strong> dari <strong>${res.pagination.total}</strong> game</span>
             <div class="pagination">
               <button class="page-btn" ${page <= 1 ? 'disabled' : ''} onclick="app.changePage('games', ${page - 1})">◀</button>
               <span style="font-size:0.85rem; font-weight:600; padding:0 6px;">Halaman ${page} dari ${this.state.games.totalPages}</span>
@@ -281,11 +284,7 @@ Object.assign(app, {
     let customPlatforms = ['Steam', 'GOG', 'EGS', 'Ubisoft', 'EA Origin'];
     let customGenres = [];
     try {
-      const [stRes, plRes, gnRes] = await Promise.all([
-        api.get('/api/taxonomy/statuses'),
-        api.get('/api/taxonomy/platforms'),
-        api.get('/api/taxonomy/genres?media_type=game')
-      ]);
+      const [stRes, plRes, gnRes] = await Promise.all([api.get('/api/taxonomy/statuses'), api.get('/api/taxonomy/platforms'), api.get('/api/taxonomy/genres?media_type=game')]);
       if (Array.isArray(stRes) && stRes.length) customStatuses = stRes.map(x => x.name);
       if (Array.isArray(plRes) && plRes.length) customPlatforms = Array.from(new Set([...plRes.filter(x => !x.category || x.category === 'Game Platform').map(x => x.name), ...customPlatforms]));
       if (Array.isArray(gnRes) && gnRes.length) customGenres = gnRes;

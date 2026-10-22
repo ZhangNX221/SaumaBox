@@ -2,7 +2,7 @@
    Modern, Informative, & Minimalist Login Modal UI
    ============================================================ */
 .modal-login-dialog {
-  max-width: 440px !important;
+  max-width: 440px;
 }
 
 .login-modal-wrapper {
@@ -217,4 +217,94 @@
   text-align: center;
 }
 
-/* ============================================================
+/* Mobile Optimization for Login Modal */
+@media (max-width: 768px) {
+  .modal-login-dialog {
+    max-width: 100% !important;
+  }
+
+  .login-modal-wrapper {
+    gap: 12px;
+  }
+
+  .login-modal-hero {
+    padding: 0 0 8px;
+    margin-bottom: 2px;
+  }
+
+  .login-badge-portal {
+    margin-bottom: 4px;
+    padding: 2px 8px;
+    font-size: 0.64rem;
+  }
+
+  .login-modal-title {
+    font-size: 1.12rem;
+    margin-bottom: 2px;
+  }
+
+  .login-modal-desc {
+    display: none; /* Hide verbose subtitle to conserve vertical space on mobile */
+  }
+
+  .login-demo-card {
+    padding: 8px 12px;
+    gap: 6px;
+  }
+
+  .login-demo-header {
+    margin-bottom: 2px;
+  }
+
+  .login-demo-title {
+    font-size: 0.74rem;
+  }
+
+  .login-demo-body {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .login-demo-text {
+    font-size: 0.74rem;
+  }
+
+  .btn-demo-fill {
+    padding: 3px 8px;
+    font-size: 0.7rem;
+  }
+
+  .form-group {
+    margin-bottom: 10px;
+  }
+
+  .form-label {
+    margin-bottom: 4px;
+    font-size: 0.78rem;
+  }
+
+  .input-with-icon {
+    height: 42px;
+    font-size: 0.88rem;
+  }
+
+  .login-options-row {
+    margin: -2px 0 6px;
+  }
+
+  .login-remember-label {
+    font-size: 0.75rem;
+  }
+
+  .btn-login-submit {
+    padding: 10px;
+    font-size: 0.88rem;
+    min-height: 44px;
+  }
+
+  .login-security-footer {
+    font-size: 0.68rem;
+    margin-top: 4px;
+  }
+}

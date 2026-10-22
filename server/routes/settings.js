@@ -223,7 +223,7 @@ router.get('/public-config', (req, res) => {
 // GET /api/settings/recent — Ambil item terbaru per kategori untuk showcase beranda
 router.get('/recent', (req, res) => {
   const db = getDb();
-  const limit = Math.min(12, Math.max(1, parseInt(req.query.limit, 10) || 6));
+  const limit = Math.min(20, Math.max(1, parseInt(req.query.limit, 10) || 10));
 
   const games = db.prepare(`
     SELECT id, type, title, year, publisher, developer, rating, status, platform, price, console, cover_url

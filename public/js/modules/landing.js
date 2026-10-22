@@ -80,20 +80,20 @@ Object.assign(app, {
         <div class="showcase-control-bar">
           <div class="showcase-heading-group">
             <h2 class="showcase-title">Pilihan Koleksi Terbaru</h2>
-            <p class="showcase-subtitle">Eksplorasi entri media yang baru ditambahkan lengkap dengan sampul otentik (Maksimal 20 poster)</p>
+            <p class="showcase-subtitle">Eksplorasi entri media terbaru per kategori dengan slider interaktif (Maksimal 10 poster per baris)</p>
           </div>
 
           <div class="showcase-toolbar-group">
             <div class="showcase-tabs" role="tablist" aria-label="Filter Kategori Media">
-              <button class="showcase-tab-btn ${this.state.recentCategory === 'all' ? 'active' : ''}" onclick="app.setRecentCategory('all')" role="tab">Semua <span class="tab-count">${Math.min(totalCount, 20)}</span></button>
-              <button class="showcase-tab-btn ${this.state.recentCategory === 'games' ? 'active' : ''}" onclick="app.setRecentCategory('games')" role="tab">Games <span class="tab-count">${Math.min(allGames.length, 20)}</span></button>
-              <button class="showcase-tab-btn ${this.state.recentCategory === 'cinema' ? 'active' : ''}" onclick="app.setRecentCategory('cinema')" role="tab">Sinema <span class="tab-count">${Math.min(allCinema.length, 20)}</span></button>
-              <button class="showcase-tab-btn ${this.state.recentCategory === 'music' ? 'active' : ''}" onclick="app.setRecentCategory('music')" role="tab">Musik <span class="tab-count">${Math.min(allMusic.length, 20)}</span></button>
+              <button class="showcase-tab-btn ${this.state.recentCategory === 'all' ? 'active' : ''}" data-cat="all" onclick="app.setRecentCategory('all')" role="tab">Semua <span class="tab-count">${totalCount}</span></button>
+              <button class="showcase-tab-btn ${this.state.recentCategory === 'games' ? 'active' : ''}" data-cat="games" onclick="app.setRecentCategory('games')" role="tab">Games <span class="tab-count">${allGames.length}</span></button>
+              <button class="showcase-tab-btn ${this.state.recentCategory === 'cinema' ? 'active' : ''}" data-cat="cinema" onclick="app.setRecentCategory('cinema')" role="tab">Sinema <span class="tab-count">${allCinema.length}</span></button>
+              <button class="showcase-tab-btn ${this.state.recentCategory === 'music' ? 'active' : ''}" data-cat="music" onclick="app.setRecentCategory('music')" role="tab">Musik <span class="tab-count">${allMusic.length}</span></button>
             </div>
           </div>
         </div>
 
-        <div class="media-grid" id="recent-media-grid">
+        <div class="showcase-rows-wrapper" id="recent-media-grid">
           ${this.renderRecentShowcase()}
         </div>
       </section>
@@ -154,11 +154,21 @@ Object.assign(app, {
   setRecentCategory(category) {
     this.state.recentCategory = category;
     document.querySelectorAll('.showcase-tab-btn').forEach(btn => {
-      const text = btn.textContent.toLowerCase();
-      btn.classList.toggle('active', text.startsWith(category) || (category === 'all' && text.startsWith('semua')));
+      btn.classList.toggle('active', btn.dataset.cat === category);
     });
     const grid = document.getElementById('recent-media-grid');
     if (grid) grid.innerHTML = this.renderRecentShowcase();
+  },
+
+  slideShowcase(category, direction) {
+    const track = document.getElementById(`slider-${category}`);
+    if (!track) return;
+    const card = track.querySelector('.media-card');
+    const isMobile = window.innerWidth <= 768;
+    const gap = isMobile ? 6 : 16;
+    const visibleCount = isMobile ? 4 : 5;
+    const step = card ? (card.offsetWidth + gap) * visibleCount : track.clientWidth * 0.85;
+    track.scrollBy({ left: direction * step, behavior: 'smooth' });
   },
 
   handleLandingSearch(query) {
@@ -175,44 +185,46 @@ Object.assign(app, {
 
   renderRecentShowcase() {
     const recent = this.state.recent || { games: [], cinema: [], music: [] };
-    const category = this.state.recentCategory || 'all';
+    const activeCat = this.state.recentCategory || 'all';
     const query = this.state.landingSearch || '';
     const sortBy = this.state.landingSort || 'newest';
 
-    let list = [];
-    if (category === 'all' || category === 'games') {
-      (recent.games || []).forEach(g => list.push({ ...g, _mediaType: 'games' }));
-    }
-    if (category === 'all' || category === 'cinema') {
-      (recent.cinema || []).forEach(c => list.push({ ...c, _mediaType: 'cinema' }));
-    }
-    if (category === 'all' || category === 'music') {
-      (recent.music || []).forEach(m => list.push({ ...m, _mediaType: 'music' }));
+    const categories = [
+      { key: 'games', label: 'Games', icon: 'games', link: 'games' },
+      { key: 'cinema', label: 'Sinema', icon: 'cinema', link: 'cinema' },
+      { key: 'music', label: 'Musik', icon: 'music', link: 'music' }
+    ];
+
+    const selectedCats = activeCat === 'all' 
+      ? categories 
+      : categories.filter(c => c.key === activeCat);
+
+    const renderedRows = [];
+
+    for (const cat of selectedCats) {
+      let items = (recent[cat.key] || []).map(item => ({ ...item, _mediaType: cat.key }));
+
+      if (query) {
+        items = items.filter(item => {
+          const str = `${item.title || ''} ${item.artist || ''} ${item.album || ''} ${item.genre || ''} ${item.developer || ''} ${item.studio || ''} ${item.publisher || ''}`.toLowerCase();
+          return str.includes(query);
+        });
+      }
+
+      if (sortBy === 'rating') {
+        items.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+      } else if (sortBy === 'title') {
+        items.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
+      }
+
+      items = items.slice(0, 10);
+
+      if (items.length > 0) {
+        renderedRows.push(this.renderShowcaseCategoryRow(cat, items));
+      }
     }
 
-    // Filter by query
-    if (query) {
-      list = list.filter(item => {
-        const title = (item.title || '').toLowerCase();
-        const artist = (item.artist || '').toLowerCase();
-        const album = (item.album || '').toLowerCase();
-        const genre = (item.genre || '').toLowerCase();
-        const dev = (item.developer || item.studio || item.publisher || '').toLowerCase();
-        return title.includes(query) || artist.includes(query) || album.includes(query) || genre.includes(query) || dev.includes(query);
-      });
-    }
-
-    // Sort list
-    if (sortBy === 'rating') {
-      list.sort((a, b) => (b.rating || 0) - (a.rating || 0));
-    } else if (sortBy === 'title') {
-      list.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
-    }
-
-    // Batasi koleksi terbaru maksimal 20 poster sesuai permintaan pengguna
-    list = list.slice(0, 20);
-
-    if (list.length === 0) {
+    if (renderedRows.length === 0) {
       return `
         <div class="showcase-empty-state">
           <div class="empty-icon">${getIcon('search', 'ui-icon', 36)}</div>
@@ -222,11 +234,43 @@ Object.assign(app, {
       `;
     }
 
-    return list.map(item => {
-      if (item._mediaType === 'games') return this.renderRecentGameCard(item);
-      if (item._mediaType === 'cinema') return this.renderRecentCinemaCard(item);
+    return renderedRows.join('');
+  },
+
+  renderShowcaseCategoryRow(cat, items) {
+    const cardsHtml = items.map(item => {
+      if (cat.key === 'games') return this.renderRecentGameCard(item);
+      if (cat.key === 'cinema') return this.renderRecentCinemaCard(item);
       return this.renderRecentMusicCard(item);
     }).join('');
+
+    return `
+      <section class="showcase-category-row" id="row-${cat.key}">
+        <div class="showcase-row-header">
+          <div class="showcase-row-title-wrap">
+            <span class="showcase-row-icon">${getIcon(cat.icon, 'ui-icon', 18)}</span>
+            <h3 class="showcase-row-title">${cat.label}</h3>
+            <span class="badge badge-neutral font-mono">${items.length}</span>
+            <button class="showcase-view-all-link" onclick="app.navigate('${cat.link}')" title="Buka katalog ${cat.label}">
+              Lihat Semua ↗
+            </button>
+          </div>
+          <div class="showcase-row-controls">
+            <button class="slider-nav-btn" onclick="app.slideShowcase('${cat.key}', -1)" title="Geser ke kiri" aria-label="Geser ke kiri">
+              ${getIcon('chevronLeft', 'ui-icon', 16)}
+            </button>
+            <button class="slider-nav-btn" onclick="app.slideShowcase('${cat.key}', 1)" title="Geser ke kanan" aria-label="Geser ke kanan">
+              ${getIcon('chevronRight', 'ui-icon', 16)}
+            </button>
+          </div>
+        </div>
+        <div class="media-slider-container">
+          <div class="media-slider-track" id="slider-${cat.key}">
+            ${cardsHtml}
+          </div>
+        </div>
+      </section>
+    `;
   },
 
   renderRecentGameCard(g) {

@@ -38,21 +38,25 @@ Object.assign(app, {
 
       return `
         <tr>
-          <td class="font-mono" style="color:var(--text-muted); width:40px;">${rowNum}</td>
-          <td style="text-align:center; width:44px;">${checkbox}</td>
-          <td><span class="badge badge-neutral">${c.type}</span></td>
+          <td class="font-mono td-center" style="color:var(--text-muted); width:32px;">${rowNum}</td>
+          <td class="td-center" style="width:36px;">${checkbox}</td>
+          <td style="width:52px;"><span class="badge badge-neutral">${c.type}</span></td>
           <td>
             <strong>${escapeHtml(c.title)}</strong>
-            ${c.genre ? `<div style="font-size:0.75rem; color:var(--text-secondary);">${escapeHtml(c.genre)}</div>` : ''}
+            ${c.genre ? `<div class="cell-sub">${escapeHtml(c.genre)}</div>` : ''}
           </td>
-          <td class="font-mono">${formatRating(c.rating)}</td>
-          <td class="font-mono">${c.year || '-'}</td>
-          <td>${escapeHtml(c.country || '-')}</td>
-          <td>${escapeHtml(c.studio || '-')}</td>
-          <td>${c.age_rating ? `<span class="badge badge-neutral">${escapeHtml(c.age_rating)}</span>` : '-'}</td>
-          <td class="font-mono">${c.total_episodes ? c.total_episodes + ' Ep' : (c.total_seasons ? c.total_seasons + ' S' : '-')}</td>
-          <td style="text-align:center;">${c.download_url ? `<a href="${escapeHtml(c.download_url)}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm" title="Akses Halaman Download / Tonton" style="display:inline-flex; align-items:center; gap:4px; text-decoration:none;">${getIcon('download', 'ui-icon', 13)} Unduh</a>` : '<span style="color:var(--text-muted); font-size:0.8rem;">-</span>'}</td>
-          ${isAdmin ? `<td style="white-space:nowrap; text-align:right;">${actionButtons}</td>` : ''}
+          <td class="font-mono cell-nowrap">${formatRating(c.rating)}</td>
+          <td class="font-mono cell-nowrap">
+            <div>${c.year || '-'}</div>
+            ${c.age_rating ? `<div class="cell-sub"><span class="badge badge-neutral" style="font-size:0.65rem; padding:1px 4px;">${escapeHtml(c.age_rating)}</span></div>` : ''}
+          </td>
+          <td>
+            <div>${escapeHtml(c.studio || '-')}</div>
+            ${c.country ? `<div class="cell-sub">${escapeHtml(c.country)}</div>` : ''}
+          </td>
+          <td class="font-mono cell-nowrap">${c.total_episodes ? c.total_episodes + ' Ep' : (c.total_seasons ? c.total_seasons + ' S' : '-')}</td>
+          <td class="td-center cell-nowrap">${c.download_url ? `<a href="${escapeHtml(c.download_url)}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm" title="Akses Halaman Download / Tonton" style="display:inline-flex; align-items:center; gap:3px; text-decoration:none;">${getIcon('download', 'ui-icon', 12)} Unduh</a>` : '<span style="color:var(--text-muted); font-size:0.8rem;">-</span>'}</td>
+          ${isAdmin ? `<td class="td-right cell-nowrap">${actionButtons}</td>` : ''}
         </tr>
       `;
     }).join('');
@@ -194,22 +198,20 @@ Object.assign(app, {
             <table class="data-table">
               <thead>
                 <tr>
-                  <th style="width:40px;">#</th>
-                  <th style="text-align:center;">Status</th>
-                  <th>Tipe</th>
-                  <th class="sortable ${this.state.cinema.sortBy === 'title' ? 'sorted' : ''}" onclick="app.sortCatalog('cinema', 'title')">Judul <span class="sort-indicator">${this.state.cinema.sortBy === 'title' ? (this.state.cinema.sortOrder === 'asc' ? '▲' : '▼') : '↕'}</span></th>
+                  <th class="th-center" style="width:32px;">#</th>
+                  <th class="th-center" style="width:36px;">Status</th>
+                  <th style="width:52px;">Tipe</th>
+                  <th class="sortable ${this.state.cinema.sortBy === 'title' ? 'sorted' : ''}" onclick="app.sortCatalog('cinema', 'title')">Judul &amp; Genre <span class="sort-indicator">${this.state.cinema.sortBy === 'title' ? (this.state.cinema.sortOrder === 'asc' ? '▲' : '▼') : '↕'}</span></th>
                   <th class="sortable ${this.state.cinema.sortBy === 'rating' ? 'sorted' : ''}" onclick="app.sortCatalog('cinema', 'rating')">Rating IMDb <span class="sort-indicator">${this.state.cinema.sortBy === 'rating' ? (this.state.cinema.sortOrder === 'asc' ? '▲' : '▼') : '↕'}</span></th>
-                  <th class="sortable ${this.state.cinema.sortBy === 'year' ? 'sorted' : ''}" onclick="app.sortCatalog('cinema', 'year')">Tahun <span class="sort-indicator">${this.state.cinema.sortBy === 'year' ? (this.state.cinema.sortOrder === 'asc' ? '▲' : '▼') : '↕'}</span></th>
-                  <th>Negara</th>
-                  <th>Studio</th>
-                  <th>Usia</th>
-                  <th>Ep/Season</th>
-                  <th>Link Download</th>
-                  ${isAdmin ? '<th style="text-align:right;">Aksi</th>' : ''}
+                  <th class="sortable ${this.state.cinema.sortBy === 'year' ? 'sorted' : ''}" onclick="app.sortCatalog('cinema', 'year')">Tahun &amp; Usia <span class="sort-indicator">${this.state.cinema.sortBy === 'year' ? (this.state.cinema.sortOrder === 'asc' ? '▲' : '▼') : '↕'}</span></th>
+                  <th>Studio &amp; Negara</th>
+                  <th>Ep / Season</th>
+                  <th class="th-center">Unduh</th>
+                  ${isAdmin ? '<th class="th-right">Aksi</th>' : ''}
                 </tr>
               </thead>
               <tbody>
-                ${tableRows || '<tr><td colspan="12" style="text-align:center; padding:40px; color:var(--text-muted);">Tidak ada tayangan yang cocok.</td></tr>'}
+                ${tableRows || '<tr><td colspan="10" style="text-align:center; padding:40px; color:var(--text-muted);">Tidak ada tayangan yang cocok.</td></tr>'}
               </tbody>
             </table>
           </div>

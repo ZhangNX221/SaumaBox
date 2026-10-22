@@ -94,16 +94,27 @@ Object.assign(app, {
 
         return `
           <tr>
-            <td class="font-mono" style="color:var(--text-muted); width:40px;">${rowNum}</td>
-            <td style="text-align:center; width:44px;">${favButton}</td>
-            <td><strong>${escapeHtml(m.title)}</strong>${m.notes ? `<div style="font-size:0.75rem; color:var(--text-secondary);">${escapeHtml(m.notes)}</div>` : ''}</td>
-            <td>${escapeHtml(m.artist || '-')}</td><td>${escapeHtml(m.album || '-')}</td>
-            <td class="font-mono">${m.year || '-'}</td><td>${escapeHtml(m.genre || '-')}</td>
-            <td>${m.platform ? `<span class="badge badge-neutral">${escapeHtml(m.platform)}</span>` : '-'}</td>
-            <td class="font-mono">${m.size_mb ? m.size_mb + ' MB' : '-'}</td>
-            <td class="font-mono">${formatRating(m.rating)}</td>
-            <td style="text-align:center;">${m.download_url ? `<a href="${escapeHtml(m.download_url)}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm" title="Akses Halaman Download / Trek" style="display:inline-flex; align-items:center; gap:4px; text-decoration:none;">${getIcon('download', 'ui-icon', 13)} Unduh</a>` : '<span style="color:var(--text-muted); font-size:0.8rem;">-</span>'}</td>
-            ${isAdmin ? `<td style="white-space:nowrap; text-align:right;">${actionButtons}</td>` : ''}
+            <td class="font-mono td-center" style="color:var(--text-muted); width:32px;">${rowNum}</td>
+            <td class="td-center" style="width:36px;">${favButton}</td>
+            <td>
+              <strong>${escapeHtml(m.title)}</strong>
+              ${m.notes ? `<div class="cell-sub">${escapeHtml(m.notes)}</div>` : ''}
+            </td>
+            <td>
+              <div><strong>${escapeHtml(m.artist || '-')}</strong></div>
+              ${m.album ? `<div class="cell-sub">${escapeHtml(m.album)}</div>` : ''}
+            </td>
+            <td class="font-mono cell-nowrap">
+              <div>${m.year || '-'}</div>
+              ${m.genre ? `<div class="cell-sub">${escapeHtml(m.genre)}</div>` : ''}
+            </td>
+            <td>
+              ${m.platform ? `<span class="badge badge-neutral">${escapeHtml(m.platform)}</span>` : '<span style="color:var(--text-muted);">-</span>'}
+              ${m.size_mb ? `<div class="cell-sub font-mono" style="font-weight:700;">${m.size_mb} MB</div>` : ''}
+            </td>
+            <td class="font-mono cell-nowrap">${formatRating(m.rating)}</td>
+            <td class="td-center cell-nowrap">${m.download_url ? `<a href="${escapeHtml(m.download_url)}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm" title="Akses Halaman Download / Trek" style="display:inline-flex; align-items:center; gap:3px; text-decoration:none;">${getIcon('download', 'ui-icon', 12)} Unduh</a>` : '<span style="color:var(--text-muted); font-size:0.8rem;">-</span>'}</td>
+            ${isAdmin ? `<td class="td-right cell-nowrap">${actionButtons}</td>` : ''}
           </tr>`;
       }).join('');
 
@@ -193,19 +204,19 @@ Object.assign(app, {
           <table class="data-table">
             <thead>
               <tr>
-                <th style="width:40px;">#</th><th style="text-align:center;">Fav</th>
-                <th class="sortable ${this.state.music.sortBy === 'title' ? 'sorted' : ''}" onclick="app.sortCatalog('music', 'title')">Judul Trek / Album <span class="sort-indicator">${this.state.music.sortBy === 'title' ? (this.state.music.sortOrder === 'asc' ? '▲' : '▼') : '↕'}</span></th>
-                <th class="sortable ${this.state.music.sortBy === 'artist' ? 'sorted' : ''}" onclick="app.sortCatalog('music', 'artist')">Artis / Komposer <span class="sort-indicator">${this.state.music.sortBy === 'artist' ? (this.state.music.sortOrder === 'asc' ? '▲' : '▼') : '↕'}</span></th>
-                <th>Album</th>
-                <th class="sortable ${this.state.music.sortBy === 'year' ? 'sorted' : ''}" onclick="app.sortCatalog('music', 'year')">Tahun <span class="sort-indicator">${this.state.music.sortBy === 'year' ? (this.state.music.sortOrder === 'asc' ? '▲' : '▼') : '↕'}</span></th>
-                <th>Genre</th><th>Platform / Format</th><th>Ukuran</th>
+                <th class="th-center" style="width:32px;">#</th>
+                <th class="th-center" style="width:36px;">Fav</th>
+                <th class="sortable ${this.state.music.sortBy === 'title' ? 'sorted' : ''}" onclick="app.sortCatalog('music', 'title')">Judul Trek <span class="sort-indicator">${this.state.music.sortBy === 'title' ? (this.state.music.sortOrder === 'asc' ? '▲' : '▼') : '↕'}</span></th>
+                <th class="sortable ${this.state.music.sortBy === 'artist' ? 'sorted' : ''}" onclick="app.sortCatalog('music', 'artist')">Artis &amp; Album <span class="sort-indicator">${this.state.music.sortBy === 'artist' ? (this.state.music.sortOrder === 'asc' ? '▲' : '▼') : '↕'}</span></th>
+                <th class="sortable ${this.state.music.sortBy === 'year' ? 'sorted' : ''}" onclick="app.sortCatalog('music', 'year')">Tahun &amp; Genre <span class="sort-indicator">${this.state.music.sortBy === 'year' ? (this.state.music.sortOrder === 'asc' ? '▲' : '▼') : '↕'}</span></th>
+                <th>Platform &amp; Format</th>
                 <th class="sortable ${this.state.music.sortBy === 'rating' ? 'sorted' : ''}" onclick="app.sortCatalog('music', 'rating')">Rating <span class="sort-indicator">${this.state.music.sortBy === 'rating' ? (this.state.music.sortOrder === 'asc' ? '▲' : '▼') : '↕'}</span></th>
-                <th>Link Download</th>
-                ${isAdmin ? '<th style="text-align:right;">Aksi</th>' : ''}
+                <th class="th-center">Unduh</th>
+                ${isAdmin ? '<th class="th-right">Aksi</th>' : ''}
               </tr>
             </thead>
             <tbody>
-              ${tableRows || '<tr><td colspan="12" style="text-align:center; padding:40px; color:var(--text-muted);">Tidak ada trek musik yang cocok.</td></tr>'}
+              ${tableRows || '<tr><td colspan="9" style="text-align:center; padding:40px; color:var(--text-muted);">Tidak ada trek musik yang cocok.</td></tr>'}
             </tbody>
           </table>
         </div>

@@ -4,7 +4,7 @@
 
 Object.assign(app, {
   renderSettingsSystem(s) {
-    const curVer = 'v0.3.0';
+    const curVer = 'v0.3.1';
     return `
       <div style="display:flex; flex-direction:column; gap:20px;">
         <!-- Card Utama: Status & Pembaruan Sistem -->
@@ -12,7 +12,7 @@ Object.assign(app, {
           <div class="system-update-header">
             <div style="display:flex; align-items:center; gap:12px;">
               <div class="system-update-icon-box">
-                <img src="/images/logo-icon.png" alt="SaumaBox Logo" width="30" height="30" style="border-radius:6px; object-fit:cover;">
+                <img src="/images/logo-icon.png" alt="SaumaBox Logo" width="30" height="30" style="object-fit:contain; filter:drop-shadow(0 2px 5px rgba(212,175,55,0.35));">
               </div>
               <div>
                 <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
@@ -81,7 +81,7 @@ Object.assign(app, {
         <div class="module-card">
           <h3 style="font-size:1.05rem; margin-bottom:6px; display:flex; align-items:center; gap:8px;">
             <span style="color:var(--accent-color);">${getIcon('layers', 'ui-icon', 16)}</span>
-            Catatan Pembaruan Terkini (v0.3.0)
+            Catatan Pembaruan Terkini (v0.3.1)
           </h3>
           <p style="font-size:0.83rem; color:var(--text-secondary); margin-bottom:14px;">
             Peningkatan fitur dan stabilitas yang disertakan pada rilis ini:
@@ -89,19 +89,15 @@ Object.assign(app, {
           <div class="changelog-list">
             <div class="changelog-item">
               <span class="changelog-tag tag-new">Fitur Baru</span>
-              <span><strong>Dropdown Tambah Data &amp; Konfirmasi UI Card:</strong> Menu tambah katalog berlabuh di bawah tombol dan modal konfirmasi hapus kustom menggantikan browser alert.</span>
-            </div>
-            <div class="changelog-item">
-              <span class="changelog-tag tag-new">Fitur Baru</span>
-              <span><strong>Mobile Bottom Nav &amp; Hero Banner:</strong> Navigasi jempol bawah untuk mobile dan ilustrasi 3D vault multimedia pada landing publik.</span>
-            </div>
-            <div class="changelog-item">
-              <span class="changelog-tag tag-new">Fitur Baru</span>
-              <span><strong>Manajemen Poster &amp; Ekspor/Impor:</strong> Ekspor ZIP kumpulan poster, katalog vertikal, dan sampel trek audio populer.</span>
+              <span><strong>Horizontal Category Sliders (Games, Sinema, Musik):</strong> Pemisahan koleksi media menjadi baris slider horizontal mandiri dengan 5 poster di desktop (10 data dimuat) dan 4 poster kompak pada mode mobile.</span>
             </div>
             <div class="changelog-item">
               <span class="changelog-tag tag-ui">Antarmuka</span>
-              <span><strong>Header Icon Actions Detail Media:</strong> Tombol edit dan tutup dipindahkan ke header modal dalam bentuk tombol ikon yang bersih.</span>
+              <span><strong>Tabel Katalog Bebas Scroll Horizontal:</strong> Penyesuaian layout tabel Game, Sinema, dan Musik agar seluruh kolom data tampil penuh di layar tanpa scroll bar.</span>
+            </div>
+            <div class="changelog-item">
+              <span class="changelog-tag tag-ui">Antarmuka</span>
+              <span><strong>Login Modal Mobile &amp; Logo Transparan:</strong> Modal login ramah mobile (bottom sheet) dan aset logo resmi transparan tanpa latar belakang.</span>
             </div>
             <div class="changelog-item">
               <span class="changelog-tag tag-system">Perbaikan</span>
