@@ -15,19 +15,14 @@ Object.assign(app, {
           <div class="toolbar-left">
             <div class="sub-tabs">
               <button class="sub-tab-btn ${subTab === 'genres' ? 'active' : ''}" onclick="app.setTaxonomyTab('genres')">Genre</button>
-              <button class="sub-tab-btn ${subTab === 'posters' ? 'active' : ''}" onclick="app.setTaxonomyTab('posters')">Poster & Album</button>
+              <button class="sub-tab-btn ${subTab === 'posters' ? 'active' : ''}" onclick="app.setTaxonomyTab('posters')">Poster</button>
               <button class="sub-tab-btn ${subTab === 'platforms' ? 'active' : ''}" onclick="app.setTaxonomyTab('platforms')">Platform</button>
               <button class="sub-tab-btn ${subTab === 'statuses' ? 'active' : ''}" onclick="app.setTaxonomyTab('statuses')">Status</button>
             </div>
           </div>
-          <div class="toolbar-right">
+          <div class="toolbar-right" id="taxonomy-toolbar-right">
             ${subTab === 'genres' ? `<button class="btn btn-primary btn-icon" onclick="app.openAddGenreModal()" title="Tambah Genre" aria-label="Tambah Genre">${getIcon('plus', 'ui-icon-btn', 16)}</button>` : ''}
-            ${subTab === 'posters' ? `
-              <div style="display:flex; gap:8px; align-items:center;">
-                <button class="btn btn-secondary btn-sm" onclick="app.exportPostersZip()" title="Ekspor semua poster dalam berkas ZIP">${getIcon('download', 'ui-icon-btn', 14)} <span>Ekspor ZIP</span></button>
-                <button class="btn btn-primary btn-sm" onclick="app.openImportPosterModal()" title="Import gambar poster baru">${getIcon('upload', 'ui-icon-btn', 14)} <span>Import Poster</span></button>
-              </div>
-            ` : ''}
+            ${subTab === 'posters' ? this.renderPostersToolbarActions() : ''}
             ${subTab === 'platforms' ? `<button class="btn btn-primary btn-icon" onclick="app.openAddPlatformModal()" title="Tambah Platform" aria-label="Tambah Platform">${getIcon('plus', 'ui-icon-btn', 16)}</button>` : ''}
             ${subTab === 'statuses' ? `<button class="btn btn-primary btn-icon" onclick="app.openAddStatusModal()" title="Tambah Status" aria-label="Tambah Status">${getIcon('plus', 'ui-icon-btn', 16)}</button>` : ''}
           </div>
@@ -40,6 +35,40 @@ Object.assign(app, {
     `;
 
     await this.loadTaxonomyData();
+  },
+
+  renderPostersToolbarActions() {
+    const s = this.state.taxonomy || {};
+    const selected = s.selectedPosters || [];
+    const count = selected.length;
+
+    return `
+      <div class="posters-toolbar-actions" style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+        ${count > 0 ? `
+          <button class="btn btn-danger btn-sm" onclick="app.confirmDeleteSelectedPosters()" title="Hapus ${count} poster terpilih">
+            ${getIcon('trash', 'ui-icon-btn', 14)} <span>Hapus (${count})</span>
+          </button>
+          <button class="btn btn-secondary btn-sm" onclick="app.downloadSelectedPosters()" title="Download ${count} poster terpilih">
+            ${getIcon('download', 'ui-icon-btn', 14)} <span>Download (${count})</span>
+          </button>
+          <button class="btn btn-secondary btn-sm" onclick="app.compressSelectedPosters()" title="Kompres ${count} poster terpilih (maks. 200 KB)">
+            ${getIcon('refresh', 'ui-icon-btn', 14)} <span>Kompres (${count})</span>
+          </button>
+        ` : ''}
+        <button class="btn btn-secondary btn-sm" onclick="app.compressAllPosters()" title="Kompres semua poster agar ukurannya tidak melebihi 200 KB">
+          ${getIcon('refresh', 'ui-icon-btn', 14)} <span>Kompres Semua</span>
+        </button>
+        <button class="btn btn-secondary btn-sm" onclick="app.exportPostersZip()" title="Ekspor semua poster dalam berkas ZIP">${getIcon('download', 'ui-icon-btn', 14)} <span>Ekspor ZIP</span></button>
+        <button class="btn btn-primary btn-sm" onclick="app.openImportPosterModal()" title="Import gambar poster baru">${getIcon('upload', 'ui-icon-btn', 14)} <span>Import Poster</span></button>
+      </div>
+    `;
+  },
+
+  updatePostersToolbar() {
+    const el = document.getElementById('taxonomy-toolbar-right');
+    if (el && this.state.taxonomy?.subTab === 'posters') {
+      el.innerHTML = this.renderPostersToolbarActions();
+    }
   },
 
   setTaxonomyTab(tab) {

@@ -4,9 +4,10 @@ const multer = require('multer');
 const fs = require('node:fs');
 const path = require('node:path');
 const { DatabaseSync } = require('node:sqlite');
-const { getDb, logActivity, DB_PATH, BACKUP_DIR, DB_DIR } = require('../db');
+const { getDb, closeDb, logActivity, DB_PATH, BACKUP_DIR, DB_DIR } = require('../db');
 const { requireAuth } = require('../auth');
 const { parseExcel, generateExcel } = require('../excel');
+const { compressImageFile } = require('../imageOptimizer');
 const {
   cleanPrice,
   cleanRating,
@@ -64,15 +65,24 @@ const coverUpload = multer({
 });
 
 // POST /api/data/upload-cover — Unggah gambar cover/poster manual
-router.post('/upload-cover', requireAuth, coverUpload.single('cover_image'), (req, res) => {
+router.post('/upload-cover', requireAuth, coverUpload.single('cover_image'), async (req, res) => {
   if (!req.file) {
     return res.status(400).json({ error: 'Berkas gambar wajib dipilih.' });
   }
+
+  // Auto-kompres cover gambar ke max 200 KB (target 100-200 KB)
+  try {
+    await compressImageFile(req.file.path);
+  } catch (err) {
+    console.error('[Upload Cover] Gagal kompres:', err.message);
+  }
+
+  const finalStat = fs.statSync(req.file.path);
   res.json({
     success: true,
     url: `/images/covers/${req.file.filename}`,
     filename: req.file.filename,
-    size: req.file.size
+    size: finalStat.size
   });
 });
 
@@ -395,6 +405,115 @@ router.get('/export', requireAuth, (req, res) => {
   }
 });
 
+function formatBytes(bytes) {
+  if (!bytes || bytes === 0) return '0 B';
+  const k = 1024, sizes = ['B', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+}
+
+// GET /api/data/backups — Daftar riwayat berkas cadangan database
+router.get('/backups', requireAuth, (req, res) => {
+  try {
+    if (!fs.existsSync(BACKUP_DIR)) fs.mkdirSync(BACKUP_DIR, { recursive: true });
+    const files = fs.readdirSync(BACKUP_DIR);
+    const backups = files
+      .filter(f => f.endsWith('.sqlite'))
+      .map(f => {
+        const fullPath = path.join(BACKUP_DIR, f);
+        let stat = { size: 0, mtime: new Date() };
+        try { stat = fs.statSync(fullPath); } catch (_) {}
+        let type = 'Manual';
+        if (f.startsWith('auto_backup_')) type = 'Auto-Rollback';
+        else if (f.startsWith('catalog_backup_')) type = 'Manual';
+        else type = 'Snapshot';
+
+        return {
+          filename: f,
+          size_bytes: stat.size,
+          size_formatted: formatBytes(stat.size),
+          created_at: stat.mtime.toISOString(),
+          type
+        };
+      })
+      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+    res.json(backups);
+  } catch (err) {
+    res.status(500).json({ error: `Gagal membaca riwayat cadangan: ${err.message}` });
+  }
+});
+
+// GET /api/data/backups/:filename — Unduh berkas cadangan spesifik dari riwayat
+router.get('/backups/:filename', requireAuth, (req, res) => {
+  const filename = path.basename(req.params.filename);
+  const filePath = path.join(BACKUP_DIR, filename);
+  if (!fs.existsSync(filePath)) {
+    return res.status(404).json({ error: 'Berkas cadangan tidak ditemukan di server.' });
+  }
+  res.download(filePath, filename);
+});
+
+// POST /api/data/backups/:filename/restore — Pulihkan database dari riwayat cadangan
+router.post('/backups/:filename/restore', requireAuth, (req, res) => {
+  const filename = path.basename(req.params.filename);
+  const filePath = path.join(BACKUP_DIR, filename);
+  if (!fs.existsSync(filePath)) {
+    return res.status(404).json({ error: 'Berkas cadangan tidak ditemukan.' });
+  }
+
+  try {
+    const testDb = new DatabaseSync(filePath);
+    const integrityResult = testDb.prepare('PRAGMA integrity_check;').get();
+    if (!integrityResult || integrityResult['integrity_check'] !== 'ok') {
+      testDb.close();
+      return res.status(400).json({ error: 'Berkas cadangan korup atau tidak lulus validasi integritas SQLite.' });
+    }
+    testDb.close();
+
+    const rollbackPath = path.join(BACKUP_DIR, 'auto_backup_before_restore.sqlite');
+    if (fs.existsSync(DB_PATH)) {
+      fs.copyFileSync(DB_PATH, rollbackPath);
+    }
+
+    closeDb();
+    if (fs.existsSync(`${DB_PATH}-wal`)) {
+      try { fs.unlinkSync(`${DB_PATH}-wal`); } catch (_) {}
+    }
+    if (fs.existsSync(`${DB_PATH}-shm`)) {
+      try { fs.unlinkSync(`${DB_PATH}-shm`); } catch (_) {}
+    }
+    fs.copyFileSync(filePath, DB_PATH);
+
+    const freshDb = getDb();
+    logActivity(freshDb, 'RESTORE', 'system', null, `Database restored from historical backup ${filename}`);
+
+    res.json({
+      success: true,
+      message: `Database berhasil dipulihkan dari cadangan ${filename}. Snapshot tersimpan di auto_backup_before_restore.sqlite.`
+    });
+  } catch (err) {
+    res.status(500).json({ error: `Gagal memulihkan database: ${err.message}` });
+  }
+});
+
+// DELETE /api/data/backups/:filename — Hapus berkas cadangan dari riwayat
+router.delete('/backups/:filename', requireAuth, (req, res) => {
+  const filename = path.basename(req.params.filename);
+  const filePath = path.join(BACKUP_DIR, filename);
+  if (fs.existsSync(filePath)) {
+    try {
+      fs.unlinkSync(filePath);
+      const db = getDb();
+      logActivity(db, 'DELETE_BACKUP', 'system', null, filename);
+      return res.json({ success: true });
+    } catch (err) {
+      return res.status(500).json({ error: `Gagal menghapus berkas: ${err.message}` });
+    }
+  }
+  res.status(404).json({ error: 'Berkas cadangan tidak ditemukan.' });
+});
+
 // GET /api/data/backup — 1-Click Database Backup (.sqlite file download)
 router.get('/backup', requireAuth, (req, res) => {
   const db = getDb();
@@ -450,11 +569,15 @@ router.post('/restore', requireAuth, upload.single('backup_file'), (req, res) =>
       fs.copyFileSync(DB_PATH, rollbackPath);
     }
 
+    closeDb();
+    if (fs.existsSync(`${DB_PATH}-wal`)) {
+      try { fs.unlinkSync(`${DB_PATH}-wal`); } catch (_) {}
+    }
+    if (fs.existsSync(`${DB_PATH}-shm`)) {
+      try { fs.unlinkSync(`${DB_PATH}-shm`); } catch (_) {}
+    }
     fs.copyFileSync(uploadedPath, DB_PATH);
     fs.unlinkSync(uploadedPath);
-
-    if (fs.existsSync(`${DB_PATH}-wal`)) fs.unlinkSync(`${DB_PATH}-wal`);
-    if (fs.existsSync(`${DB_PATH}-shm`)) fs.unlinkSync(`${DB_PATH}-shm`);
 
     const freshDb = getDb();
     logActivity(freshDb, 'RESTORE', 'system', null, 'Database restored successfully from backup');

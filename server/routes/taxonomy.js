@@ -7,6 +7,7 @@ const os = require('node:os');
 const { execFile } = require('node:child_process');
 const { getDb, logActivity } = require('../db');
 const { requireAuth } = require('../auth');
+const { compressImageFile, compressDirectory, MAX_IMAGE_SIZE } = require('../imageOptimizer');
 
 const COVERS_DIR = path.join(__dirname, '..', '..', 'public', 'images', 'covers');
 if (!fs.existsSync(COVERS_DIR)) fs.mkdirSync(COVERS_DIR, { recursive: true });
@@ -161,11 +162,21 @@ router.get('/posters', (req, res) => {
   res.json(list);
 });
 
-router.post('/posters/upload', requireAuth, posterUpload.single('poster'), (req, res) => {
+router.post('/posters/upload', requireAuth, posterUpload.single('poster'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'Berkas gambar wajib dipilih.' });
   const db = getDb();
   const filename = req.file.filename;
   const url = `/images/covers/${filename}`;
+
+  // Auto-kompres gambar poster yang diunggah ke max 200 KB (target 100-200 KB)
+  let compressInfo = null;
+  try {
+    compressInfo = await compressImageFile(req.file.path);
+  } catch (err) {
+    console.error('[Upload Poster] Kompresi gambar gagal:', err.message);
+  }
+
+  const finalStat = fs.statSync(req.file.path);
 
   const { target_domain, target_id } = req.body;
   if (target_domain && target_id) {
@@ -180,7 +191,66 @@ router.post('/posters/upload', requireAuth, posterUpload.single('poster'), (req,
     success: true,
     filename,
     url,
-    size: req.file.size
+    size: finalStat.size,
+    size_formatted: formatBytes(finalStat.size),
+    compressed: compressInfo ? compressInfo.compressed : false,
+    original_size: compressInfo ? compressInfo.originalSize : finalStat.size
+  });
+});
+
+// POST /api/taxonomy/posters/compress-all — Kompres semua poster di public/images/covers (<= 200 KB)
+router.post('/posters/compress-all', requireAuth, async (req, res) => {
+  try {
+    const result = await compressDirectory(COVERS_DIR);
+    res.json({
+      success: true,
+      message: result.totalCompressed > 0
+        ? `Berhasil mengompresi ${result.totalCompressed} poster (Hemat ${result.spaceSavedFormatted}).`
+        : 'Semua poster sudah optimal (ukuran <= 200 KB).',
+      ...result
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Gagal mengompresi poster: ' + err.message });
+  }
+});
+
+// POST /api/taxonomy/posters/compress-selected — Kompres poster yang dipilih (<= 200 KB)
+router.post('/posters/compress-selected', requireAuth, async (req, res) => {
+  const { filenames } = req.body;
+  if (!Array.isArray(filenames) || filenames.length === 0) {
+    return res.status(400).json({ error: 'Daftar berkas poster tidak valid.' });
+  }
+
+  let totalCompressed = 0;
+  let spaceSaved = 0;
+  const results = [];
+
+  for (const rawName of filenames) {
+    const filename = path.basename(rawName);
+    const fullPath = path.join(COVERS_DIR, filename);
+    if (fs.existsSync(fullPath)) {
+      try {
+        const resComp = await compressImageFile(fullPath, { force: true });
+        if (resComp.compressed) {
+          totalCompressed++;
+          const saved = resComp.originalSize - resComp.newSize;
+          spaceSaved += saved;
+          results.push({ filename, ...resComp });
+        }
+      } catch (e) {
+        console.error('[compress-selected]', filename, e.message);
+      }
+    }
+  }
+
+  res.json({
+    success: true,
+    totalCompressed,
+    spaceSavedFormatted: formatBytes(spaceSaved),
+    message: totalCompressed > 0
+      ? `Berhasil mengompresi ${totalCompressed} poster terpilih (Hemat ${formatBytes(spaceSaved)}).`
+      : 'Poster yang dipilih sudah optimal (ukuran <= 200 KB).',
+    results
   });
 });
 
@@ -199,6 +269,31 @@ router.post('/posters/link', requireAuth, (req, res) => {
   res.json({ success: true, url });
 });
 
+router.post('/posters/batch-delete', requireAuth, (req, res) => {
+  const { filenames } = req.body;
+  if (!Array.isArray(filenames) || filenames.length === 0) {
+    return res.status(400).json({ error: 'Daftar berkas poster tidak valid.' });
+  }
+  const db = getDb();
+  let deletedCount = 0;
+  for (const rawName of filenames) {
+    const filename = path.basename(rawName);
+    const fullPath = path.join(COVERS_DIR, filename);
+    if (fs.existsSync(fullPath)) {
+      try {
+        fs.unlinkSync(fullPath);
+        deletedCount++;
+        const coverUrl = `/images/covers/${filename}`;
+        db.prepare("UPDATE games SET cover_url = '' WHERE cover_url = ?").run(coverUrl);
+        db.prepare("UPDATE cinema SET cover_url = '' WHERE cover_url = ?").run(coverUrl);
+        db.prepare("UPDATE music SET cover_url = '' WHERE cover_url = ?").run(coverUrl);
+        logActivity(db, 'DELETE_POSTER', 'taxonomy', 0, filename);
+      } catch (_) {}
+    }
+  }
+  res.json({ success: true, count: deletedCount });
+});
+
 router.delete('/posters/:filename', requireAuth, (req, res) => {
   const filename = path.basename(req.params.filename);
   const fullPath = path.join(COVERS_DIR, filename);
@@ -206,28 +301,54 @@ router.delete('/posters/:filename', requireAuth, (req, res) => {
     try { fs.unlinkSync(fullPath); } catch (_) {}
   }
   const db = getDb();
+  const coverUrl = `/images/covers/${filename}`;
+  db.prepare("UPDATE games SET cover_url = '' WHERE cover_url = ?").run(coverUrl);
+  db.prepare("UPDATE cinema SET cover_url = '' WHERE cover_url = ?").run(coverUrl);
+  db.prepare("UPDATE music SET cover_url = '' WHERE cover_url = ?").run(coverUrl);
   logActivity(db, 'DELETE_POSTER', 'taxonomy', 0, filename);
   res.json({ success: true });
 });
 
 router.get('/posters/export-zip', requireAuth, (req, res) => {
-  const zipName = `saumabox-posters-${Date.now()}.zip`;
-  const tmpZipPath = path.join(os.tmpdir(), zipName);
-  const files = fs.readdirSync(COVERS_DIR).filter(f => !f.startsWith('.') && /\.(jpe?g|png|webp|svg|gif)$/i.test(f));
+  const { files: selectedFilesParam } = req.query;
+  const allFiles = fs.readdirSync(COVERS_DIR).filter(f => !f.startsWith('.') && /\.(jpe?g|png|webp|svg|gif)$/i.test(f));
 
-  if (files.length === 0) {
-    return res.status(400).json({ error: 'Tidak ada berkas poster untuk diekspor.' });
+  let targetFiles = allFiles;
+  if (selectedFilesParam) {
+    const requested = selectedFilesParam.split(',').map(f => path.basename(f.trim())).filter(Boolean);
+    targetFiles = allFiles.filter(f => requested.includes(f));
   }
 
-  const fileArgs = files.map(f => path.join(COVERS_DIR, f));
-  execFile('zip', ['-j', tmpZipPath, ...fileArgs], (err) => {
-    if (err || !fs.existsSync(tmpZipPath)) {
-      return res.status(500).json({ error: 'Gagal membuat berkas ZIP poster.' });
-    }
-    res.download(tmpZipPath, 'saumabox-posters.zip', () => {
+  if (targetFiles.length === 0) {
+    return res.status(400).json({ error: 'Tidak ada berkas poster yang cocok untuk diunduh.' });
+  }
+
+  const zipName = `saumabox-posters-${Date.now()}.zip`;
+  const tmpZipPath = path.join(os.tmpdir(), zipName);
+  const filePaths = targetFiles.map(f => path.join(COVERS_DIR, f));
+  const downloadFilename = selectedFilesParam ? `saumabox-posters-terpilih-${targetFiles.length}.zip` : 'saumabox-posters.zip';
+
+  const sendZip = () => {
+    res.download(tmpZipPath, downloadFilename, () => {
       try { fs.unlinkSync(tmpZipPath); } catch (_) {}
     });
-  });
+  };
+
+  if (process.platform === 'win32') {
+    execFile('powershell', ['-NoProfile', '-NonInteractive', '-Command', 'Compress-Archive', '-Path', filePaths.join(','), '-DestinationPath', tmpZipPath, '-Force'], (err) => {
+      if (err || !fs.existsSync(tmpZipPath)) {
+        return res.status(500).json({ error: 'Gagal membuat berkas ZIP poster di server Windows.' });
+      }
+      sendZip();
+    });
+  } else {
+    execFile('zip', ['-j', tmpZipPath, ...filePaths], (err) => {
+      if (err || !fs.existsSync(tmpZipPath)) {
+        return res.status(500).json({ error: 'Gagal membuat berkas ZIP poster di server Linux.' });
+      }
+      sendZip();
+    });
+  }
 });
 
 router.get('/media-candidates', requireAuth, (req, res) => {

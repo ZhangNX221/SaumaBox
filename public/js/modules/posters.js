@@ -5,6 +5,7 @@
 Object.assign(app, {
   async renderPostersTab(content) {
     const s = this.state.taxonomy = this.state.taxonomy || { subTab: 'posters', q: '', posterDomain: 'all', sortBy: 'updated_at', sortOrder: 'desc', page: 1, limit: 12 };
+    s.selectedPosters = s.selectedPosters || [];
     const { q, limit = 12, page = 1 } = s;
     const curDomain = s.posterDomain || 'all';
 
@@ -23,6 +24,7 @@ Object.assign(app, {
     const curPage = Math.min(Math.max(1, page), totalPages);
     s.page = curPage;
     const paged = posters.slice((curPage - 1) * limit, curPage * limit);
+    const allSelectedOnPage = paged.length > 0 && paged.every(p => s.selectedPosters.includes(p.filename));
 
     const filterBar = `
       <div class="poster-filter-bar">
@@ -33,8 +35,13 @@ Object.assign(app, {
           <button class="poster-pill-btn ${curDomain === 'music' ? 'active' : ''}" onclick="app.setPosterDomainFilter('music')">🎵 Musik</button>
           <button class="poster-pill-btn ${curDomain === 'unlinked' ? 'active' : ''}" onclick="app.setPosterDomainFilter('unlinked')">📁 Belum Ditautkan</button>
         </div>
-        <div style="display:flex; align-items:center; gap:8px;">
-          <input type="text" class="form-input" style="padding:6px 12px; font-size:0.85rem; width:220px;" placeholder="Cari poster..." value="${escapeHtml(q)}" onkeyup="if(event.key==='Enter'){app.state.taxonomy.q=this.value; app.state.taxonomy.page=1; app.loadTaxonomyData();}">
+        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+          <label class="poster-select-all-label" title="Pilih semua poster di halaman ini">
+            <input type="checkbox" id="poster-select-all-cb" ${allSelectedOnPage ? 'checked' : ''} onchange="app.toggleSelectAllPosters(this.checked)">
+            <span>Pilih Semua</span>
+          </label>
+          ${s.selectedPosters.length > 0 ? `<button class="btn btn-ghost btn-xs" onclick="app.clearPosterSelection()" style="font-size:0.75rem; color:var(--text-secondary); padding:2px 8px;">Batal (${s.selectedPosters.length})</button>` : ''}
+          <input type="text" class="form-input" style="padding:6px 12px; font-size:0.85rem; width:200px;" placeholder="Cari poster..." value="${escapeHtml(q)}" onkeyup="if(event.key==='Enter'){app.state.taxonomy.q=this.value; app.state.taxonomy.page=1; app.loadTaxonomyData();}">
         </div>
       </div>
     `;
@@ -42,9 +49,14 @@ Object.assign(app, {
     const cards = paged.map(p => {
       const hasLink = p.links && p.links.length > 0;
       const linkLabel = hasLink ? p.links.map(l => `${l.typeName}: ${l.title}`).join(', ') : 'Belum ditautkan';
+      const isSelected = s.selectedPosters.includes(p.filename);
       return `
-        <div class="poster-admin-card">
+        <div class="poster-admin-card ${isSelected ? 'selected' : ''}" id="poster-card-${encodeURIComponent(p.filename)}" onclick="app.toggleSelectPoster('${escapeHtml(p.filename)}')">
           <div class="poster-thumb-wrap">
+            <label class="poster-select-box" onclick="event.stopPropagation();" title="Pilih poster ini">
+              <input type="checkbox" class="poster-checkbox-input" value="${escapeHtml(p.filename)}" ${isSelected ? 'checked' : ''} onchange="app.toggleSelectPoster('${escapeHtml(p.filename)}', this.checked)">
+              <span class="poster-custom-checkbox">${getIcon('check', 'poster-check-icon', 12)}</span>
+            </label>
             <img src="${escapeHtml(p.url)}" alt="${escapeHtml(p.filename)}" class="poster-thumb-img" loading="lazy" onerror="this.src='/images/logo-icon.png'">
             <span class="poster-badge-format">${p.ext}</span>
             <span class="poster-badge-size">${p.size_formatted}</span>
@@ -55,11 +67,11 @@ Object.assign(app, {
               ${hasLink ? getIcon('check', 'ui-icon', 12) : getIcon('info', 'ui-icon', 12)}
               <span>${escapeHtml(linkLabel)}</span>
             </div>
-            <div class="poster-actions">
-              <button class="btn btn-secondary btn-sm" onclick="app.openLinkPosterModal('${escapeHtml(p.filename)}')" title="Tautkan ke Media">${getIcon('link', 'ui-icon', 12)} Tautkan</button>
-              <button class="btn btn-secondary btn-sm btn-icon-sm" onclick="app.copyPosterPath('${escapeHtml(p.url)}')" title="Salin Path">${getIcon('copy', 'ui-icon', 12)}</button>
-              <a href="${escapeHtml(p.url)}" download="${escapeHtml(p.filename)}" class="btn btn-secondary btn-sm btn-icon-sm" title="Unduh File">${getIcon('download', 'ui-icon', 12)}</a>
-              <button class="btn btn-secondary btn-sm btn-icon-sm" onclick="app.confirmDeletePoster('${escapeHtml(p.filename)}')" title="Hapus Poster">${getIcon('trash', 'ui-icon', 12)}</button>
+            <div class="poster-actions" onclick="event.stopPropagation();">
+              <button class="btn btn-secondary btn-sm btn-icon-sm" onclick="app.openLinkPosterModal('${escapeHtml(p.filename)}')" title="Tautkan ke Media" aria-label="Tautkan ke Media">${getIcon('link', 'ui-icon', 14)}</button>
+              <button class="btn btn-secondary btn-sm btn-icon-sm" onclick="app.copyPosterPath('${escapeHtml(p.url)}')" title="Salin Path / URL" aria-label="Salin Path">${getIcon('copy', 'ui-icon', 14)}</button>
+              <a href="${escapeHtml(p.url)}" download="${escapeHtml(p.filename)}" class="btn btn-secondary btn-sm btn-icon-sm" title="Download Berkas" aria-label="Download Berkas">${getIcon('download', 'ui-icon', 14)}</a>
+              <button class="btn btn-secondary btn-sm btn-icon-sm btn-trash" onclick="app.confirmDeletePoster('${escapeHtml(p.filename)}')" title="Hapus Poster" aria-label="Hapus Poster">${getIcon('trash', 'ui-icon', 14)}</button>
             </div>
           </div>
         </div>
@@ -92,6 +104,140 @@ Object.assign(app, {
       ${cards ? `<div class="poster-gallery-grid">${cards}</div>` : `<div class="state-container" style="padding:40px 16px;"><div class="state-icon">🖼️</div><div class="state-title">Tidak ada berkas poster yang cocok.</div><div class="state-desc" style="color:var(--text-secondary); font-size:0.85rem; margin-top:4px;">Gunakan tombol "Import Poster" untuk mengunggah poster baru.</div></div>`}
       ${footer}
     `;
+
+    this.updatePostersToolbar();
+  },
+
+  toggleSelectPoster(filename, forceState) {
+    const s = this.state.taxonomy = this.state.taxonomy || {};
+    s.selectedPosters = s.selectedPosters || [];
+    const idx = s.selectedPosters.indexOf(filename);
+    const shouldSelect = typeof forceState === 'boolean' ? forceState : idx === -1;
+
+    if (shouldSelect && idx === -1) {
+      s.selectedPosters.push(filename);
+    } else if (!shouldSelect && idx !== -1) {
+      s.selectedPosters.splice(idx, 1);
+    }
+
+    const card = document.getElementById(`poster-card-${encodeURIComponent(filename)}`);
+    if (card) {
+      card.classList.toggle('selected', shouldSelect);
+      const cb = card.querySelector('.poster-checkbox-input');
+      if (cb) cb.checked = shouldSelect;
+    }
+
+    const allCb = document.getElementById('poster-select-all-cb');
+    const pagedCbs = document.querySelectorAll('.poster-checkbox-input');
+    if (allCb && pagedCbs.length > 0) {
+      allCb.checked = Array.from(pagedCbs).every(cb => cb.checked);
+    }
+
+    this.updatePostersToolbar();
+  },
+
+  toggleSelectAllPosters(isChecked) {
+    const s = this.state.taxonomy = this.state.taxonomy || {};
+    s.selectedPosters = s.selectedPosters || [];
+    const pagedCbs = document.querySelectorAll('.poster-checkbox-input');
+
+    pagedCbs.forEach(cb => {
+      const fname = cb.value;
+      cb.checked = isChecked;
+      const idx = s.selectedPosters.indexOf(fname);
+      if (isChecked && idx === -1) s.selectedPosters.push(fname);
+      else if (!isChecked && idx !== -1) s.selectedPosters.splice(idx, 1);
+
+      const card = document.getElementById(`poster-card-${encodeURIComponent(fname)}`);
+      if (card) card.classList.toggle('selected', isChecked);
+    });
+
+    this.updatePostersToolbar();
+  },
+
+  clearPosterSelection() {
+    const s = this.state.taxonomy = this.state.taxonomy || {};
+    s.selectedPosters = [];
+    document.querySelectorAll('.poster-admin-card').forEach(c => c.classList.remove('selected'));
+    document.querySelectorAll('.poster-checkbox-input').forEach(cb => cb.checked = false);
+    const allCb = document.getElementById('poster-select-all-cb');
+    if (allCb) allCb.checked = false;
+    this.updatePostersToolbar();
+  },
+
+  downloadSelectedPosters() {
+    const s = this.state.taxonomy || {};
+    const selected = s.selectedPosters || [];
+    if (selected.length === 0) {
+      showToast('Pilih setidaknya satu poster untuk didownload', 'info');
+      return;
+    }
+
+    if (selected.length === 1) {
+      const filename = selected[0];
+      const a = document.createElement('a');
+      a.href = `/images/covers/${encodeURIComponent(filename)}`;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      showToast(`Mengunduh berkas ${filename}`, 'success');
+    } else {
+      showToast(`Menyiapkan arsip ZIP untuk ${selected.length} poster terpilih...`, 'info');
+      window.location.href = `/api/taxonomy/posters/export-zip?files=${encodeURIComponent(selected.join(','))}`;
+    }
+  },
+
+  confirmDeleteSelectedPosters() {
+    const s = this.state.taxonomy || {};
+    const selected = s.selectedPosters || [];
+    if (selected.length === 0) return;
+
+    showConfirmModal({
+      title: 'Hapus Poster Terpilih',
+      message: `Hapus <strong>${selected.length} berkas poster</strong> yang dipilih secara permanen?`,
+      subtext: 'Berkas gambar ini akan dihapus dari server dan tautan cover pada media terkait akan dibersihkan.',
+      confirmText: `Ya, Hapus (${selected.length})`,
+      cancelText: 'Batal',
+      type: 'danger',
+      onConfirm: async () => {
+        try {
+          const res = await api.post('/api/taxonomy/posters/batch-delete', { filenames: selected });
+          showToast(`${res.count || selected.length} berkas poster berhasil dihapus`, 'success');
+          s.selectedPosters = [];
+          this.loadTaxonomyData();
+        } catch (err) {
+          showToast('Gagal menghapus poster: ' + err.message, 'error');
+        }
+      }
+    });
+  },
+
+  async compressAllPosters() {
+    showToast('Memeriksa dan mengompresi poster...', 'info');
+    try {
+      const res = await api.post('/api/taxonomy/posters/compress-all');
+      showToast(res.message || 'Kompresi selesai!', 'success');
+      this.loadTaxonomyData();
+    } catch (err) {
+      showToast('Gagal mengompresi poster: ' + err.message, 'error');
+    }
+  },
+
+  async compressSelectedPosters() {
+    const s = this.state.taxonomy || {};
+    const selected = s.selectedPosters || [];
+    if (selected.length === 0) return;
+
+    showToast(`Mengompresi ${selected.length} poster terpilih...`, 'info');
+    try {
+      const res = await api.post('/api/taxonomy/posters/compress-selected', { filenames: selected });
+      showToast(res.message || 'Kompresi selesai!', 'success');
+      s.selectedPosters = [];
+      this.loadTaxonomyData();
+    } catch (err) {
+      showToast('Gagal mengompresi poster: ' + err.message, 'error');
+    }
   },
 
   setPosterDomainFilter(domain) {
@@ -146,7 +292,7 @@ Object.assign(app, {
         <div class="form-group">
           <label class="form-label">Pilih Berkas Gambar Poster *</label>
           <input type="file" class="form-input" name="poster" accept=".jpg,.jpeg,.png,.webp,.svg,.gif" required onchange="app.previewImportPoster(event)">
-          <span style="font-size:0.75rem; color:var(--text-secondary); margin-top:4px; display:block;">Format: JPG, PNG, WebP, SVG (Maks. 25MB)</span>
+          <span style="font-size:0.75rem; color:var(--text-secondary); margin-top:4px; display:block;">Format: JPG, PNG, WebP (Otomatis dikompresi maksimal 100-200 KB)</span>
         </div>
         <div id="import-poster-preview-wrap" style="display:none; margin-bottom:14px; text-align:center;">
           <img id="import-poster-preview-img" src="" alt="Pratinjau" style="max-height:160px; max-width:100%; border-radius:var(--radius-card); border:1px solid var(--border-color); object-fit:contain;">
@@ -184,7 +330,7 @@ Object.assign(app, {
     const file = form.poster.files[0];
     if (!file) return showToast('Pilih berkas poster terlebih dahulu.', 'error');
     const submitBtn = document.getElementById('btn-submit-import');
-    if (submitBtn) { submitBtn.disabled = true; submitBtn.innerText = 'Mengunggah...'; }
+    if (submitBtn) { submitBtn.disabled = true; submitBtn.innerText = 'Mengunggah & Mengompresi...'; }
 
     const formData = new FormData();
     formData.append('poster', file);
@@ -196,8 +342,11 @@ Object.assign(app, {
     }
 
     try {
-      await api.upload('/api/taxonomy/posters/upload', formData);
-      showToast('Poster berhasil diunggah!', 'success');
+      const res = await api.upload('/api/taxonomy/posters/upload', formData);
+      const msg = res.compressed
+        ? `Poster berhasil diunggah & dikompresi ke ${res.size_formatted}!`
+        : `Poster berhasil diunggah (${res.size_formatted || 'Optimal'})!`;
+      showToast(msg, 'success');
       this.closeModal('modal-import-poster');
       this.loadTaxonomyData();
     } catch (err) {

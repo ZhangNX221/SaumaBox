@@ -182,30 +182,93 @@ Object.assign(app, {
     this.navigate('landing');
   },
 
-  // Restore Database Modal
+  // Restore Database Modal (/antislop-ui)
   openRestoreModal() {
     this.createModal('modal-restore', 'Restore Database SQLite', `
-      <p style="color:var(--text-secondary); margin-bottom:16px;">
-        Pilih file <code>.sqlite</code> untuk memulihkan seluruh data aplikasi. Sistem akan menjalankan validasi integritas dan otomatis membuat berkas snapshot cadangan sebelum memulihkan data aktif.
+      <p style="color:var(--text-secondary); margin-bottom:16px; font-size:0.86rem; line-height:1.45;">
+        Pilih berkas cadangan <code>.sqlite</code> untuk memulihkan seluruh data aplikasi. Sistem akan memvalidasi integritas struktur data sebelum menimpa basis data aktif.
       </p>
-      <div class="form-group">
-        <label class="form-label">Pilih File Backup (.sqlite) *</label>
-        <input type="file" id="restore-file-input" class="form-input" accept=".sqlite, .db">
+
+      <div class="form-group" style="margin-bottom:0;">
+        <label class="form-label">Berkas Database Cadangan *</label>
+        <div class="io-dropzone" id="restore-dropzone"
+             onclick="document.getElementById('restore-file-input').click()"
+             ondragover="event.preventDefault(); this.classList.add('dragover');"
+             ondragleave="this.classList.remove('dragover');"
+             ondrop="event.preventDefault(); this.classList.remove('dragover'); if(event.dataTransfer.files.length){ const inp = document.getElementById('restore-file-input'); inp.files = event.dataTransfer.files; app.handleRestoreFileSelect(inp); }">
+          <input type="file" id="restore-file-input" style="display:none;" accept=".sqlite, .db" onchange="app.handleRestoreFileSelect(this)">
+          
+          <div class="io-dropzone-empty" id="restore-dropzone-empty">
+            <div class="io-dropzone-icon">
+              ${getIcon('database', 'ui-icon', 22)}
+            </div>
+            <div class="io-dropzone-title">Pilih berkas .sqlite atau seret ke sini</div>
+            <div class="io-dropzone-hint">Mendukung berkas SQLite Database (.sqlite, .db) hingga 50 MB</div>
+          </div>
+
+          <div class="io-dropzone-selected" id="restore-dropzone-selected" style="display:none;">
+            <span class="io-file-badge font-mono" style="background:rgba(212,175,55,0.15); color:var(--accent-color); border:1px solid rgba(212,175,55,0.3);">SQLITE</span>
+            <div class="io-file-details">
+              <div class="io-file-name" id="restore-file-name">database.sqlite</div>
+              <div class="io-file-size" id="restore-file-size">0 KB</div>
+            </div>
+            <button type="button" class="btn btn-ghost btn-sm" onclick="event.stopPropagation(); app.clearRestoreFile();" style="padding:4px 8px; font-size:0.75rem;">Ganti</button>
+          </div>
+        </div>
       </div>
-      <div style="background:var(--bg-surface-elevated); padding:12px; border-radius:var(--radius-control); margin-bottom:16px; font-size:0.8rem; color:var(--text-muted);">
-        Peringatan: Proses ini akan memulihkan katalog dari file backup. Snapshot cadangan otomatis disimpan di <code>auto_backup_before_restore.sqlite</code>.
+
+      <div class="restore-safety-notice">
+        <span class="restore-safety-icon">${getIcon('shield', 'ui-icon', 16)}</span>
+        <div>
+          <strong>Snapshot Otomatis Dibuat</strong>
+          <span>Sistem secara otomatis mencadangkan kondisi database saat ini ke <code>auto_backup_before_restore.sqlite</code> sebelum proses penimpaan data dimulai.</span>
+        </div>
       </div>
+
       <div style="display:flex; justify-content:flex-end; gap:10px;">
-        <button class="btn btn-secondary" onclick="app.closeModal('modal-restore')">Batal</button>
-        <button class="btn btn-danger" onclick="app.executeRestore()">Mulai Restore Database</button>
+        <button type="button" class="btn btn-secondary" onclick="app.closeModal('modal-restore')">Batal</button>
+        <button type="button" class="btn btn-danger" id="restore-submit-btn" onclick="app.executeRestore()" style="display:inline-flex; align-items:center; gap:6px;">
+          ${getIcon('refresh', 'ui-icon-btn', 14)} Mulai Pemulihan Database
+        </button>
       </div>
     `);
+  },
+
+  handleRestoreFileSelect(input) {
+    const file = input && input.files ? input.files[0] : null;
+    const emptyEl = document.getElementById('restore-dropzone-empty');
+    const selEl = document.getElementById('restore-dropzone-selected');
+    const nameEl = document.getElementById('restore-file-name');
+    const sizeEl = document.getElementById('restore-file-size');
+
+    if (!file) {
+      if (emptyEl) emptyEl.style.display = 'block';
+      if (selEl) selEl.style.display = 'none';
+      return;
+    }
+
+    if (emptyEl) emptyEl.style.display = 'none';
+    if (selEl) selEl.style.display = 'flex';
+    if (nameEl) nameEl.textContent = file.name;
+    if (sizeEl) sizeEl.textContent = typeof formatBytes === 'function' ? formatBytes(file.size) : (file.size + ' B');
+  },
+
+  clearRestoreFile() {
+    const input = document.getElementById('restore-file-input');
+    if (input) input.value = '';
+    this.handleRestoreFileSelect(null);
   },
 
   async executeRestore() {
     const fileInput = document.getElementById('restore-file-input');
     if (!fileInput || !fileInput.files[0]) {
       return showToast('Silakan tentukan berkas cadangan database (.sqlite) yang ingin dipulihkan.', 'warning');
+    }
+
+    const btn = document.getElementById('restore-submit-btn');
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = `${getIcon('refresh', 'ui-icon-btn spin', 14)} Memulihkan...`;
     }
 
     const formData = new FormData();
@@ -218,6 +281,10 @@ Object.assign(app, {
       showToast(res.message, 'success');
       setTimeout(() => window.location.reload(), 1500);
     } catch (err) {
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = `${getIcon('refresh', 'ui-icon-btn', 14)} Mulai Pemulihan Database`;
+      }
       showToast(err.message, 'error');
     }
   },

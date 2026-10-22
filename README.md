@@ -3,7 +3,7 @@
 > **All-in-One Personal Media Catalog & Archiving System**  
 > Kelola, arsipkan, dan pantau seluruh koleksi Game, Cinema, dan Musik pribadi Anda dalam satu platform web modern, ringan, dan mandiri tanpa ketergantungan cloud pihak ketiga.
 
-[![Version](https://img.shields.io/badge/version-v0.4.0-blue.svg)](https://github.com/ZhangNX221/SaumaBox/releases/tag/v0.4.0)
+[![Version](https://img.shields.io/badge/version-v0.5.0-blue.svg)](https://github.com/ZhangNX221/SaumaBox/releases/tag/v0.5.0)
 [![Node.js](https://img.shields.io/badge/Node.js-22.x-green.svg)](https://nodejs.org/)
 [![Database](https://img.shields.io/badge/Database-SQLite%20(WAL%20Mode)-003B57.svg)](https://sqlite.org/)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)

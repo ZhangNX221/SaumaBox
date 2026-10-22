@@ -14,6 +14,105 @@
   }
 }
 
+/* ============================================================
+   Tampilan & Akses Publik Settings (Single Card, Antislop-UI)
+   ============================================================ */
+.settings-section-divider {
+  border-top: 1px solid var(--border-color);
+  margin: 22px 0 18px 0;
+  padding-top: 20px;
+}
+
+.settings-group-header {
+  margin-bottom: 14px;
+}
+
+.settings-group-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 3px;
+}
+
+.settings-group-desc {
+  font-size: 0.77rem;
+  color: var(--text-muted);
+}
+
+.sharing-master-box {
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-control);
+  padding: 14px 16px;
+  margin-bottom: 14px;
+  transition: border-color 0.15s ease;
+}
+
+.sharing-master-box:focus-within {
+  border-color: rgba(212, 175, 55, 0.4);
+}
+
+.sharing-sub-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 10px;
+}
+
+@media (max-width: 640px) {
+  .sharing-sub-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.sharing-sub-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-control);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.sharing-sub-item:hover {
+  background: rgba(255, 255, 255, 0.02);
+  border-color: var(--border-color);
+}
+
+.sharing-sub-item input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent-color, #d4af37);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.sharing-sub-item span {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  line-height: 1.35;
+}
+
+.sharing-sub-item:has(input:checked) {
+  border-color: rgba(212, 175, 55, 0.3);
+  background: rgba(212, 175, 55, 0.04);
+}
+
+.sharing-sub-item:has(input:checked) span {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+/* ============================================================
    System Updater & Version Management Styles
    ============================================================ */
 .system-update-header {
@@ -215,3 +314,180 @@
   color: #d4af37;
   border: 1px solid rgba(212, 175, 55, 0.3);
 }
+
+/* ============================================================
+   API Integration & Metadata Management (Antislop-UI)
+   ============================================================ */
+.api-section-group {
+  margin-bottom: 24px;
+}
+
+.api-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.api-section-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.api-section-subtitle {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.api-service-list {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-control);
+  overflow: hidden;
+  background: var(--bg-surface-elevated);
+}
+
+.api-service-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-subtle);
+  transition: background 0.15s ease;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.api-service-item:last-child {
+  border-bottom: none;
+}
+
+.api-service-item:hover {
+  background: rgba(255, 255, 255, 0.015);
+}
+
+.api-service-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 220px;
+  flex: 1;
+}
+
+.api-service-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent-color, #d4af37);
+  flex-shrink: 0;
+}
+
+.api-service-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.api-service-name-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.api-service-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.api-service-desc {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  line-height: 1.35;
+}
+
+.api-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: #34d399;
+  background: rgba(16, 185, 129, 0.1);
+  padding: 2px 7px;
+  border-radius: 4px;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.api-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #10b981;
+}
+
+/* Custom API Key Form Card */
+.custom-api-form-card {
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-control);
+  background: var(--bg-surface-elevated);
+  overflow: hidden;
+  margin-top: 20px;
+}
+
+.custom-api-header {
+  padding: 14px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+  background: var(--bg-surface-elevated);
+  transition: background 0.15s ease;
+}
+
+.custom-api-header:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.custom-api-content {
+  padding: 16px;
+  border-top: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
+}
+
+.custom-api-row {
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.custom-api-row:first-child {
+  padding-top: 0;
+}
+
+.custom-api-row:last-of-type {
+  border-bottom: none;
+  padding-bottom: 16px;
+}
+
+.custom-api-row-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+

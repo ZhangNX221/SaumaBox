@@ -4,7 +4,7 @@
 
 Object.assign(app, {
   renderSettingsSystem(s) {
-    const curVer = 'v0.4.0';
+    const curVer = 'v0.5.0';
     return `
       <div style="display:flex; flex-direction:column; gap:20px;">
         <!-- Card Utama: Status & Pembaruan Sistem -->
@@ -71,8 +71,8 @@ Object.assign(app, {
               ${getIcon('download', 'ui-icon-btn', 14)}
               <span id="btn-apply-text">Update Sekarang</span>
             </button>
-            <button type="button" class="btn btn-ghost btn-sm" onclick="app.forceCheckUpdates()" title="Periksa Ulang Secara Paksa" style="margin-left:auto; font-size:0.75rem;">
-              🔄 Sinkron Ulang
+            <button type="button" class="btn btn-ghost btn-sm" onclick="app.forceCheckUpdates()" title="Periksa Ulang Secara Paksa" style="margin-left:auto; font-size:0.75rem; gap:5px;">
+              ${getIcon('refresh', 'ui-icon-btn', 12)} Sinkron Ulang
             </button>
           </div>
         </div>
@@ -81,15 +81,31 @@ Object.assign(app, {
         <div class="module-card">
           <h3 style="font-size:1.05rem; margin-bottom:6px; display:flex; align-items:center; gap:8px;">
             <span style="color:var(--accent-color);">${getIcon('layers', 'ui-icon', 16)}</span>
-            Catatan Pembaruan Terkini (v0.4.0)
+            Catatan Pembaruan Terkini (v0.5.0)
           </h3>
           <p style="font-size:0.83rem; color:var(--text-secondary); margin-bottom:14px;">
-            Peningkatan fitur dan stabilitas yang disertakan pada rilis ini:
+            Peningkatan fitur, efisiensi penyimpanan, dan perbaikan antarmuka pada rilis ini:
           </p>
           <div class="changelog-list">
             <div class="changelog-item">
               <span class="changelog-tag tag-new">Fitur Baru</span>
-              <span><strong>Dukungan Penuh Docker &amp; Cloud Deployment:</strong> Konfigurasi Dockerfile Alpine, docker-compose.yml persisten, PM2 ecosystem.config.js, Procfile Cloud PaaS (Render, Railway, Fly.io), serta healthcheck endpoint otomatis.</span>
+              <span><strong>Kompresi Gambar Otomatis (100–200 KB):</strong> Engine optimasi gambar terintegrasi berbasis Sharp untuk seluruh upload poster, cover, dan avatar profil dengan batas ketat $\le 200$ KB.</span>
+            </div>
+            <div class="changelog-item">
+              <span class="changelog-tag tag-system">Media</span>
+              <span><strong>Kompresi Massal Galeri Poster:</strong> Optimasi seluruh koleksi gambar poster di disk tanpa menurunkan estetika tampilan, dilengkapi fitur Kompres Semua &amp; Kompres Selektif di UI.</span>
+            </div>
+            <div class="changelog-item">
+              <span class="changelog-tag tag-ui">Antarmuka</span>
+              <span><strong>Redesain Taksonomi &amp; Galeri:</strong> Restrukturisasi menu (Genre, Poster, Platform, Status), multi-select dengan aksi tombol ikon minimalis, download massal, dan hapus terpilih.</span>
+            </div>
+            <div class="changelog-item">
+              <span class="changelog-tag tag-ui">Antarmuka</span>
+              <span><strong>Modal Ekspor &amp; Impor Terpisah:</strong> Pop-up terpisah yang bersih dan fungsional untuk ekspor data CSV dan impor data per modul.</span>
+            </div>
+            <div class="changelog-item">
+              <span class="changelog-tag tag-system">Database</span>
+              <span><strong>Tabel Riwayat Cadangan &amp; Restore SQLite Minimalis:</strong> Riwayat snapshot backup otomatis, kartu restore single-card yang bersih, dan restrukturisasi tab pengaturan profil.</span>
             </div>
             <div class="changelog-item">
               <span class="changelog-tag tag-system">Database</span>

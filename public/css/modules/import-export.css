@@ -3,7 +3,8 @@
    ============================================================ */
 
 #modal-import .modal-dialog,
-#modal-export .modal-dialog {
+#modal-export .modal-dialog,
+#modal-restore .modal-dialog {
   max-width: 540px;
 }
 
@@ -65,7 +66,7 @@
 .io-dropzone:hover,
 .io-dropzone.dragover {
   border-color: var(--accent-color);
-  background: rgba(99, 102, 241, 0.04);
+  background: rgba(212, 175, 55, 0.05);
 }
 
 .io-dropzone-icon {
@@ -169,9 +170,10 @@
   border-color: rgba(255, 255, 255, 0.2);
 }
 
-.io-format-card:has(.io-format-input:checked) {
+.io-format-card:has(.io-format-input:checked),
+.io-format-card.selected {
   border-color: var(--accent-color);
-  background: rgba(99, 102, 241, 0.08);
+  background: rgba(212, 175, 55, 0.08);
   box-shadow: 0 0 0 1px var(--accent-color);
 }
 
@@ -208,3 +210,54 @@
   padding-top: 14px;
   border-top: 1px solid var(--border-color);
 }
+
+/* ============================================================
+   Restore Database Dialog Styles (/antislop-ui)
+   ============================================================ */
+.restore-safety-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: rgba(212, 175, 55, 0.05);
+  border: 1px solid rgba(212, 175, 55, 0.25);
+  border-radius: var(--radius-control);
+  padding: 12px 14px;
+  margin-top: 14px;
+  margin-bottom: 20px;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  line-height: 1.45;
+}
+
+.restore-safety-icon {
+  color: var(--accent-color, #d4af37);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.restore-safety-notice strong {
+  color: var(--text-primary);
+  display: block;
+  margin-bottom: 2px;
+  font-size: 0.82rem;
+}
+
+.restore-safety-notice code {
+  background: rgba(0, 0, 0, 0.25);
+  padding: 2px 5px;
+  border-radius: 4px;
+  font-size: 0.76rem;
+  color: #fbbf24;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.spin {
+  animation: spin 0.8s linear infinite;
+  display: inline-block;
+}
+
+

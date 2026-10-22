@@ -5,6 +5,7 @@ const fs = require('fs');
 const multer = require('multer');
 const { getDb, logActivity } = require('../db');
 const { hashPassword, verifyPassword, createSession, deleteSession, requireAuth } = require('../auth');
+const { compressImageFile } = require('../imageOptimizer');
 
 const AVATARS_DIR = path.join(__dirname, '..', '..', 'public', 'images', 'avatars');
 if (!fs.existsSync(AVATARS_DIR)) fs.mkdirSync(AVATARS_DIR, { recursive: true });
@@ -246,9 +247,16 @@ router.put('/password', (req, res) => {
 });
 
 // POST /api/auth/avatar — Unggah foto profil
-router.post('/avatar', requireAuth, avatarUpload.single('avatar'), (req, res) => {
+router.post('/avatar', requireAuth, avatarUpload.single('avatar'), async (req, res) => {
   if (!req.file) {
     return res.status(400).json({ error: 'Berkas foto profil wajib dipilih.' });
+  }
+
+  // Auto-kompres avatar ke max 200 KB (target 100-200 KB)
+  try {
+    await compressImageFile(req.file.path);
+  } catch (err) {
+    console.error('[Upload Avatar] Gagal kompres:', err.message);
   }
 
   const db = getDb();

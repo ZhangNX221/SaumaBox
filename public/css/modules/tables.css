@@ -402,10 +402,61 @@
 .poster-admin-card:hover .poster-thumb-img {
   transform: scale(1.04);
 }
-.poster-badge-format {
+.poster-admin-card {
+  position: relative;
+  cursor: pointer;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.poster-admin-card.selected {
+  border-color: var(--accent-color, #f59e0b) !important;
+  box-shadow: 0 0 0 1.5px var(--accent-color, #f59e0b), 0 8px 24px rgba(0, 0, 0, 0.4) !important;
+  background: rgba(245, 158, 11, 0.04) !important;
+}
+.poster-select-box {
   position: absolute;
   top: 8px;
   left: 8px;
+  z-index: 5;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.poster-checkbox-input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+.poster-custom-checkbox {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: rgba(15, 17, 23, 0.75);
+  backdrop-filter: blur(6px);
+  border: 1.5px solid rgba(255, 255, 255, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: transparent;
+  transition: all 0.15s ease;
+}
+.poster-admin-card:hover .poster-custom-checkbox {
+  border-color: rgba(255, 255, 255, 0.8);
+  background: rgba(15, 17, 23, 0.9);
+}
+.poster-checkbox-input:checked + .poster-custom-checkbox,
+.poster-admin-card.selected .poster-custom-checkbox {
+  background: var(--accent-color, #f59e0b) !important;
+  border-color: var(--accent-color, #f59e0b) !important;
+  color: #000000 !important;
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.5);
+}
+.poster-badge-format {
+  position: absolute;
+  top: 8px;
+  right: 8px;
   background: rgba(15, 17, 23, 0.88);
   backdrop-filter: blur(6px);
   color: var(--accent-color);
@@ -418,7 +469,7 @@
 }
 .poster-badge-size {
   position: absolute;
-  top: 8px;
+  bottom: 8px;
   right: 8px;
   background: rgba(15, 17, 23, 0.88);
   backdrop-filter: blur(6px);
@@ -428,6 +479,26 @@
   padding: 2px 6px;
   border-radius: 4px;
   border: 1px solid rgba(255, 255, 255, 0.12);
+}
+.poster-select-all-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  user-select: none;
+  font-weight: 500;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: color 0.15s ease;
+}
+.poster-select-all-label:hover {
+  color: var(--text-primary);
+}
+.poster-select-all-label input[type="checkbox"] {
+  cursor: pointer;
+  accent-color: var(--accent-color, #f59e0b);
 }
 .poster-info {
   padding: 10px 12px;
@@ -465,16 +536,21 @@
   padding-top: 8px;
   border-top: 1px solid var(--border-color);
 }
-.poster-actions .btn {
+.poster-actions .btn,
+.poster-actions .btn-icon-sm {
   flex: 1;
-  padding: 6px 4px;
+  height: 32px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
   justify-content: center;
   font-size: 0.78rem;
+  border-radius: 6px;
+  transition: all 0.15s ease;
 }
-.poster-actions .btn-icon-sm {
-  flex: 0 0 32px;
-  width: 32px;
-  padding: 0;
-  justify-content: center;
+.poster-actions .btn-trash:hover {
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.4);
+  background: rgba(239, 68, 68, 0.1);
 }
 
