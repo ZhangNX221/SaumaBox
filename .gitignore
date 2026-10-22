@@ -13,6 +13,7 @@ data/uploads/*
 # Environment files
 .env
 .env.*
+!.env.example
 
 # Logs
 *.log

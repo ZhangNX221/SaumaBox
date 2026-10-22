@@ -2,9 +2,13 @@ const { DatabaseSync } = require('node:sqlite');
 const fs = require('node:fs');
 const path = require('node:path');
 
-const DB_DIR = path.join(__dirname, '..', 'data');
+const DB_DIR = process.env.DATA_DIR
+  ? path.resolve(process.env.DATA_DIR)
+  : path.join(__dirname, '..', 'data');
 const BACKUP_DIR = path.join(DB_DIR, 'backups');
-const DB_PATH = path.join(DB_DIR, 'saumabox.sqlite');
+const DB_PATH = process.env.DB_PATH
+  ? path.resolve(process.env.DB_PATH)
+  : path.join(DB_DIR, 'saumabox.sqlite');
 
 // Pastikan direktori data & backups tersedia
 if (!fs.existsSync(DB_DIR)) fs.mkdirSync(DB_DIR, { recursive: true });
@@ -270,8 +274,20 @@ function logActivity(database, action, module, itemId, itemTitle, details = '') 
   }
 }
 
+function closeDb() {
+  if (db) {
+    try {
+      db.close();
+      db = null;
+    } catch (err) {
+      console.error('Failed to close database cleanly:', err.message);
+    }
+  }
+}
+
 module.exports = {
   getDb,
+  closeDb,
   logActivity,
   DB_PATH,
   DB_DIR,

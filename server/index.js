@@ -15,7 +15,8 @@ const taxonomyRoutes = require('./routes/taxonomy');
 const metadataRoutes = require('./routes/metadata');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = parseInt(process.env.PORT || '3000', 10);
+const HOST = process.env.HOST || '0.0.0.0';
 
 // Middleware
 app.use(express.json({ limit: '10mb' }));
@@ -38,6 +39,17 @@ app.use('/api/metadata', metadataRoutes);
 app.get('/api/recent', (req, res, next) => {
   req.url = '/recent';
   settingsRoutes(req, res, next);
+});
+
+// Health check endpoint for Docker, Kubernetes, & cloud PaaS (Render, Railway, Coolify)
+app.get(['/api/health', '/healthz'], (req, res) => {
+  res.status(200).json({
+    status: 'ok',
+    app: 'SaumaBox',
+    version: require('../package.json').version,
+    uptime: Math.floor(process.uptime()),
+    timestamp: new Date().toISOString()
+  });
 });
 
 
@@ -63,13 +75,32 @@ app.use((err, req, res, next) => {
 });
 
 if (require.main === module) {
-  app.listen(PORT, () => {
+  const server = app.listen(PORT, HOST, () => {
+    const { DB_PATH } = require('./db');
     console.log(`\n======================================================`);
     console.log(`🎮 SaumaBox — All-in-One Personal Media Catalog`);
-    console.log(`🌐 Server aktif di: http://localhost:${PORT}`);
-    console.log(`📁 Database: data/saumabox.sqlite (WAL Mode)`);
+    console.log(`🌐 Server aktif di: http://${HOST === '0.0.0.0' ? 'localhost' : HOST}:${PORT}`);
+    console.log(`📁 Database: ${DB_PATH} (WAL Mode)`);
     console.log(`======================================================\n`);
   });
+
+  const handleShutdown = (signal) => {
+    console.log(`\n[${signal}] Menutup server SaumaBox secara aman...`);
+    server.close(() => {
+      const { closeDb } = require('./db');
+      closeDb();
+      console.log('Koneksi database SQLite ditutup. Selesai.');
+      process.exit(0);
+    });
+
+    setTimeout(() => {
+      console.error('Batas waktu penutupan habis, mematikan proses paksa.');
+      process.exit(1);
+    }, 5000).unref();
+  };
+
+  process.on('SIGTERM', () => handleShutdown('SIGTERM'));
+  process.on('SIGINT', () => handleShutdown('SIGINT'));
 }
 
 module.exports = app;

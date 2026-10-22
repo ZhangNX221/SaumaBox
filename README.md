@@ -92,6 +92,86 @@ SaumaBox dirancang dengan prinsip **Zero-Bloat / High Performance**:
 
 ---
 
+## 🚢 Panduan Deployment (Docker & Hosting)
+
+SaumaBox dirancang untuk kemudahan *self-hosting* di berbagai infrastruktur:
+
+### A. Deploy dengan Docker & Docker Compose (Direkomendasikan)
+Cara tercepat dan paling bersih untuk menjalankan SaumaBox tanpa perlu memasang Node.js di sistem host:
+
+1. **Jalankan via Docker Compose**:
+   ```bash
+   docker compose up -d
+   ```
+   *Perintah ini otomatis membangun container berbasis `node:22-alpine` yang ringan dan mengamankan data SQLite pada volume folder `./data`.*
+
+2. **Periksa Status & Log**:
+   ```bash
+   # Cek status kontainer dan healthcheck
+   docker compose ps
+
+   # Pantau log sistem
+   docker compose logs -f
+   ```
+
+3. **Hentikan Layanan**:
+   ```bash
+   docker compose down
+   ```
+
+---
+
+### B. Deploy di Linux VPS (Ubuntu / Debian) dengan PM2 & Nginx
+Untuk hosting mandiri di VPS (DigitalOcean, Hetzner, Linode, AWS EC2):
+
+1. **Pasang Node.js 22 LTS & PM2**:
+   ```bash
+   # Install Node.js 22
+   curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
+   sudo apt-get install -y nodejs
+
+   # Install Process Manager PM2
+   sudo npm install -g pm2
+   ```
+
+2. **Jalankan Aplikasi dengan `ecosystem.config.js`**:
+   ```bash
+   pm2 start ecosystem.config.js
+   pm2 save
+   pm2 startup
+   ```
+   *Catatan: Konfigurasi default menggunakan `instances: 1` untuk menjaga integritas transaksi SQLite WAL.*
+
+3. **Contoh Konfigurasi Nginx Reverse Proxy**:
+   ```nginx
+   server {
+       listen 80;
+       server_name saumabox.domainanda.com;
+
+       location / {
+           proxy_pass http://127.0.0.1:3000;
+           proxy_http_version 1.1;
+           proxy_set_header Upgrade $http_upgrade;
+           proxy_set_header Connection 'upgrade';
+           proxy_set_header Host $host;
+           proxy_set_header X-Real-IP $remote_addr;
+           proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+           proxy_cache_bypass $http_upgrade;
+       }
+   }
+   ```
+
+---
+
+### C. Deploy di Cloud PaaS (Railway, Render, Coolify, Fly.io)
+SaumaBox telah dilengkapi dengan [Dockerfile](Dockerfile), [Procfile](Procfile), dan health check endpoint `/api/health`:
+
+- **Mount Persistent Disk**: Wajib memasang persistent disk / volume pada path `/app/data` agar database SQLite tidak ter-reset saat deploy ulang.
+- **Port**: Otomatis mendeteksi `process.env.PORT` dari penyedia cloud.
+- **Health Check Path**: `/api/health` (mengembalikan status HTTP 200 `{ "status": "ok" }`).
+
+---
+
 ## 🔑 Akun Bawaan (Default Credentials)
 
 Saat pertama kali dijalankan, sistem otomatis membuatkan skema database, data awal (seed), dan akun admin bawaan:
@@ -126,6 +206,11 @@ SaumaBox/
 ├── server/                     # Backend API & layanan sistem
 │   ├── db.js                   # Inisialisasi SQLite, schema DDL, seed data, & logging
 │   └── index.js                # Server Express, routing REST API, & session auth
+├── Dockerfile                  # Konfigurasi container produksi berbasis Node 22 Alpine
+├── docker-compose.yml          # Konfigurasi deployment 1-command dengan volume persistent
+├── ecosystem.config.js         # Konfigurasi PM2 Process Manager untuk VPS
+├── Procfile                    # File proses untuk Cloud PaaS (Render, Railway, Fly.io)
+├── .env.example                # Templat variabel lingkungan sistem
 ├── package.json
 └── README.md
 ```

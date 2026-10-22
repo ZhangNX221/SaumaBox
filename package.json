@@ -8,6 +8,9 @@
     "dev": "node --watch server/index.js",
     "test": "node -e \"require('./server/index.js'); console.log('App loaded OK'); process.exit(0);\""
   },
+  "engines": {
+    "node": ">=22.0.0"
+  },
   "keywords": [
     "media-catalog",
     "games",
