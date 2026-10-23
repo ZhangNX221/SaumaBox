@@ -1,13 +1,21 @@
-# SaumaBox
+<p align="center">
+  <img src="docs/images/title.jpg" alt="SaumaBox" width="328">
+</p>
 
-Aplikasi katalog multimedia mandiri untuk mengelola koleksi game, sinema, dan musik pribadi tanpa ketergantungan layanan cloud.
+<p align="center">
+  Aplikasi katalog multimedia mandiri untuk mengelola koleksi game, sinema, dan musik pribadi tanpa ketergantungan layanan cloud.
+</p>
 
-[![Version](https://img.shields.io/badge/version-v0.5.1-blue.svg)](https://github.com/ZhangNX221/SaumaBox/releases/tag/v0.5.1)
-[![Node.js](https://img.shields.io/badge/Node.js-22.x-green.svg)](https://nodejs.org/)
-[![Database](https://img.shields.io/badge/Database-SQLite%20(WAL%20Mode)-003B57.svg)](https://sqlite.org/)
-[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+<p align="center">
+  <a href="https://github.com/ZhangNX221/SaumaBox/releases/tag/v0.5.2"><img src="https://img.shields.io/badge/version-v0.5.2-blue.svg" alt="Version"></a>
+  <a href="https://nodejs.org/"><img src="https://img.shields.io/badge/Node.js-22.x-green.svg" alt="Node.js"></a>
+  <a href="https://sqlite.org/"><img src="https://img.shields.io/badge/Database-SQLite%20(WAL%20Mode)-003B57.svg" alt="Database"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License"></a>
+</p>
 
-![Pratinjau Antarmuka SaumaBox](docs/images/preview.jpg)
+<p align="center">
+  <img src="docs/images/preview.jpg" alt="Pratinjau Antarmuka SaumaBox">
+</p>
 
 ---
 

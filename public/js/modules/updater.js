@@ -4,7 +4,7 @@
 
 Object.assign(app, {
   renderSettingsSystem(s) {
-    const curVer = 'v0.5.1';
+    const curVer = 'v0.5.2';
     return `
       <div style="display:flex; flex-direction:column; gap:20px;">
         <!-- Card Utama: Status & Pembaruan Sistem -->
@@ -81,7 +81,7 @@ Object.assign(app, {
         <div class="module-card">
           <h3 style="font-size:1.05rem; margin-bottom:6px; display:flex; align-items:center; gap:8px;">
             <span style="color:var(--accent-color);">${getIcon('layers', 'ui-icon', 16)}</span>
-            Catatan Pembaruan Terkini (v0.5.1)
+            Catatan Pembaruan Terkini (v0.5.2)
           </h3>
           <p style="font-size:0.83rem; color:var(--text-secondary); margin-bottom:14px;">
             Peningkatan fitur, efisiensi penyimpanan, dan perbaikan antarmuka pada rilis ini:
@@ -89,15 +89,15 @@ Object.assign(app, {
           <div class="changelog-list">
             <div class="changelog-item">
               <span class="changelog-tag tag-new">Fitur Baru</span>
-              <span><strong>Katalog Web &amp; Bookmark Aplikasi:</strong> Modul peluncur bookmark tautan web dan aplikasi homelab (CasaOS, ZimaOS, Portainer) berbentuk kartu kisi launchpad dengan logo/favicon otomatis.</span>
-            </div>
-            <div class="changelog-item">
-              <span class="changelog-tag tag-system">Keamanan</span>
-              <span><strong>Kontrol Visibilitas Akses Publik (Read-Only):</strong> Master switch dan per-katalog toggle untuk mengatur akses pengunjung tanpa login, route guard katalog privat, serta opsi sembunyikan estimasi harga game.</span>
+              <span><strong>Ekspansi 30 Bookmark Web &amp; Homelab:</strong> Koleksi bawaan diperluas menjadi 30 layanan terkelola lengkap dengan ikon dashboard resmi, kategori terstruktur, dan fitur ekspor/impor CSV.</span>
             </div>
             <div class="changelog-item">
               <span class="changelog-tag tag-ui">Antarmuka</span>
-              <span><strong>Hero Banner Dinamis &amp; Branding:</strong> Kustomisasi nama aplikasi, logo, judul banner, dan deskripsi beranda langsung tersinkron secara reaktif ke antarmuka.</span>
+              <span><strong>Pembaruan Header Brand &amp; Tata Letak:</strong> Tampilan visual judul banner baru, pembersihan kartu statistik redundan di dashboard, serta grid peluncur aplikasi yang lebih responsif.</span>
+            </div>
+            <div class="changelog-item">
+              <span class="changelog-tag tag-system">Stabilitas</span>
+              <span><strong>Audit Kualitas Ponytail Review:</strong> Peningkatan keamanan kueri SQL, pencegahan crash pengecekan password hash, dan konkurensi pengambilan metadata.</span>
             </div>
             <div class="changelog-item">
               <span class="changelog-tag tag-new">Fitur Baru</span>
