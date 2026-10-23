@@ -81,6 +81,7 @@ Object.assign(app, {
       const tableRows = res.items.map((m, idx) => {
         const rowNum = (page - 1) * limit + idx + 1;
         const isFav = m.is_favorite === 1;
+        const itemCode = typeof formatItemCode === 'function' ? formatItemCode('music', m.id) : `M-${String(m.id).padStart(3, '0')}`;
         const favButton = isAdmin ? `
           <button class="quick-check-btn ${isFav ? 'active' : ''}" onclick="app.toggleMusicFavorite(${m.id})" title="${isFav ? 'Hapus favorit' : 'Jadikan favorit'}" aria-label="${isFav ? 'Hapus favorit' : 'Favorit'}">
             ${isFav ? getIcon('star', 'ui-icon', 14) : '<span class="quick-check-empty"></span>'}
@@ -96,6 +97,7 @@ Object.assign(app, {
           <tr>
             <td class="font-mono td-center" style="color:var(--text-muted); width:32px;">${rowNum}</td>
             <td class="td-center" style="width:36px;">${favButton}</td>
+            <td class="cell-nowrap" style="width:68px;"><span class="badge badge-item-id font-mono" onclick="copyItemCode('${itemCode}', event)" title="Klik untuk salin ID unik">${itemCode}</span></td>
             <td>
               <strong>${escapeHtml(m.title)}</strong>
               ${m.notes ? `<div class="cell-sub">${escapeHtml(m.notes)}</div>` : ''}
@@ -121,6 +123,7 @@ Object.assign(app, {
       const gridCards = res.items.map(m => {
         const isFav = m.is_favorite === 1;
         const coverSrc = m.cover_url || '/images/covers/bohemian_rhapsody.jpg';
+        const itemCode = typeof formatItemCode === 'function' ? formatItemCode('music', m.id) : `M-${String(m.id).padStart(3, '0')}`;
 
         const adminActions = isAdmin ? `
           <div class="ps-actions" onclick="event.stopPropagation()">
@@ -138,6 +141,7 @@ Object.assign(app, {
             <div class="ps-card-media music-aspect">
               <div class="ps-overlay-top">
                 <div class="ps-overlay-badges-left">
+                  <span class="badge badge-item-id font-mono" onclick="copyItemCode('${itemCode}', event)" title="Klik untuk salin ID unik">${itemCode}</span>
                   ${m.platform ? `<span class="badge badge-purple">${escapeHtml(m.platform)}</span>` : '<span class="badge badge-neutral">Audio</span>'}
                   ${m.genre ? `<span class="badge badge-neutral">${escapeHtml(m.genre)}</span>` : ''}
                 </div>
@@ -169,10 +173,14 @@ Object.assign(app, {
 
       const mobileCards = res.items.map(m => {
         const isFav = m.is_favorite === 1;
+        const itemCode = typeof formatItemCode === 'function' ? formatItemCode('music', m.id) : `M-${String(m.id).padStart(3, '0')}`;
         return `
           <div class="mobile-data-card">
             <div class="mobile-card-row">
               <div>
+                <div style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">
+                  <span class="badge badge-item-id font-mono" onclick="copyItemCode('${itemCode}', event)" title="Klik untuk salin ID unik">${itemCode}</span>
+                </div>
                 <strong style="font-size:1.05rem;">${escapeHtml(m.title)}</strong>
                 <div style="font-size:0.8rem; color:var(--text-secondary);">${escapeHtml(m.artist || '')} • ${escapeHtml(m.album || '')}</div>
               </div>
@@ -206,6 +214,7 @@ Object.assign(app, {
               <tr>
                 <th class="th-center" style="width:32px;">#</th>
                 <th class="th-center" style="width:36px;">Fav</th>
+                <th style="width:68px;">ID Unik</th>
                 <th class="sortable ${this.state.music.sortBy === 'title' ? 'sorted' : ''}" onclick="app.sortCatalog('music', 'title')">Judul Trek <span class="sort-indicator">${this.state.music.sortBy === 'title' ? (this.state.music.sortOrder === 'asc' ? '▲' : '▼') : '↕'}</span></th>
                 <th class="sortable ${this.state.music.sortBy === 'artist' ? 'sorted' : ''}" onclick="app.sortCatalog('music', 'artist')">Artis &amp; Album <span class="sort-indicator">${this.state.music.sortBy === 'artist' ? (this.state.music.sortOrder === 'asc' ? '▲' : '▼') : '↕'}</span></th>
                 <th class="sortable ${this.state.music.sortBy === 'year' ? 'sorted' : ''}" onclick="app.sortCatalog('music', 'year')">Tahun &amp; Genre <span class="sort-indicator">${this.state.music.sortBy === 'year' ? (this.state.music.sortOrder === 'asc' ? '▲' : '▼') : '↕'}</span></th>
@@ -216,7 +225,7 @@ Object.assign(app, {
               </tr>
             </thead>
             <tbody>
-              ${tableRows || '<tr><td colspan="9" style="text-align:center; padding:40px; color:var(--text-muted);">Tidak ada trek musik yang cocok.</td></tr>'}
+              ${tableRows || '<tr><td colspan="10" style="text-align:center; padding:40px; color:var(--text-muted);">Tidak ada trek musik yang cocok.</td></tr>'}
             </tbody>
           </table>
         </div>

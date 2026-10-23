@@ -506,10 +506,14 @@ Object.assign(app, {
       let posterSrc = item.cover_url || '';
       let detailsHtml = '';
 
+      const itemCode = typeof formatItemCode === 'function' ? formatItemCode(category, item.id) : `${category.charAt(0).toUpperCase()}-${String(item.id).padStart(3, '0')}`;
+      const idRowHtml = `<tr><td>ID Unik Item</td><td><span class="badge badge-item-id font-mono" onclick="copyItemCode('${itemCode}', event)" title="Klik untuk salin ID unik">${itemCode}</span><span style="font-size:0.75rem; color:var(--text-muted); margin-left:6px;">(Klik untuk salin ID)</span></td></tr>`;
+
       if (category === 'games') {
         if (!posterSrc) posterSrc = '/images/covers/cyberpunk2077.jpg';
         detailsHtml = `
           <table class="media-detail-table">
+            ${idRowHtml}
             <tr><td>Kategori Koleksi</td><td><span class="badge badge-neutral">${item.type}</span></td></tr>
             <tr><td>Tanggal Rilis</td><td><span class="font-mono">${escapeHtml(item.release_date || (item.year ? String(item.year) : '-'))}</span></td></tr>
             <tr><td>Genre Permainan</td><td>${item.genre ? `<span class="badge badge-neutral">${escapeHtml(item.genre)}</span>` : '<span style="color:var(--text-muted);">-</span>'}</td></tr>
@@ -540,6 +544,7 @@ Object.assign(app, {
         if (!posterSrc) posterSrc = '/images/covers/breaking_bad.jpg';
         detailsHtml = `
           <table class="media-detail-table">
+            ${idRowHtml}
             <tr><td>Jenis Tayangan</td><td><span class="badge ${getCinemaTypeBadgeClass(item.type)}">${item.type}</span></td></tr>
             <tr><td>Tahun Rilis</td><td class="font-mono">${item.year || '-'}</td></tr>
             <tr><td>Genre Sinema</td><td>${escapeHtml(item.genre || '-')}</td></tr>
@@ -557,6 +562,7 @@ Object.assign(app, {
         if (!posterSrc) posterSrc = '/images/covers/bohemian_rhapsody.jpg';
         detailsHtml = `
           <table class="media-detail-table">
+            ${idRowHtml}
             <tr><td>Musisi / Artis</td><td><strong>${escapeHtml(item.artist || '-')}</strong></td></tr>
             <tr><td>Judul Album</td><td>${escapeHtml(item.album || '-')}</td></tr>
             <tr><td>Tahun Rilis</td><td class="font-mono">${item.year || '-'}</td></tr>

@@ -36,10 +36,13 @@ Object.assign(app, {
         </div>
       ` : '';
 
+      const itemCode = typeof formatItemCode === 'function' ? formatItemCode('cinema', c.id) : `C-${String(c.id).padStart(3, '0')}`;
+
       return `
         <tr>
           <td class="font-mono td-center" style="color:var(--text-muted); width:32px;">${rowNum}</td>
           <td class="td-center" style="width:36px;">${checkbox}</td>
+          <td class="cell-nowrap" style="width:68px;"><span class="badge badge-item-id font-mono" onclick="copyItemCode('${itemCode}', event)" title="Klik untuk salin ID unik">${itemCode}</span></td>
           <td style="width:52px;"><span class="badge badge-neutral">${c.type}</span></td>
           <td>
             <strong>${escapeHtml(c.title)}</strong>
@@ -64,6 +67,7 @@ Object.assign(app, {
     const gridCards = res.items.map(c => {
       const isWatched = c.watched === 1;
       const coverSrc = c.cover_url || '/images/covers/breaking_bad.jpg';
+      const itemCode = typeof formatItemCode === 'function' ? formatItemCode('cinema', c.id) : `C-${String(c.id).padStart(3, '0')}`;
 
       const adminActions = isAdmin ? `
         <div class="ps-actions" onclick="event.stopPropagation()">
@@ -83,6 +87,7 @@ Object.assign(app, {
           <div class="ps-card-media cinema-aspect">
             <div class="ps-overlay-top">
               <div class="ps-overlay-badges-left">
+                <span class="badge badge-item-id font-mono" onclick="copyItemCode('${itemCode}', event)" title="Klik untuk salin ID unik">${itemCode}</span>
                 <span class="badge ${getCinemaTypeBadgeClass(c.type)}">${c.type}</span>
                 ${c.age_rating ? `<span class="badge badge-neutral">${escapeHtml(c.age_rating)}</span>` : ''}
               </div>
@@ -119,10 +124,14 @@ Object.assign(app, {
 
     const mobileCards = res.items.map(c => {
       const isWatched = c.watched === 1;
+      const itemCode = typeof formatItemCode === 'function' ? formatItemCode('cinema', c.id) : `C-${String(c.id).padStart(3, '0')}`;
       return `
         <div class="mobile-data-card">
           <div class="mobile-card-row">
-            <span class="badge badge-neutral">${c.type}</span>
+            <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+              <span class="badge badge-item-id font-mono" onclick="copyItemCode('${itemCode}', event)" title="Klik untuk salin ID unik">${itemCode}</span>
+              <span class="badge badge-neutral">${c.type}</span>
+            </div>
             <div style="display:flex; align-items:center; gap:8px;">
               <span class="font-mono">${formatRating(c.rating)}</span>
               ${isAdmin ? `
@@ -200,6 +209,7 @@ Object.assign(app, {
                 <tr>
                   <th class="th-center" style="width:32px;">#</th>
                   <th class="th-center" style="width:36px;">Status</th>
+                  <th style="width:68px;">ID Unik</th>
                   <th style="width:52px;">Tipe</th>
                   <th class="sortable ${this.state.cinema.sortBy === 'title' ? 'sorted' : ''}" onclick="app.sortCatalog('cinema', 'title')">Judul &amp; Genre <span class="sort-indicator">${this.state.cinema.sortBy === 'title' ? (this.state.cinema.sortOrder === 'asc' ? '▲' : '▼') : '↕'}</span></th>
                   <th class="sortable ${this.state.cinema.sortBy === 'rating' ? 'sorted' : ''}" onclick="app.sortCatalog('cinema', 'rating')">Rating IMDb <span class="sort-indicator">${this.state.cinema.sortBy === 'rating' ? (this.state.cinema.sortOrder === 'asc' ? '▲' : '▼') : '↕'}</span></th>
@@ -211,7 +221,7 @@ Object.assign(app, {
                 </tr>
               </thead>
               <tbody>
-                ${tableRows || '<tr><td colspan="10" style="text-align:center; padding:40px; color:var(--text-muted);">Tidak ada tayangan yang cocok.</td></tr>'}
+                ${tableRows || '<tr><td colspan="11" style="text-align:center; padding:40px; color:var(--text-muted);">Tidak ada tayangan yang cocok.</td></tr>'}
               </tbody>
             </table>
           </div>

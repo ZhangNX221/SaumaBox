@@ -38,7 +38,9 @@ Object.assign(app, {
 
     const cards = paged.map(p => {
       const hasLink = p.links && p.links.length > 0;
-      const linkLabel = hasLink ? p.links.map(l => `${l.typeName}: ${l.title}`).join(', ') : 'Belum ditautkan';
+      const linkLabel = hasLink
+        ? p.links.map(l => `${l.code ? `[${l.code}] ` : ''}${l.title}`).join(', ')
+        : 'Belum ditautkan';
       const isSelected = s.selectedPosters.includes(p.filename);
       return `
         <div class="poster-admin-card ${isSelected ? 'selected' : ''}" id="poster-card-${encodeURIComponent(p.filename)}" onclick="app.toggleSelectPoster('${escapeHtml(p.filename)}')">
@@ -305,13 +307,130 @@ Object.assign(app, {
     });
   },
 
+  findMediaCandidate(input) {
+    if (!this._mediaCandidates || !input) return null;
+    const str = String(input).trim();
+    if (!str) return null;
+
+    const parsed = typeof parseItemCode === 'function' ? parseItemCode(str) : null;
+    const all = [
+      ...(this._mediaCandidates.games || []).map(g => ({ ...g, domain: 'games', domainLabel: '🎮 Game', code: g.code || `G-${String(g.id).padStart(3, '0')}`, meta: [g.type, g.genre, g.year || g.release_date].filter(Boolean).join(' • ') })),
+      ...(this._mediaCandidates.cinema || []).map(c => ({ ...c, domain: 'cinema', domainLabel: '🎬 Cinema', code: c.code || `C-${String(c.id).padStart(3, '0')}`, meta: [c.type, c.genre, c.year].filter(Boolean).join(' • ') })),
+      ...(this._mediaCandidates.music || []).map(m => ({ ...m, domain: 'music', domainLabel: '🎵 Musik', code: m.code || `M-${String(m.id).padStart(3, '0')}`, meta: [m.artist, m.album, m.year].filter(Boolean).join(' • ') }))
+    ];
+
+    if (parsed) {
+      const match = all.find(item => {
+        if (parsed.domain !== 'any' && item.domain !== parsed.domain) return false;
+        return Number(item.id) === Number(parsed.id);
+      });
+      if (match) return match;
+    }
+
+    // Pencarian cadangan jika pengguna mengetik kode persis atau substring kode
+    const upper = str.toUpperCase();
+    const exactCodeMatch = all.find(item => item.code.toUpperCase() === upper);
+    if (exactCodeMatch) return exactCodeMatch;
+
+    return null;
+  },
+
+  onLinkPosterCodeInput(val) {
+    const previewWrap = document.getElementById('link-poster-preview-card');
+    const submitBtn = document.getElementById('btn-submit-link-poster');
+    const helperSel = document.getElementById('link-poster-helper-select');
+    if (!previewWrap) return;
+
+    const trimmed = (val || '').trim();
+    if (!trimmed) {
+      previewWrap.innerHTML = `
+        <div style="display:flex; align-items:center; gap:10px; color:var(--text-muted); font-size:0.85rem; width:100%; justify-content:center; padding:8px 0;">
+          ${getIcon('info', 'ui-icon', 16)}
+          <span>Ketik ID unik item (contoh: <strong style="color:var(--text-primary);">G-001</strong>, <strong style="color:var(--text-primary);">C-002</strong>, <strong style="color:var(--text-primary);">M-003</strong>) untuk mendeteksi media.</span>
+        </div>`;
+      if (submitBtn) submitBtn.disabled = true;
+      if (helperSel) helperSel.value = '';
+      return;
+    }
+
+    const item = this.findMediaCandidate(trimmed);
+    if (item) {
+      const coverSrc = item.cover_url || (item.domain === 'games' ? '/images/covers/cyberpunk2077.svg' : item.domain === 'cinema' ? '/images/covers/breaking_bad.jpg' : '/images/covers/bohemian_rhapsody.jpg');
+      previewWrap.innerHTML = `
+        <img src="${escapeHtml(coverSrc)}" alt="${escapeHtml(item.title)}" style="width:44px; height:58px; object-fit:cover; border-radius:4px; border:1px solid var(--border-color); flex-shrink:0;" onerror="this.src='/images/logo-icon.png'">
+        <div style="flex:1; min-width:0;">
+          <div style="display:flex; align-items:center; gap:6px; margin-bottom:3px; flex-wrap:wrap;">
+            <span class="badge badge-item-id font-mono" style="font-size:0.75rem;">${escapeHtml(item.code)}</span>
+            <span class="badge badge-neutral" style="font-size:0.7rem;">${escapeHtml(item.domainLabel)}</span>
+            <span style="font-size:0.75rem; color:var(--badge-success-text); font-weight:700; display:inline-flex; align-items:center; gap:3px;">
+              ${getIcon('check', 'ui-icon', 12)} Media Terdeteksi
+            </span>
+          </div>
+          <div style="font-weight:700; font-size:0.92rem; color:var(--text-primary); text-overflow:ellipsis; overflow:hidden; white-space:nowrap;" title="${escapeHtml(item.title)}">${escapeHtml(item.title)}</div>
+          <div style="font-size:0.75rem; color:var(--text-secondary); text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">${escapeHtml(item.meta || '')}</div>
+        </div>
+      `;
+      if (submitBtn) submitBtn.disabled = false;
+      if (helperSel) {
+        helperSel.value = `${item.domain}:${item.id}`;
+      }
+    } else {
+      previewWrap.innerHTML = `
+        <div style="display:flex; align-items:center; gap:10px; color:var(--badge-danger-text); font-size:0.85rem; width:100%; justify-content:center; padding:8px 0;">
+          ${getIcon('alert', 'ui-icon', 16)}
+          <span>ID "<strong>${escapeHtml(trimmed)}</strong>" tidak ditemukan. Pastikan format diawali <strong class="font-mono">G-</strong> (Game), <strong class="font-mono">C-</strong> (Cinema), atau <strong class="font-mono">M-</strong> (Musik).</span>
+        </div>`;
+      if (submitBtn) submitBtn.disabled = true;
+    }
+  },
+
+  toggleLinkPosterHelperDropdown() {
+    const wrap = document.getElementById('link-poster-helper-wrap');
+    if (wrap) {
+      const isHidden = wrap.style.display === 'none';
+      wrap.style.display = isHidden ? 'block' : 'none';
+      if (isHidden) {
+        const sel = document.getElementById('link-poster-helper-select');
+        if (sel) sel.focus();
+      }
+    }
+  },
+
+  onLinkPosterHelperSelect(val) {
+    if (!val) return;
+    const [domain, id] = val.split(':');
+    const input = document.getElementById('link-poster-code-input');
+    const code = typeof formatItemCode === 'function' ? formatItemCode(domain, id) : `${domain.charAt(0).toUpperCase()}-${String(id).padStart(3, '0')}`;
+    if (input) {
+      input.value = code;
+      this.onLinkPosterCodeInput(code);
+    }
+  },
+
+  onImportPosterCodeInput(val) {
+    const previewEl = document.getElementById('import-poster-target-preview');
+    if (!previewEl) return;
+    const trimmed = (val || '').trim();
+    if (!trimmed) {
+      previewEl.innerHTML = '';
+      return;
+    }
+    const item = this.findMediaCandidate(trimmed);
+    if (item) {
+      previewEl.innerHTML = `<span style="color:var(--badge-success-text); font-weight:600;">✓ Ditautkan ke: [${escapeHtml(item.code)}] ${escapeHtml(item.title)} (${escapeHtml(item.domainLabel)})</span>`;
+    } else {
+      previewEl.innerHTML = `<span style="color:var(--badge-danger-text);">ID "${escapeHtml(trimmed)}" tidak ditemukan.</span>`;
+    }
+  },
+
   async openImportPosterModal() {
     let candidates = { games: [], cinema: [], music: [] };
     try { candidates = await api.get('/api/taxonomy/media-candidates'); } catch (_) {}
+    this._mediaCandidates = candidates;
 
-    const gameOpts = (candidates.games || []).map(g => `<option value="games:${g.id}">[Game] ${escapeHtml(g.title)}</option>`).join('');
-    const cinemaOpts = (candidates.cinema || []).map(c => `<option value="cinema:${c.id}">[Cinema] ${escapeHtml(c.title)}</option>`).join('');
-    const musicOpts = (candidates.music || []).map(m => `<option value="music:${m.id}">[Musik] ${escapeHtml(m.title)}</option>`).join('');
+    const gameOpts = (candidates.games || []).map(g => `<option value="${g.code || `G-${String(g.id).padStart(3, '0')}`}">[${g.code || `G-${String(g.id).padStart(3, '0')}`}] ${escapeHtml(g.title)}</option>`).join('');
+    const cinemaOpts = (candidates.cinema || []).map(c => `<option value="${c.code || `C-${String(c.id).padStart(3, '0')}`}">[${c.code || `C-${String(c.id).padStart(3, '0')}`}] ${escapeHtml(c.title)}</option>`).join('');
+    const musicOpts = (candidates.music || []).map(m => `<option value="${m.code || `M-${String(m.id).padStart(3, '0')}`}">[${m.code || `M-${String(m.id).padStart(3, '0')}`}] ${escapeHtml(m.title)}</option>`).join('');
 
     this.createModal('modal-import-poster', 'Import Gambar Poster / Sampul', `
       <form onsubmit="app.handleUploadPoster(event)">
@@ -324,13 +443,20 @@ Object.assign(app, {
           <img id="import-poster-preview-img" src="" alt="Pratinjau" style="max-height:160px; max-width:100%; border-radius:var(--radius-card); border:1px solid var(--border-color); object-fit:contain;">
         </div>
         <div class="form-group">
-          <label class="form-label">Tautkan ke Media (Opsional)</label>
-          <select class="form-select" name="target_media">
-            <option value="">-- Simpan ke penyimpanan saja (Tanpa tautan) --</option>
-            <optgroup label="🎮 Katalog Game">${gameOpts}</optgroup>
-            <optgroup label="🎬 Katalog Cinema">${cinemaOpts}</optgroup>
-            <optgroup label="🎵 Katalog Musik">${musicOpts}</optgroup>
-          </select>
+          <label class="form-label" style="display:flex; justify-content:space-between; align-items:center;">
+            <span>Tautkan ke Media (Opsional dengan ID)</span>
+            <span style="font-size:0.75rem; color:var(--text-secondary);">Contoh: <code style="color:var(--accent-color);">G-001</code>, <code style="color:var(--accent-color);">C-002</code></span>
+          </label>
+          <div style="display:flex; gap:8px;">
+            <input type="text" class="form-input font-mono" name="target_code" placeholder="Ketik ID unik (misal: G-001)" style="text-transform:uppercase; font-weight:700;" oninput="app.onImportPosterCodeInput(this.value)">
+            <select class="form-select" style="max-width:200px;" onchange="if(this.value){document.querySelector('[name=target_code]').value=this.value; app.onImportPosterCodeInput(this.value);}">
+              <option value="">-- Pilih Judul --</option>
+              <optgroup label="🎮 Game">${gameOpts}</optgroup>
+              <optgroup label="🎬 Cinema">${cinemaOpts}</optgroup>
+              <optgroup label="🎵 Musik">${musicOpts}</optgroup>
+            </select>
+          </div>
+          <div id="import-poster-target-preview" style="font-size:0.8rem; margin-top:4px; min-height:18px;"></div>
         </div>
         <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:16px;">
           <button type="button" class="btn btn-secondary" onclick="app.closeModal('modal-import-poster')">Batal</button>
@@ -360,11 +486,9 @@ Object.assign(app, {
 
     const formData = new FormData();
     formData.append('poster', file);
-    const target = form.target_media.value;
-    if (target) {
-      const [target_domain, target_id] = target.split(':');
-      formData.append('target_domain', target_domain);
-      formData.append('target_id', target_id);
+    const targetCode = form.target_code ? form.target_code.value.trim() : '';
+    if (targetCode) {
+      formData.append('target_code', targetCode);
     }
 
     try {
@@ -387,50 +511,114 @@ Object.assign(app, {
   async openLinkPosterModal(filename) {
     let candidates = { games: [], cinema: [], music: [] };
     try { candidates = await api.get('/api/taxonomy/media-candidates'); } catch (_) {}
+    this._mediaCandidates = candidates;
 
-    const gameOpts = (candidates.games || []).map(g => `<option value="games:${g.id}">[Game] ${escapeHtml(g.title)}</option>`).join('');
-    const cinemaOpts = (candidates.cinema || []).map(c => `<option value="cinema:${c.id}">[Cinema] ${escapeHtml(c.title)}</option>`).join('');
-    const musicOpts = (candidates.music || []).map(m => `<option value="music:${m.id}">[Musik] ${escapeHtml(m.title)}</option>`).join('');
+    const gameOpts = (candidates.games || []).map(g => `<option value="games:${g.id}">[${g.code || `G-${String(g.id).padStart(3, '0')}`}] ${escapeHtml(g.title)}</option>`).join('');
+    const cinemaOpts = (candidates.cinema || []).map(c => `<option value="cinema:${c.id}">[${c.code || `C-${String(c.id).padStart(3, '0')}`}] ${escapeHtml(c.title)}</option>`).join('');
+    const musicOpts = (candidates.music || []).map(m => `<option value="music:${m.id}">[${m.code || `M-${String(m.id).padStart(3, '0')}`}] ${escapeHtml(m.title)}</option>`).join('');
 
     this.createModal('modal-link-poster', 'Tautkan Poster ke Media', `
       <form onsubmit="app.handleLinkPoster(event, '${escapeHtml(filename)}')">
-        <div style="display:flex; align-items:center; gap:12px; margin-bottom:14px; padding:10px; background:var(--bg-surface-elevated); border-radius:var(--radius-card);">
-          <img src="/images/covers/${escapeHtml(filename)}" alt="${escapeHtml(filename)}" style="width:48px; height:64px; object-fit:cover; border-radius:4px;">
+        <!-- Info Poster yang Sedang Ditautkan -->
+        <div style="display:flex; align-items:center; gap:12px; margin-bottom:16px; padding:10px 12px; background:var(--bg-surface-elevated); border-radius:var(--radius-card); border:1px solid var(--border-color);">
+          <img src="/images/covers/${escapeHtml(filename)}" alt="${escapeHtml(filename)}" style="width:48px; height:64px; object-fit:cover; border-radius:4px; border:1px solid var(--border-color); flex-shrink:0;">
           <div style="overflow:hidden;">
-            <div style="font-weight:600; font-size:0.85rem; color:var(--text-primary); text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">${escapeHtml(filename)}</div>
-            <div style="font-size:0.75rem; color:var(--text-secondary);">/images/covers/${escapeHtml(filename)}</div>
+            <div style="font-weight:700; font-size:0.9rem; color:var(--text-primary); text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">${escapeHtml(filename)}</div>
+            <div style="font-size:0.75rem; color:var(--text-secondary); margin-top:2px;" class="font-mono">/images/covers/${escapeHtml(filename)}</div>
           </div>
         </div>
-        <div class="form-group">
-          <label class="form-label">Pilih Item Media Target *</label>
-          <select class="form-select" name="target_media" required>
-            <option value="">-- Pilih Media untuk Menerapkan Cover Ini --</option>
+
+        <!-- Input ID Unik Target -->
+        <div class="form-group" style="margin-bottom:12px;">
+          <label class="form-label" style="display:flex; justify-content:space-between; align-items:center;">
+            <span>ID Unik Media Target *</span>
+            <span style="font-size:0.75rem; color:var(--text-secondary);">Contoh: <code style="color:var(--accent-color); font-weight:700;">G-001</code>, <code style="color:var(--accent-color); font-weight:700;">C-002</code>, <code style="color:var(--accent-color); font-weight:700;">M-005</code></span>
+          </label>
+          <div style="display:flex; gap:8px;">
+            <input type="text"
+                   id="link-poster-code-input"
+                   name="target_code"
+                   class="form-input font-mono"
+                   placeholder="Ketik ID item (misal: G-001)"
+                   style="text-transform:uppercase; font-size:1.05rem; font-weight:700; letter-spacing:1px;"
+                   autocomplete="off"
+                   autofocus
+                   required
+                   oninput="app.onLinkPosterCodeInput(this.value)">
+            <button type="button" class="btn btn-secondary" onclick="app.toggleLinkPosterHelperDropdown()" title="Cari dari daftar judul jika lupa ID" style="white-space:nowrap; display:inline-flex; align-items:center; gap:6px;">
+              ${getIcon('search', 'ui-icon', 14)} <span>Cari Judul</span>
+            </button>
+          </div>
+          <div style="font-size:0.75rem; color:var(--text-muted); margin-top:5px;">
+            Cukup ketik ID-nya saja untuk menghubungkan dengan cepat. Awalan: <strong class="font-mono">G-</strong> (Game), <strong class="font-mono">C-</strong> (Cinema), <strong class="font-mono">M-</strong> (Musik).
+          </div>
+        </div>
+
+        <!-- Helper Dropdown Pencarian Judul (Opsional) -->
+        <div id="link-poster-helper-wrap" style="display:none; margin-bottom:14px; padding:10px 12px; background:var(--bg-surface-elevated); border-radius:var(--radius-card); border:1px solid var(--border-color);">
+          <label class="form-label" style="font-size:0.75rem; margin-bottom:4px; color:var(--text-secondary);">Pilih dari Daftar Judul Media:</label>
+          <select class="form-select" id="link-poster-helper-select" onchange="app.onLinkPosterHelperSelect(this.value)">
+            <option value="">-- Pilih Media untuk Memasukkan ID Otomatis --</option>
             <optgroup label="🎮 Katalog Game">${gameOpts}</optgroup>
             <optgroup label="🎬 Katalog Cinema">${cinemaOpts}</optgroup>
             <optgroup label="🎵 Katalog Musik">${musicOpts}</optgroup>
           </select>
         </div>
+
+        <!-- Live Target Preview Card -->
+        <div id="link-poster-preview-card" style="margin-bottom:16px; padding:12px; border-radius:var(--radius-card); border:1px dashed var(--border-color); background:var(--bg-surface-elevated); min-height:72px; display:flex; align-items:center; gap:12px;">
+          <div style="display:flex; align-items:center; gap:10px; color:var(--text-muted); font-size:0.85rem; width:100%; justify-content:center; padding:8px 0;">
+            ${getIcon('info', 'ui-icon', 16)}
+            <span>Ketik ID unik item di atas untuk melihat pratinjau media target.</span>
+          </div>
+        </div>
+
+        <!-- Tombol Aksi -->
         <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:16px;">
           <button type="button" class="btn btn-secondary" onclick="app.closeModal('modal-link-poster')">Batal</button>
-          <button type="submit" class="btn btn-primary">${getIcon('link', 'ui-icon-btn', 14)} <span>Terapkan Tautan</span></button>
+          <button type="submit" class="btn btn-primary" id="btn-submit-link-poster">${getIcon('link', 'ui-icon-btn', 14)} <span>Terapkan Tautan</span></button>
         </div>
       </form>
     `);
+
+    // Auto-focus ke input setelah dialog modal muncul
+    setTimeout(() => {
+      const inp = document.getElementById('link-poster-code-input');
+      if (inp) inp.focus();
+    }, 100);
   },
 
   async handleLinkPoster(e, filename) {
     e.preventDefault();
-    const target = e.target.target_media.value;
-    if (!target) return showToast('Pilih item media tujuan.', 'error');
-    const [target_domain, target_id] = target.split(':');
+    const form = e.target;
+    const codeVal = (form.target_code ? form.target_code.value : '').trim();
+    if (!codeVal) return showToast('Masukkan ID item media target.', 'error');
+
+    const item = this.findMediaCandidate(codeVal);
+    const submitBtn = document.getElementById('btn-submit-link-poster');
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.innerText = 'Menautkan...';
+    }
 
     try {
-      await api.post('/api/taxonomy/posters/link', { filename, target_domain, target_id });
-      showToast('Poster berhasil ditautkan ke media!', 'success');
+      const payload = { filename, code: codeVal };
+      if (item) {
+        payload.target_domain = item.domain;
+        payload.target_id = item.id;
+      }
+      const res = await api.post('/api/taxonomy/posters/link', payload);
+      const title = (item && item.title) ? ` ke [${res.code || item.code}] ${item.title}` : '';
+      showToast(`Poster berhasil ditautkan${title}!`, 'success');
       this.closeModal('modal-link-poster');
       this.loadTaxonomyData();
     } catch (err) {
       showToast(err.message || 'Gagal menautkan poster.', 'error');
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = `${getIcon('link', 'ui-icon-btn', 14)} <span>Terapkan Tautan</span>`;
+      }
     }
   }
 });
+

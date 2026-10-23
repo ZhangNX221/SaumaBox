@@ -29,6 +29,7 @@ Object.assign(app, {
     const tableRows = res.items.map((g, idx) => {
       const rowNum = (page - 1) * limit + idx + 1;
       const isCompleted = g.completed === 1;
+      const itemCode = typeof formatItemCode === 'function' ? formatItemCode('games', g.id) : `G-${String(g.id).padStart(3, '0')}`;
       let platformOrConsole = '-';
       if (g.type === 'PC') platformOrConsole = g.platform ? `<span class="badge ${getPlatformBadgeClass(g.platform)}">${escapeHtml(g.platform)}</span>` : '-';
       else if (g.type === 'EMULATOR') platformOrConsole = g.console ? `<span class="badge badge-neutral">${escapeHtml(g.console)}</span>` : '-';
@@ -49,6 +50,7 @@ Object.assign(app, {
         <tr>
           <td class="font-mono td-center" style="color:var(--text-muted); width:32px;">${rowNum}</td>
           <td class="td-center" style="width:36px;">${completedCheckbox}</td>
+          <td class="cell-nowrap" style="width:68px;"><span class="badge badge-item-id font-mono" onclick="copyItemCode('${itemCode}', event)" title="Klik untuk salin ID unik">${itemCode}</span></td>
           <td style="width:52px;"><span class="badge badge-neutral">${g.type}</span></td>
           <td>
             <strong>${escapeHtml(g.title)}</strong>
@@ -75,10 +77,12 @@ Object.assign(app, {
     const mobileCards = res.items.map(g => {
       const releaseStr = g.release_date || (g.year ? String(g.year) : '');
       const isCompleted = g.completed === 1;
+      const itemCode = typeof formatItemCode === 'function' ? formatItemCode('games', g.id) : `G-${String(g.id).padStart(3, '0')}`;
       return `
         <div class="mobile-data-card">
           <div class="mobile-card-row">
             <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+              <span class="badge badge-item-id font-mono" onclick="copyItemCode('${itemCode}', event)" title="Klik untuk salin ID unik">${itemCode}</span>
               <span class="badge badge-neutral">${g.type}</span>
               ${g.genre ? `<span class="badge badge-neutral">${escapeHtml(g.genre)}</span>` : ''}
             </div>
@@ -124,6 +128,7 @@ Object.assign(app, {
       if (g.publisher && g.publisher !== g.developer) devPubParts.push(escapeHtml(g.publisher));
       const devPubHtml = devPubParts.length > 0 ? devPubParts.map(p => `<span>${p}</span>`).join('<span>•</span>') : '<span>-</span>';
       const isCompleted = g.completed === 1;
+      const itemCode = typeof formatItemCode === 'function' ? formatItemCode('games', g.id) : `G-${String(g.id).padStart(3, '0')}`;
 
       let platformPill = '';
       if (g.type === 'PC') platformPill = `<span class="badge ${getPlatformBadgeClass(g.platform)}">${escapeHtml(g.platform || 'PC')}</span>`;
@@ -140,6 +145,7 @@ Object.assign(app, {
           <div class="ps-card-media">
             <div class="ps-overlay-top">
               <div class="ps-overlay-badges-left">
+                <span class="badge badge-item-id font-mono" onclick="copyItemCode('${itemCode}', event)" title="Klik untuk salin ID unik">${itemCode}</span>
                 ${platformPill}
                 <span class="badge badge-neutral">${g.type}</span>
               </div>
@@ -206,6 +212,7 @@ Object.assign(app, {
                 <tr>
                   <th class="th-center" style="width:32px;">#</th>
                   <th class="th-center" style="width:36px;">Tamat</th>
+                  <th style="width:68px;">ID Unik</th>
                   <th style="width:52px;">Tipe</th>
                   <th class="sortable ${this.state.games.sortBy === 'title' ? 'sorted' : ''}" onclick="app.sortCatalog('games', 'title')">Judul &amp; Genre <span class="sort-indicator">${this.state.games.sortBy === 'title' ? (this.state.games.sortOrder === 'asc' ? '▲' : '▼') : '↕'}</span></th>
                   <th class="sortable ${this.state.games.sortBy === 'release_date' ? 'sorted' : ''}" onclick="app.sortCatalog('games', 'release_date')">Tgl Rilis <span class="sort-indicator">${this.state.games.sortBy === 'release_date' ? (this.state.games.sortOrder === 'asc' ? '▲' : '▼') : '↕'}</span></th>
@@ -219,7 +226,7 @@ Object.assign(app, {
                 </tr>
               </thead>
               <tbody>
-                ${tableRows || '<tr><td colspan="12" style="text-align:center; padding:40px; color:var(--text-muted);">Tidak ada game yang cocok dengan kriteria pencarian.</td></tr>'}
+                ${tableRows || '<tr><td colspan="13" style="text-align:center; padding:40px; color:var(--text-muted);">Tidak ada game yang cocok dengan kriteria pencarian.</td></tr>'}
               </tbody>
             </table>
           </div>

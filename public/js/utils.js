@@ -395,6 +395,53 @@ function showConfirmModal(options) {
 
 window.showConfirmModal = showConfirmModal;
 
+// SaumaBox Unique Media Item Code Helpers (ID Unik Otomatis)
+function formatItemCode(domain, id) {
+  if (!id) return '';
+  const prefixMap = { games: 'G', cinema: 'C', music: 'M', web: 'W' };
+  const p = prefixMap[domain] || String(domain).charAt(0).toUpperCase();
+  return `${p}-${String(id).padStart(3, '0')}`;
+}
 
+function parseItemCode(input) {
+  if (!input) return null;
+  const s = String(input).trim();
+  const m = s.match(/^(G|GAME|C|CINEMA|M|MUSIC|MUSIK|W|WEB)[\s\-_:]*(\d+)$/i);
+  if (m) {
+    const raw = m[1].toUpperCase();
+    const id = parseInt(m[2], 10);
+    let domain = 'games';
+    if (raw.startsWith('C')) domain = 'cinema';
+    else if (raw.startsWith('M')) domain = 'music';
+    else if (raw.startsWith('W')) domain = 'web';
+    return { domain, id, code: formatItemCode(domain, id) };
+  }
+  // Jika hanya angka murni
+  if (/^\d+$/.test(s)) {
+    const id = parseInt(s, 10);
+    return { domain: 'any', id, code: `#${id}` };
+  }
+  return null;
+}
 
+window.formatItemCode = formatItemCode;
+window.parseItemCode = parseItemCode;
 
+function copyItemCode(code, e) {
+  if (e) {
+    e.stopPropagation();
+    e.preventDefault();
+  }
+  if (!code) return;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(code).then(() => {
+      showToast(`ID ${code} disalin ke clipboard!`, 'success');
+    }).catch(() => {
+      showToast(`ID: ${code}`, 'info');
+    });
+  } else {
+    showToast(`ID: ${code}`, 'info');
+  }
+}
+
+window.copyItemCode = copyItemCode;

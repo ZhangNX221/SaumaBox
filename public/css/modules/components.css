@@ -200,6 +200,28 @@
 .badge-danger { background: var(--badge-danger-bg); color: var(--badge-danger-text); }
 .badge-warning { background: var(--badge-warning-bg); color: var(--badge-warning-text); }
 .badge-neutral { background: var(--bg-surface-elevated); color: var(--text-secondary); border: 1px solid var(--border-color); }
+.badge-item-id {
+  background: rgba(245, 158, 11, 0.16);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  user-select: all;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+.badge-item-id:hover {
+  background: rgba(245, 158, 11, 0.28);
+  border-color: #fbbf24;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.2);
+}
+.badge-item-id:active {
+  transform: scale(0.96);
+}
 
 /* Form Styling */
 .form-group {

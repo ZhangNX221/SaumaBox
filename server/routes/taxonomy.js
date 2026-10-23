@@ -41,6 +41,32 @@ function formatBytes(bytes) {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
 }
 
+function formatItemCode(domain, id) {
+  if (!id) return '';
+  const prefixMap = { games: 'G', cinema: 'C', music: 'M', web: 'W' };
+  const p = prefixMap[domain] || String(domain).charAt(0).toUpperCase();
+  return `${p}-${String(id).padStart(3, '0')}`;
+}
+
+function parseItemCode(input) {
+  if (!input) return null;
+  const s = String(input).trim();
+  const m = s.match(/^(G|GAME|C|CINEMA|M|MUSIC|MUSIK|W|WEB)[\s\-_:]*(\d+)$/i);
+  if (m) {
+    const raw = m[1].toUpperCase();
+    const id = parseInt(m[2], 10);
+    let domain = 'games';
+    if (raw.startsWith('C')) domain = 'cinema';
+    else if (raw.startsWith('M')) domain = 'music';
+    else if (raw.startsWith('W')) domain = 'web';
+    return { domain, id, code: formatItemCode(domain, id) };
+  }
+  if (/^\d+$/.test(s)) {
+    return { domain: 'any', id: parseInt(s, 10), code: `#${s}` };
+  }
+  return null;
+}
+
 // ============================================================
 // GENRES & TAGS
 // ============================================================
@@ -123,9 +149,9 @@ router.get('/posters', (req, res) => {
       const linkedMusic = musicCovers.filter(m => m.cover_url && m.cover_url.endsWith(f));
 
       const links = [
-        ...linkedGames.map(g => ({ domain: 'games', id: g.id, title: g.title, typeName: 'Game' })),
-        ...linkedCinema.map(c => ({ domain: 'cinema', id: c.id, title: c.title, typeName: 'Cinema' })),
-        ...linkedMusic.map(m => ({ domain: 'music', id: m.id, title: m.title, typeName: 'Musik' }))
+        ...linkedGames.map(g => ({ domain: 'games', id: g.id, code: formatItemCode('games', g.id), title: g.title, typeName: 'Game' })),
+        ...linkedCinema.map(c => ({ domain: 'cinema', id: c.id, code: formatItemCode('cinema', c.id), title: c.title, typeName: 'Cinema' })),
+        ...linkedMusic.map(m => ({ domain: 'music', id: m.id, code: formatItemCode('music', m.id), title: m.title, typeName: 'Musik' }))
       ];
 
       let detectedDomain = 'unlinked';
@@ -154,7 +180,7 @@ router.get('/posters', (req, res) => {
     const term = q.toLowerCase();
     list = list.filter(item =>
       item.filename.toLowerCase().includes(term) ||
-      item.links.some(l => l.title.toLowerCase().includes(term))
+      item.links.some(l => l.title.toLowerCase().includes(term) || (l.code && l.code.toLowerCase().includes(term)))
     );
   }
 
@@ -178,7 +204,15 @@ router.post('/posters/upload', requireAuth, posterUpload.single('poster'), async
 
   const finalStat = fs.statSync(req.file.path);
 
-  const { target_domain, target_id } = req.body;
+  let { target_domain, target_id, target_code } = req.body;
+  if (target_code && (!target_domain || !target_id)) {
+    const p = parseItemCode(target_code);
+    if (p) {
+      target_domain = p.domain;
+      target_id = p.id;
+    }
+  }
+
   if (target_domain && target_id) {
     const id = Number(target_id);
     if (target_domain === 'games') db.prepare('UPDATE games SET cover_url = ? WHERE id = ?').run(url, id);
@@ -256,17 +290,53 @@ router.post('/posters/compress-selected', requireAuth, async (req, res) => {
 
 router.post('/posters/link', requireAuth, (req, res) => {
   const db = getDb();
-  const { filename, target_domain, target_id } = req.body;
-  if (!filename || !target_domain || !target_id) {
-    return res.status(400).json({ error: 'Parameter tidak lengkap.' });
+  let { filename, target_domain, target_id, code } = req.body;
+  if (!filename) {
+    return res.status(400).json({ error: 'Parameter berkas poster wajib diisi.' });
   }
+
+  // Jika input berupa ID unik (contoh: G-001, C-002, M-003, atau G1)
+  if (code && (!target_domain || !target_id)) {
+    const parsed = parseItemCode(code);
+    if (parsed) {
+      target_domain = parsed.domain;
+      target_id = parsed.id;
+    } else if (/^\d+$/.test(String(code).trim())) {
+      target_id = parseInt(code, 10);
+      if (!target_domain) target_domain = 'games';
+    }
+  }
+
+  if (!target_domain || !target_id) {
+    return res.status(400).json({ error: 'ID unik media target tidak valid atau belum diisi.' });
+  }
+
   const url = `/images/covers/${path.basename(filename)}`;
   const id = Number(target_id);
-  if (target_domain === 'games') db.prepare('UPDATE games SET cover_url = ? WHERE id = ?').run(url, id);
-  else if (target_domain === 'cinema') db.prepare('UPDATE cinema SET cover_url = ? WHERE id = ?').run(url, id);
-  else if (target_domain === 'music') db.prepare('UPDATE music SET cover_url = ? WHERE id = ?').run(url, id);
-  logActivity(db, 'LINK_POSTER', 'taxonomy', id, `${filename} -> ${target_domain} #${id}`);
-  res.json({ success: true, url });
+  let itemTitle = '';
+
+  if (target_domain === 'games') {
+    const row = db.prepare('SELECT id, title FROM games WHERE id = ?').get(id);
+    if (!row) return res.status(404).json({ error: `Game dengan ID [G-${String(id).padStart(3, '0')}] tidak ditemukan.` });
+    db.prepare('UPDATE games SET cover_url = ? WHERE id = ?').run(url, id);
+    itemTitle = row.title;
+  } else if (target_domain === 'cinema') {
+    const row = db.prepare('SELECT id, title FROM cinema WHERE id = ?').get(id);
+    if (!row) return res.status(404).json({ error: `Cinema dengan ID [C-${String(id).padStart(3, '0')}] tidak ditemukan.` });
+    db.prepare('UPDATE cinema SET cover_url = ? WHERE id = ?').run(url, id);
+    itemTitle = row.title;
+  } else if (target_domain === 'music') {
+    const row = db.prepare('SELECT id, title FROM music WHERE id = ?').get(id);
+    if (!row) return res.status(404).json({ error: `Musik dengan ID [M-${String(id).padStart(3, '0')}] tidak ditemukan.` });
+    db.prepare('UPDATE music SET cover_url = ? WHERE id = ?').run(url, id);
+    itemTitle = row.title;
+  } else {
+    return res.status(400).json({ error: 'Domain media tidak dikenali.' });
+  }
+
+  const itemCode = formatItemCode(target_domain, id);
+  logActivity(db, 'LINK_POSTER', 'taxonomy', id, `${filename} -> [${itemCode}] ${itemTitle}`);
+  res.json({ success: true, url, target_domain, target_id: id, item_code: itemCode, title: itemTitle });
 });
 
 router.post('/posters/batch-delete', requireAuth, (req, res) => {
@@ -355,9 +425,12 @@ router.get('/posters/export-zip', requireAuth, (req, res) => {
 
 router.get('/media-candidates', requireAuth, (req, res) => {
   const db = getDb();
-  const games = db.prepare('SELECT id, title, type as category FROM games ORDER BY title ASC').all();
-  const cinema = db.prepare('SELECT id, title, type as category FROM cinema ORDER BY title ASC').all();
-  const music = db.prepare('SELECT id, title, artist as category FROM music ORDER BY title ASC').all();
+  const games = db.prepare('SELECT id, title, type as category, cover_url FROM games ORDER BY title ASC').all()
+    .map(g => ({ ...g, domain: 'games', code: formatItemCode('games', g.id) }));
+  const cinema = db.prepare('SELECT id, title, type as category, cover_url FROM cinema ORDER BY title ASC').all()
+    .map(c => ({ ...c, domain: 'cinema', code: formatItemCode('cinema', c.id) }));
+  const music = db.prepare('SELECT id, title, artist as category, cover_url FROM music ORDER BY title ASC').all()
+    .map(m => ({ ...m, domain: 'music', code: formatItemCode('music', m.id) }));
   res.json({ games, cinema, music });
 });
 
@@ -468,5 +541,7 @@ router.delete('/statuses/:id', requireAuth, (req, res) => {
   logActivity(db, 'DELETE_STATUS', 'taxonomy', req.params.id, `ID ${req.params.id}`);
   res.json({ success: true });
 });
+router.formatItemCode = formatItemCode;
+router.parseItemCode = parseItemCode;
 
 module.exports = router;
