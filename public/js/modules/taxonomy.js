@@ -22,16 +22,12 @@ Object.assign(app, {
             ${subTab === 'posters' ? `
               <div class="toolbar-filters-row poster-toolbar-filters">
                 <select class="filter-select" id="filter-poster-domain" onchange="app.setPosterDomainFilter(this.value)" aria-label="Filter kategori poster">
-                  <option value="all" ${(this.state.taxonomy?.posterDomain || 'all') === 'all' ? 'selected' : ''}>Kategori: Semua</option>
-                  <option value="games" ${this.state.taxonomy?.posterDomain === 'games' ? 'selected' : ''}>Kategori: Game</option>
-                  <option value="cinema" ${this.state.taxonomy?.posterDomain === 'cinema' ? 'selected' : ''}>Kategori: Cinema</option>
-                  <option value="music" ${this.state.taxonomy?.posterDomain === 'music' ? 'selected' : ''}>Kategori: Musik</option>
-                  <option value="unlinked" ${this.state.taxonomy?.posterDomain === 'unlinked' ? 'selected' : ''}>Kategori: Belum Ditautkan</option>
+                  <option value="all" ${(this.state.taxonomy?.posterDomain || 'all') === 'all' ? 'selected' : ''}>Semua</option>
+                  <option value="games" ${this.state.taxonomy?.posterDomain === 'games' ? 'selected' : ''}>Game</option>
+                  <option value="cinema" ${this.state.taxonomy?.posterDomain === 'cinema' ? 'selected' : ''}>Cinema</option>
+                  <option value="music" ${this.state.taxonomy?.posterDomain === 'music' ? 'selected' : ''}>Musik</option>
+                  <option value="unlinked" ${this.state.taxonomy?.posterDomain === 'unlinked' ? 'selected' : ''}>Belum Ditautkan</option>
                 </select>
-                <div class="search-box-wrap poster-search-wrap" style="position:relative; display:inline-flex; align-items:center;">
-                  <span style="position:absolute; left:10px; pointer-events:none; color:var(--text-secondary);">${getIcon('search', 'ui-icon', 13)}</span>
-                  <input type="text" class="form-input poster-search-input" placeholder="Cari poster..." value="${escapeHtml(q || '')}" onkeyup="if(event.key==='Enter'){app.state.taxonomy.q=this.value; app.state.taxonomy.page=1; app.loadTaxonomyData();}" onchange="app.state.taxonomy.q=this.value; app.state.taxonomy.page=1; app.loadTaxonomyData();" style="padding-left:30px; height:34px; font-size:0.8rem; border-radius:8px; width:160px;">
-                </div>
               </div>
             ` : ''}
           </div>
@@ -57,9 +53,14 @@ Object.assign(app, {
     const selected = s.selectedPosters || [];
     const count = selected.length;
     const isAllSelected = typeof this.isAllPostersSelectedOnPage === 'function' ? this.isAllPostersSelectedOnPage() : false;
+    const viewMode = s.posterViewMode || localStorage.getItem('saumabox_view_posters') || 'grid';
 
     return `
       <div class="posters-toolbar-actions" style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+        <div class="view-toggle-group" role="group" aria-label="Pilihan Tampilan Poster">
+          <button class="view-toggle-btn ${viewMode === 'grid' ? 'active' : ''}" onclick="app.setCatalogViewMode('posters', 'grid')" title="Tampilan Grid Poster" aria-label="Tampilan Grid">${getIcon('grid', 'ui-icon', 16)}</button>
+          <button class="view-toggle-btn ${viewMode === 'table' ? 'active' : ''}" onclick="app.setCatalogViewMode('posters', 'table')" title="Tampilan Tabel Spreadsheet" aria-label="Tampilan Tabel">${getIcon('table', 'ui-icon', 16)}</button>
+        </div>
         ${count > 0 ? `
           <button class="btn btn-danger btn-sm" onclick="app.confirmDeleteSelectedPosters()" title="Hapus ${count} poster terpilih">
             ${getIcon('trash', 'ui-icon-btn', 14)} <span>Hapus (${count})</span>

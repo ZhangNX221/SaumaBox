@@ -560,6 +560,13 @@ const app = {
   },
 
   setCatalogViewMode(cat, mode) {
+    if (cat === 'posters') {
+      this.state.taxonomy = this.state.taxonomy || {};
+      this.state.taxonomy.posterViewMode = mode;
+      localStorage.setItem('saumabox_view_posters', mode);
+      this.loadTaxonomyData();
+      return;
+    }
     if (this.state[cat]) {
       this.state[cat].viewMode = mode;
       localStorage.setItem(`saumabox_view_${cat}`, mode);

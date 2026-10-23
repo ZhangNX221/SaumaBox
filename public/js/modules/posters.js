@@ -6,8 +6,12 @@ Object.assign(app, {
   async renderPostersTab(content) {
     const s = this.state.taxonomy = this.state.taxonomy || { subTab: 'posters', q: '', posterDomain: 'all', sortBy: 'updated_at', sortOrder: 'desc', page: 1, limit: 12 };
     s.selectedPosters = s.selectedPosters || [];
+    const viewMode = s.posterViewMode || localStorage.getItem('saumabox_view_posters') || 'grid';
+    s.posterViewMode = viewMode;
     const { q, limit = 12, page = 1 } = s;
     const curDomain = s.posterDomain || 'all';
+    const sortBy = s.sortBy || 'updated_at';
+    const sortOrder = s.sortOrder || 'desc';
 
     content.innerHTML = getLoadingHtml('Memuat galeri poster...', 'Memindai berkas poster dan album');
 
@@ -19,11 +23,32 @@ Object.assign(app, {
       return;
     }
 
+    // Client-side sorting
+    posters.sort((a, b) => {
+      let va = a[sortBy] ?? '';
+      let vb = b[sortBy] ?? '';
+      if (sortBy === 'updated_at') {
+        va = new Date(va).getTime() || 0;
+        vb = new Date(vb).getTime() || 0;
+      } else if (sortBy === 'size_bytes') {
+        va = Number(va) || 0;
+        vb = Number(vb) || 0;
+      } else if (typeof va === 'string') {
+        va = va.toLowerCase();
+        vb = String(vb).toLowerCase();
+      }
+      if (va < vb) return sortOrder === 'asc' ? -1 : 1;
+      if (va > vb) return sortOrder === 'asc' ? 1 : -1;
+      return 0;
+    });
+
     const total = posters.length;
     const totalPages = Math.ceil(total / limit) || 1;
     const curPage = Math.min(Math.max(1, page), totalPages);
     s.page = curPage;
     const paged = posters.slice((curPage - 1) * limit, curPage * limit);
+
+    const isAllSelected = typeof this.isAllPostersSelectedOnPage === 'function' ? this.isAllPostersSelectedOnPage() : false;
 
     const selectionBanner = s.selectedPosters.length > 0 ? `
       <div class="poster-selection-banner" style="display:flex; align-items:center; justify-content:space-between; background:rgba(212,175,55,0.08); border:1px solid rgba(212,175,55,0.25); border-radius:10px; padding:8px 14px; margin-bottom:14px; font-size:0.82rem;">
@@ -36,39 +61,151 @@ Object.assign(app, {
       </div>
     ` : '';
 
-    const cards = paged.map(p => {
-      const hasLink = p.links && p.links.length > 0;
-      const linkLabel = hasLink
-        ? p.links.map(l => `${l.code ? `[${l.code}] ` : ''}${l.title}`).join(', ')
-        : 'Belum ditautkan';
-      const isSelected = s.selectedPosters.includes(p.filename);
-      return `
-        <div class="poster-admin-card ${isSelected ? 'selected' : ''}" id="poster-card-${encodeURIComponent(p.filename)}" onclick="app.toggleSelectPoster('${escapeHtml(p.filename)}')">
-          <div class="poster-thumb-wrap">
-            <label class="poster-select-box" onclick="event.stopPropagation();" title="Pilih poster ini" aria-label="Pilih poster ${escapeHtml(p.filename)}">
-              <input type="checkbox" class="poster-checkbox-input" value="${escapeHtml(p.filename)}" ${isSelected ? 'checked' : ''} onchange="app.toggleSelectPoster('${escapeHtml(p.filename)}', this.checked)">
-              <span class="poster-custom-checkbox">${getIcon('check', 'poster-check-icon', 12)}</span>
-            </label>
-            <img src="${escapeHtml(p.url)}" alt="${escapeHtml(p.filename)}" class="poster-thumb-img" loading="lazy" onerror="this.src='/images/logo-icon.png'">
-            <span class="poster-badge-format">${p.ext}</span>
-            <span class="poster-badge-size">${p.size_formatted}</span>
-          </div>
-          <div class="poster-info">
-            <div class="poster-filename" title="${escapeHtml(p.filename)}">${escapeHtml(p.filename)}</div>
-            <div class="poster-link-status ${hasLink ? 'linked' : ''}" title="${escapeHtml(linkLabel)}">
-              ${hasLink ? getIcon('check', 'ui-icon', 12) : getIcon('info', 'ui-icon', 12)}
-              <span>${escapeHtml(linkLabel)}</span>
+    const sortTh = (col, label) => {
+      const isSorted = sortBy === col;
+      const arrow = isSorted ? (sortOrder === 'asc' ? '▲' : '▼') : '↕';
+      return `<th class="sortable ${isSorted ? 'sorted' : ''}" onclick="app.sortTaxonomy('${col}')" title="Urutkan ${label}">${label} <span class="sort-indicator">${arrow}</span></th>`;
+    };
+
+    let mainContentHtml = '';
+
+    if (viewMode === 'grid') {
+      const cards = paged.map(p => {
+        const hasLink = p.links && p.links.length > 0;
+        const linkLabel = hasLink
+          ? p.links.map(l => `${l.code ? `[${l.code}] ` : ''}${l.title}`).join(', ')
+          : 'Belum ditautkan';
+        const isSelected = s.selectedPosters.includes(p.filename);
+        return `
+          <div class="poster-admin-card ${isSelected ? 'selected' : ''}" id="poster-card-${encodeURIComponent(p.filename)}" onclick="app.toggleSelectPoster('${escapeHtml(p.filename)}')">
+            <div class="poster-thumb-wrap">
+              <label class="poster-select-box" onclick="event.stopPropagation();" title="Pilih poster ini" aria-label="Pilih poster ${escapeHtml(p.filename)}">
+                <input type="checkbox" class="poster-checkbox-input" value="${escapeHtml(p.filename)}" ${isSelected ? 'checked' : ''} onchange="app.toggleSelectPoster('${escapeHtml(p.filename)}', this.checked)">
+                <span class="poster-custom-checkbox">${getIcon('check', 'poster-check-icon', 12)}</span>
+              </label>
+              <img src="${escapeHtml(p.url)}" alt="${escapeHtml(p.filename)}" class="poster-thumb-img" loading="lazy" onerror="this.src='/images/logo-icon.png'">
+              <span class="poster-badge-format">${p.ext}</span>
+              <span class="poster-badge-size">${p.size_formatted}</span>
             </div>
-            <div class="poster-actions" onclick="event.stopPropagation();">
-              <button class="btn btn-secondary btn-sm btn-icon-sm" onclick="app.openLinkPosterModal('${escapeHtml(p.filename)}')" title="Tautkan ke Media" aria-label="Tautkan ke Media">${getIcon('link', 'ui-icon', 14)}</button>
-              <button class="btn btn-secondary btn-sm btn-icon-sm" onclick="app.copyPosterPath('${escapeHtml(p.url)}')" title="Salin Path / URL" aria-label="Salin Path">${getIcon('copy', 'ui-icon', 14)}</button>
-              <a href="${escapeHtml(p.url)}" download="${escapeHtml(p.filename)}" class="btn btn-secondary btn-sm btn-icon-sm" title="Download Berkas" aria-label="Download Berkas">${getIcon('download', 'ui-icon', 14)}</a>
-              <button class="btn btn-secondary btn-sm btn-icon-sm btn-trash" onclick="app.confirmDeletePoster('${escapeHtml(p.filename)}')" title="Hapus Poster" aria-label="Hapus Poster">${getIcon('trash', 'ui-icon', 14)}</button>
+            <div class="poster-info">
+              <div class="poster-filename" title="${escapeHtml(p.filename)}">${escapeHtml(p.filename)}</div>
+              <div class="poster-link-status ${hasLink ? 'linked' : ''}" title="${escapeHtml(linkLabel)}">
+                ${hasLink ? getIcon('check', 'ui-icon', 12) : getIcon('info', 'ui-icon', 12)}
+                <span>${escapeHtml(linkLabel)}</span>
+              </div>
+              <div class="poster-actions" onclick="event.stopPropagation();">
+                <button class="btn btn-secondary btn-sm btn-icon-sm" onclick="app.openLinkPosterModal('${escapeHtml(p.filename)}')" title="Tautkan ke Media" aria-label="Tautkan ke Media">${getIcon('link', 'ui-icon', 13)}</button>
+                <button class="btn btn-secondary btn-sm btn-icon-sm" onclick="app.copyPosterPath('${escapeHtml(p.url)}')" title="Salin Path / URL" aria-label="Salin Path">${getIcon('copy', 'ui-icon', 13)}</button>
+                <a href="${escapeHtml(p.url)}" download="${escapeHtml(p.filename)}" class="btn btn-secondary btn-sm btn-icon-sm" title="Download Berkas" aria-label="Download Berkas">${getIcon('download', 'ui-icon', 13)}</a>
+                <button class="btn btn-secondary btn-sm btn-icon-sm btn-trash" onclick="app.confirmDeletePoster('${escapeHtml(p.filename)}')" title="Hapus Poster" aria-label="Hapus Poster">${getIcon('trash', 'ui-icon', 13)}</button>
+              </div>
             </div>
           </div>
+        `;
+      }).join('');
+
+      mainContentHtml = cards ? `<div class="poster-gallery-grid">${cards}</div>` : `<div class="state-container" style="padding:40px 16px;"><div class="state-icon">🖼️</div><div class="state-title">Tidak ada berkas poster yang cocok.</div><div class="state-desc" style="color:var(--text-secondary); font-size:0.85rem; margin-top:4px;">Gunakan tombol "Import Poster" untuk mengunggah poster baru.</div></div>`;
+    } else {
+      // Table Mode
+      const tableRows = paged.map(p => {
+        const hasLink = p.links && p.links.length > 0;
+        const isSelected = s.selectedPosters.includes(p.filename);
+        const linkBadges = hasLink
+          ? p.links.map(l => `<span class="badge badge-success" style="font-size:0.72rem; margin-right:4px; display:inline-block; margin-bottom:2px;">${escapeHtml(l.typeName)}: ${escapeHtml(l.title)}</span>`).join('')
+          : '<span class="badge badge-neutral" style="font-size:0.72rem;">Belum ditautkan</span>';
+
+        return `
+          <tr id="poster-row-${encodeURIComponent(p.filename)}" class="${isSelected ? 'selected' : ''}" onclick="app.toggleSelectPoster('${escapeHtml(p.filename)}')">
+            <td class="th-center" style="width:36px;" onclick="event.stopPropagation();">
+              <input type="checkbox" class="poster-checkbox-input" value="${escapeHtml(p.filename)}" ${isSelected ? 'checked' : ''} onchange="app.toggleSelectPoster('${escapeHtml(p.filename)}', this.checked)" style="width:16px; height:16px; cursor:pointer; accent-color:var(--accent-color);">
+            </td>
+            <td style="width:52px; text-align:center;">
+              <img src="${escapeHtml(p.url)}" alt="${escapeHtml(p.filename)}" style="width:36px; height:48px; object-fit:cover; border-radius:4px; border:1px solid var(--border-color); vertical-align:middle;" onerror="this.src='/images/logo-icon.png'">
+            </td>
+            <td>
+              <div class="font-mono" style="font-weight:600; font-size:0.85rem; color:var(--text-primary);">${escapeHtml(p.filename)}</div>
+              <div style="font-size:0.75rem; color:var(--text-muted);">${escapeHtml(p.url)}</div>
+            </td>
+            <td>
+              <span class="badge badge-neutral" style="font-size:0.7rem;">${p.ext}</span>
+              <span style="font-size:0.75rem; color:var(--text-secondary); margin-left:4px;">${p.size_formatted}</span>
+            </td>
+            <td>
+              ${linkBadges}
+            </td>
+            <td class="font-mono" style="font-size:0.78rem; color:var(--text-secondary); white-space:nowrap;">
+              ${typeof formatDateTime === 'function' ? formatDateTime(p.updated_at) : p.updated_at}
+            </td>
+            <td style="text-align:right; white-space:nowrap;" onclick="event.stopPropagation();">
+              <div style="display:inline-flex; gap:4px; align-items:center;">
+                <button class="btn btn-secondary btn-sm" style="padding:4px 8px; min-width:32px; height:32px;" onclick="app.openLinkPosterModal('${escapeHtml(p.filename)}')" title="Tautkan ke Media">${getIcon('link', 'ui-icon', 13)}</button>
+                <button class="btn btn-secondary btn-sm" style="padding:4px 8px; min-width:32px; height:32px;" onclick="app.copyPosterPath('${escapeHtml(p.url)}')" title="Salin Path / URL">${getIcon('copy', 'ui-icon', 13)}</button>
+                <a href="${escapeHtml(p.url)}" download="${escapeHtml(p.filename)}" class="btn btn-secondary btn-sm" style="padding:4px 8px; min-width:32px; height:32px; display:inline-flex; align-items:center; justify-content:center;" title="Download Berkas">${getIcon('download', 'ui-icon', 13)}</a>
+                <button class="btn btn-secondary btn-sm btn-trash" style="padding:4px 8px; min-width:32px; height:32px;" onclick="app.confirmDeletePoster('${escapeHtml(p.filename)}')" title="Hapus Poster">${getIcon('trash', 'ui-icon', 13)}</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      const mobileCards = paged.map(p => {
+        const hasLink = p.links && p.links.length > 0;
+        const isSelected = s.selectedPosters.includes(p.filename);
+        return `
+          <div class="mobile-data-card ${isSelected ? 'selected' : ''}" id="poster-mcard-${encodeURIComponent(p.filename)}" onclick="app.toggleSelectPoster('${escapeHtml(p.filename)}')">
+            <div class="mobile-card-row">
+              <div style="display:flex; gap:8px; align-items:center;" onclick="event.stopPropagation();">
+                <input type="checkbox" class="poster-checkbox-input" value="${escapeHtml(p.filename)}" ${isSelected ? 'checked' : ''} onchange="app.toggleSelectPoster('${escapeHtml(p.filename)}', this.checked)" style="width:18px; height:18px; cursor:pointer; accent-color:var(--accent-color);">
+                <span class="badge badge-neutral">${p.ext}</span>
+                <span class="font-mono" style="font-size:0.75rem; color:var(--text-secondary);">${p.size_formatted}</span>
+              </div>
+              <span style="font-size:0.72rem; color:var(--text-muted);">${typeof formatDate === 'function' ? formatDate(p.updated_at) : ''}</span>
+            </div>
+            <div style="display:flex; gap:10px; margin:8px 0; align-items:center;">
+              <img src="${escapeHtml(p.url)}" alt="${escapeHtml(p.filename)}" style="width:40px; height:54px; object-fit:cover; border-radius:6px; flex-shrink:0;" onerror="this.src='/images/logo-icon.png'">
+              <div style="min-width:0; flex:1;">
+                <div class="font-mono" style="font-weight:600; font-size:0.85rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtml(p.filename)}</div>
+                <div style="margin-top:4px;">
+                  ${hasLink ? p.links.map(l => `<span class="badge badge-success" style="font-size:0.7rem;">${escapeHtml(l.typeName)}: ${escapeHtml(l.title)}</span>`).join('') : '<span class="badge badge-neutral" style="font-size:0.7rem;">Belum ditautkan</span>'}
+                </div>
+              </div>
+            </div>
+            <div style="display:flex; gap:6px; justify-content:flex-end; border-top:1px solid var(--border-color); padding-top:8px; margin-top:6px;" onclick="event.stopPropagation();">
+              <button class="btn btn-secondary btn-sm" style="flex:1; height:32px; min-width:0; padding:0; display:inline-flex; align-items:center; justify-content:center; gap:4px; font-size:0.78rem;" onclick="app.openLinkPosterModal('${escapeHtml(p.filename)}')">${getIcon('link', 'ui-icon', 13)} Tautkan</button>
+              <button class="btn btn-secondary btn-sm" style="height:32px; min-width:32px; padding:0; display:inline-flex; align-items:center; justify-content:center;" onclick="app.copyPosterPath('${escapeHtml(p.url)}')" title="Salin Path">${getIcon('copy', 'ui-icon', 13)}</button>
+              <a href="${escapeHtml(p.url)}" download="${escapeHtml(p.filename)}" class="btn btn-secondary btn-sm" style="height:32px; min-width:32px; padding:0; display:inline-flex; align-items:center; justify-content:center;" title="Download">${getIcon('download', 'ui-icon', 13)}</a>
+              <button class="btn btn-secondary btn-sm btn-trash" style="height:32px; min-width:32px; padding:0; display:inline-flex; align-items:center; justify-content:center;" onclick="app.confirmDeletePoster('${escapeHtml(p.filename)}')" title="Hapus">${getIcon('trash', 'ui-icon', 13)}</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      mainContentHtml = `
+        <div class="table-responsive data-table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th class="th-center" style="width:36px;">
+                  <input type="checkbox" id="poster-table-select-all" ${isAllSelected ? 'checked' : ''} onchange="app.toggleSelectAllCurrentPagePosters()" style="width:16px; height:16px; cursor:pointer; accent-color:var(--accent-color);" title="Pilih Semua di Halaman Ini">
+                </th>
+                <th style="width:52px; text-align:center;">Poster</th>
+                ${sortTh('filename', 'Nama Berkas')}
+                ${sortTh('size_bytes', 'Format & Ukuran')}
+                <th>Tautan Media</th>
+                ${sortTh('updated_at', 'Waktu Modifikasi')}
+                <th style="text-align:right;">Aksi</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${tableRows || '<tr><td colspan="7" style="text-align:center; padding:32px; color:var(--text-secondary);">Tidak ada berkas poster yang cocok.</td></tr>'}
+            </tbody>
+          </table>
+        </div>
+        <div class="mobile-card-list" style="padding:16px;">
+          ${mobileCards || '<div class="state-container"><div class="state-title">Tidak ada berkas poster</div></div>'}
         </div>
       `;
-    }).join('');
+    }
 
     const footer = `
       <div class="table-footer">
@@ -93,7 +230,7 @@ Object.assign(app, {
 
     content.innerHTML = `
       ${selectionBanner}
-      ${cards ? `<div class="poster-gallery-grid">${cards}</div>` : `<div class="state-container" style="padding:40px 16px;"><div class="state-icon">🖼️</div><div class="state-title">Tidak ada berkas poster yang cocok.</div><div class="state-desc" style="color:var(--text-secondary); font-size:0.85rem; margin-top:4px;">Gunakan tombol "Import Poster" untuk mengunggah poster baru.</div></div>`}
+      ${mainContentHtml}
       ${footer}
     `;
 
@@ -136,9 +273,25 @@ Object.assign(app, {
       if (cb) cb.checked = shouldSelect;
     }
 
+    const row = document.getElementById(`poster-row-${encodeURIComponent(filename)}`);
+    if (row) {
+      row.classList.toggle('selected', shouldSelect);
+      const cb = row.querySelector('.poster-checkbox-input');
+      if (cb) cb.checked = shouldSelect;
+    }
+
+    const mcard = document.getElementById(`poster-mcard-${encodeURIComponent(filename)}`);
+    if (mcard) {
+      mcard.classList.toggle('selected', shouldSelect);
+      const cb = mcard.querySelector('.poster-checkbox-input');
+      if (cb) cb.checked = shouldSelect;
+    }
+
     const isAll = this.isAllPostersSelectedOnPage();
     const allCb = document.getElementById('poster-select-all-cb');
     if (allCb) allCb.checked = isAll;
+    const tableAllCb = document.getElementById('poster-table-select-all');
+    if (tableAllCb) tableAllCb.checked = isAll;
     const allBtn = document.getElementById('btn-select-all-posters');
     if (allBtn) {
       allBtn.classList.toggle('btn-select-all-active', isAll);
@@ -163,10 +316,16 @@ Object.assign(app, {
 
       const card = document.getElementById(`poster-card-${encodeURIComponent(fname)}`);
       if (card) card.classList.toggle('selected', isChecked);
+      const row = document.getElementById(`poster-row-${encodeURIComponent(fname)}`);
+      if (row) row.classList.toggle('selected', isChecked);
+      const mcard = document.getElementById(`poster-mcard-${encodeURIComponent(fname)}`);
+      if (mcard) mcard.classList.toggle('selected', isChecked);
     });
 
     const allCb = document.getElementById('poster-select-all-cb');
     if (allCb) allCb.checked = isChecked;
+    const tableAllCb = document.getElementById('poster-table-select-all');
+    if (tableAllCb) tableAllCb.checked = isChecked;
     const allBtn = document.getElementById('btn-select-all-posters');
     if (allBtn) {
       allBtn.classList.toggle('btn-select-all-active', isChecked);
@@ -180,10 +339,12 @@ Object.assign(app, {
   clearPosterSelection() {
     const s = this.state.taxonomy = this.state.taxonomy || {};
     s.selectedPosters = [];
-    document.querySelectorAll('.poster-admin-card').forEach(c => c.classList.remove('selected'));
+    document.querySelectorAll('.poster-admin-card, .data-table tr, .mobile-data-card').forEach(c => c.classList.remove('selected'));
     document.querySelectorAll('.poster-checkbox-input').forEach(cb => cb.checked = false);
     const allCb = document.getElementById('poster-select-all-cb');
     if (allCb) allCb.checked = false;
+    const tableAllCb = document.getElementById('poster-table-select-all');
+    if (tableAllCb) tableAllCb.checked = false;
     const allBtn = document.getElementById('btn-select-all-posters');
     if (allBtn) {
       allBtn.classList.remove('btn-select-all-active');

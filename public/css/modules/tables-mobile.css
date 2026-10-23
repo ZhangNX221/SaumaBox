@@ -197,24 +197,25 @@
   }
 
   .poster-toolbar-filters .filter-select {
-    flex: 1 1 130px;
+    width: 100%;
     min-width: 0;
-    font-size: 0.74rem;
+    font-size: 0.78rem;
   }
 
-  .poster-toolbar-filters .poster-search-wrap {
-    flex: 1 1 130px;
-    min-width: 0;
-  }
-
-  .poster-toolbar-filters .poster-search-input {
-    width: 100% !important;
+  .poster-actions {
+    gap: 4px;
+    width: 100%;
+    box-sizing: border-box;
   }
 
   .poster-actions .btn,
   .poster-actions .btn-icon-sm {
-    height: 36px;
-    min-height: 36px;
+    height: 34px;
+    min-height: 34px;
+    min-width: 0 !important;
+    width: 100%;
+    padding: 0 !important;
+    box-sizing: border-box;
   }
 }
 
