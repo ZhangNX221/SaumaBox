@@ -18,7 +18,20 @@ Object.assign(app, {
     const allCinema = recent.cinema || [];
     const allMusic = recent.music || [];
     const allWeb = recent.web || [];
-    const totalCount = allGames.length + allCinema.length + allMusic.length + allWeb.length;
+    const cfg = this.state.publicConfig || {};
+    const isPublic = cfg.public_sharing_enabled !== false;
+    const isGames = isPublic && cfg.public_games_enabled !== false;
+    const isCinema = isPublic && cfg.public_cinema_enabled !== false;
+    const isMusic = isPublic && cfg.public_music_enabled !== false;
+    const isWeb = isPublic && cfg.public_web_enabled !== false;
+    const showPrice = !!this.state.user || (isPublic && cfg.public_show_prices !== false);
+
+    const bannerTitle = escapeHtml(cfg.banner_title || 'Kurasi Digital Game, Sinema & Audio dalam Satu Presisi');
+    const bannerSubtitle = escapeHtml(cfg.banner_subtitle || 'Ruang arsip pribadi untuk menyimpan dan mengorganisasi koleksi game PC, emulator retro, serial sinema pilihan, dan arsip audio lossless dalam tampilan bersih dan tenang.');
+    const appLogo = escapeHtml(cfg.app_logo_url || '/images/logo.png');
+    const appName = escapeHtml(cfg.app_name || 'SaumaBox');
+
+    const totalCount = (isGames ? allGames.length : 0) + (isCinema ? allCinema.length : 0) + (isMusic ? allMusic.length : 0) + (isWeb ? allWeb.length : 0);
 
     container.innerHTML = `
       <section class="editorial-hero">
@@ -29,81 +42,106 @@ Object.assign(app, {
               <span class="status-pulse-dot"></span>
               <span class="status-pill-text">Pustaka Multimedia Personal • Akses Lokal Siap Pakai</span>
             </div>
-            <h1 class="hero-display-title">
-              Kurasi Digital <span class="gradient-text-accent">Game, Sinema &amp; Audio</span> dalam Satu Presisi
-            </h1>
-            <p class="hero-lead-text">
-              Ruang arsip pribadi untuk menyimpan dan mengorganisasi koleksi game PC, emulator retro, serial sinema pilihan, dan arsip audio lossless dalam tampilan bersih dan tenang.
-            </p>
+            <h1 class="hero-display-title">${bannerTitle}</h1>
+            <p class="hero-lead-text">${bannerSubtitle}</p>
 
             <div class="hero-metric-strip">
-              <div class="metric-chip" onclick="app.setRecentCategory('games'); app.scrollToShowcase();" role="button" tabindex="0">
-                <span class="metric-num">${stats.totals.games}</span>
-                <span class="metric-lbl">Permainan</span>
-              </div>
-              <div class="metric-chip" onclick="app.setRecentCategory('cinema'); app.scrollToShowcase();" role="button" tabindex="0">
-                <span class="metric-num">${stats.totals.cinema}</span>
-                <span class="metric-lbl">Sinema</span>
-              </div>
-              <div class="metric-chip" onclick="app.setRecentCategory('music'); app.scrollToShowcase();" role="button" tabindex="0">
-                <span class="metric-num">${stats.totals.music}</span>
-                <span class="metric-lbl">Musik</span>
-              </div>
-              <div class="metric-chip" onclick="app.setRecentCategory('web'); app.scrollToShowcase();" role="button" tabindex="0">
-                <span class="metric-num">${stats.totals.web || 0}</span>
-                <span class="metric-lbl">Bookmark Web</span>
-              </div>
-              <div class="metric-chip">
-                <span class="metric-num font-mono">${formatRupiah(stats.totals.spending)}</span>
-                <span class="metric-lbl">Investasi Koleksi</span>
-              </div>
+              ${isGames ? `
+                <div class="metric-chip" onclick="app.setRecentCategory('games'); app.scrollToShowcase();" role="button" tabindex="0">
+                  <span class="metric-num">${stats.totals.games}</span>
+                  <span class="metric-lbl">Permainan</span>
+                </div>
+              ` : ''}
+              ${isCinema ? `
+                <div class="metric-chip" onclick="app.setRecentCategory('cinema'); app.scrollToShowcase();" role="button" tabindex="0">
+                  <span class="metric-num">${stats.totals.cinema}</span>
+                  <span class="metric-lbl">Sinema</span>
+                </div>
+              ` : ''}
+              ${isMusic ? `
+                <div class="metric-chip" onclick="app.setRecentCategory('music'); app.scrollToShowcase();" role="button" tabindex="0">
+                  <span class="metric-num">${stats.totals.music}</span>
+                  <span class="metric-lbl">Musik</span>
+                </div>
+              ` : ''}
+              ${isWeb ? `
+                <div class="metric-chip" onclick="app.setRecentCategory('web'); app.scrollToShowcase();" role="button" tabindex="0">
+                  <span class="metric-num">${stats.totals.web || 0}</span>
+                  <span class="metric-lbl">Bookmark Web</span>
+                </div>
+              ` : ''}
+              ${showPrice && isGames ? `
+                <div class="metric-chip">
+                  <span class="metric-num font-mono">${formatRupiah(stats.totals.spending)}</span>
+                  <span class="metric-lbl">Investasi Koleksi</span>
+                </div>
+              ` : ''}
+              ${!isPublic ? `
+                <div class="metric-chip" style="border-color:var(--accent-color);">
+                  <span class="metric-num">${getIcon('lock', 'ui-icon', 18)}</span>
+                  <span class="metric-lbl">Katalog Privat</span>
+                </div>
+              ` : ''}
             </div>
           </div>
 
           <div class="hero-illustration-col">
             <div class="hero-app-showcase-card">
               <div class="app-illustration-frame">
-                <img src="/images/logo.png" alt="Ilustrasi SaumaBox Media Hub" class="app-illustration-img" loading="eager">
+                <img src="${appLogo}" alt="Ilustrasi ${appName}" class="app-illustration-img" loading="eager" onerror="this.src='/images/logo.png'">
               </div>
               <div class="app-showcase-badge">
                 ${getIcon('sparkles', 'ui-icon', 13)}
                 <span>Pustaka Terpadu</span>
               </div>
-              <h2 class="app-showcase-title">SaumaBox Hub</h2>
-              <p class="app-showcase-desc">Pusat arsip media pribadi: Permainan, Sinema, dan Musik Resolusi Tinggi.</p>
+              <h2 class="app-showcase-title">${appName} Hub</h2>
+              <p class="app-showcase-desc">Pusat arsip media pribadi: Permainan, Sinema, Musik, dan Bookmark Web.</p>
               <div class="app-showcase-pillars">
-                <span class="pillar-tag">${getIcon('games', 'ui-icon', 14)} Games</span>
-                <span class="pillar-tag">${getIcon('cinema', 'ui-icon', 14)} Sinema</span>
-                <span class="pillar-tag">${getIcon('music', 'ui-icon', 14)} Musik</span>
-                <span class="pillar-tag">${getIcon('globe', 'ui-icon', 14)} Web</span>
+                ${isGames ? `<span class="pillar-tag">${getIcon('games', 'ui-icon', 14)} Games</span>` : ''}
+                ${isCinema ? `<span class="pillar-tag">${getIcon('cinema', 'ui-icon', 14)} Sinema</span>` : ''}
+                ${isMusic ? `<span class="pillar-tag">${getIcon('music', 'ui-icon', 14)} Musik</span>` : ''}
+                ${isWeb ? `<span class="pillar-tag">${getIcon('globe', 'ui-icon', 14)} Web</span>` : ''}
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      <section class="recent-showcase-section" id="public-showcase-section">
-        <div class="showcase-control-bar">
-          <div class="showcase-heading-group">
-            <h2 class="showcase-title">Pilihan Koleksi Terbaru</h2>
-            <p class="showcase-subtitle">Eksplorasi entri media terbaru per kategori dengan slider interaktif (Maksimal 10 poster per baris)</p>
-          </div>
+      ${isPublic ? `
+        <section class="recent-showcase-section" id="public-showcase-section">
+          <div class="showcase-control-bar">
+            <div class="showcase-heading-group">
+              <h2 class="showcase-title">Pilihan Koleksi Terbaru</h2>
+              <p class="showcase-subtitle">Eksplorasi entri media terbaru per kategori dengan slider interaktif (Maksimal 10 poster per baris)</p>
+            </div>
 
-          <div class="showcase-toolbar-group">
-            <div class="showcase-tabs" role="tablist" aria-label="Filter Kategori Media">
-              <button class="showcase-tab-btn ${this.state.recentCategory === 'all' ? 'active' : ''}" data-cat="all" onclick="app.setRecentCategory('all')" role="tab">Semua <span class="tab-count">${totalCount}</span></button>
-              <button class="showcase-tab-btn ${this.state.recentCategory === 'games' ? 'active' : ''}" data-cat="games" onclick="app.setRecentCategory('games')" role="tab">Games <span class="tab-count">${allGames.length}</span></button>
-              <button class="showcase-tab-btn ${this.state.recentCategory === 'cinema' ? 'active' : ''}" data-cat="cinema" onclick="app.setRecentCategory('cinema')" role="tab">Sinema <span class="tab-count">${allCinema.length}</span></button>
-              <button class="showcase-tab-btn ${this.state.recentCategory === 'music' ? 'active' : ''}" data-cat="music" onclick="app.setRecentCategory('music')" role="tab">Musik <span class="tab-count">${allMusic.length}</span></button>
-              <button class="showcase-tab-btn ${this.state.recentCategory === 'web' ? 'active' : ''}" data-cat="web" onclick="app.setRecentCategory('web')" role="tab">Web <span class="tab-count">${allWeb.length}</span></button>
+            <div class="showcase-toolbar-group">
+              <div class="showcase-tabs" role="tablist" aria-label="Filter Kategori Media">
+                <button class="showcase-tab-btn ${this.state.recentCategory === 'all' ? 'active' : ''}" data-cat="all" onclick="app.setRecentCategory('all')" role="tab">Semua <span class="tab-count">${totalCount}</span></button>
+                ${isGames ? `<button class="showcase-tab-btn ${this.state.recentCategory === 'games' ? 'active' : ''}" data-cat="games" onclick="app.setRecentCategory('games')" role="tab">Games <span class="tab-count">${allGames.length}</span></button>` : ''}
+                ${isCinema ? `<button class="showcase-tab-btn ${this.state.recentCategory === 'cinema' ? 'active' : ''}" data-cat="cinema" onclick="app.setRecentCategory('cinema')" role="tab">Sinema <span class="tab-count">${allCinema.length}</span></button>` : ''}
+                ${isMusic ? `<button class="showcase-tab-btn ${this.state.recentCategory === 'music' ? 'active' : ''}" data-cat="music" onclick="app.setRecentCategory('music')" role="tab">Musik <span class="tab-count">${allMusic.length}</span></button>` : ''}
+                ${isWeb ? `<button class="showcase-tab-btn ${this.state.recentCategory === 'web' ? 'active' : ''}" data-cat="web" onclick="app.setRecentCategory('web')" role="tab">Web <span class="tab-count">${allWeb.length}</span></button>` : ''}
+              </div>
             </div>
           </div>
-        </div>
 
-        <div class="showcase-rows-wrapper" id="recent-media-grid">
-          ${this.renderRecentShowcase()}
-        </div>
-      </section>
+          <div class="showcase-rows-wrapper" id="recent-media-grid">
+            ${this.renderRecentShowcase()}
+          </div>
+        </section>
+      ` : `
+        <section class="recent-showcase-section" id="public-showcase-section" style="padding:48px 24px; text-align:center;">
+          <div class="state-container" style="max-width:540px; margin:0 auto; padding:36px; background:var(--bg-surface); border:1px solid var(--border-color); border-radius:18px;">
+            <div class="state-icon" style="color:var(--accent-color);">${getIcon('lock', 'ui-icon', 40)}</div>
+            <h3 class="state-title" style="margin-top:14px;">Visibilitas Akses Publik Nonaktif</h3>
+            <p class="state-desc" style="color:var(--text-secondary); margin:8px 0 20px 0; font-size:0.88rem;">
+              Administrator menonaktifkan visibilitas publik untuk pengunjung. Silakan masuk untuk melihat seluruh katalog koleksi.
+            </p>
+            <button class="btn btn-primary btn-sm" onclick="app.openLoginModal()">${getIcon('user', 'ui-icon-btn', 14)} Masuk Admin</button>
+          </div>
+        </section>
+      `}
 
       <section class="editorial-bento-section">
         <div class="bento-header">
@@ -196,12 +234,18 @@ Object.assign(app, {
     const query = this.state.landingSearch || '';
     const sortBy = this.state.landingSort || 'newest';
 
-    const categories = [
-      { key: 'games', label: 'Games', icon: 'games', link: 'games' },
-      { key: 'cinema', label: 'Sinema', icon: 'cinema', link: 'cinema' },
-      { key: 'music', label: 'Musik', icon: 'music', link: 'music' },
-      { key: 'web', label: 'Bookmark Web', icon: 'globe', link: 'web' }
-    ];
+    const cfg = this.state.publicConfig || {};
+    const isPublic = cfg.public_sharing_enabled !== false;
+    const isGames = isPublic && cfg.public_games_enabled !== false;
+    const isCinema = isPublic && cfg.public_cinema_enabled !== false;
+    const isMusic = isPublic && cfg.public_music_enabled !== false;
+    const isWeb = isPublic && cfg.public_web_enabled !== false;
+
+    const categories = [];
+    if (isGames) categories.push({ key: 'games', label: 'Games', icon: 'games', link: 'games' });
+    if (isCinema) categories.push({ key: 'cinema', label: 'Sinema', icon: 'cinema', link: 'cinema' });
+    if (isMusic) categories.push({ key: 'music', label: 'Musik', icon: 'music', link: 'music' });
+    if (isWeb) categories.push({ key: 'web', label: 'Bookmark Web', icon: 'globe', link: 'web' });
 
     const selectedCats = activeCat === 'all' 
       ? categories 
@@ -320,7 +364,9 @@ Object.assign(app, {
       platformPill = `<span class="badge badge-purple">${escapeHtml(g.port_version || 'Port')}</span>`;
     }
 
-    const priceText = g.type === 'PC' && g.price > 0 ? formatRupiah(g.price) : (g.status || 'Koleksi');
+    const cfg = this.state.publicConfig || {};
+    const showPrice = !!this.state.user || cfg.public_show_prices !== false;
+    const priceText = showPrice && g.type === 'PC' && g.price > 0 ? formatRupiah(g.price) : (g.status || 'Koleksi');
 
     return `
       <article class="media-card" onclick="app.openMediaDetail('games', ${g.id})" tabindex="0" onkeydown="if(event.key==='Enter')app.openMediaDetail('games', ${g.id})">
@@ -413,7 +459,7 @@ Object.assign(app, {
             <tr><td>Penerbit (Publisher)</td><td>${escapeHtml(item.publisher || '-')}</td></tr>
             ${item.type === 'PC' ? `
               <tr><td>Platform</td><td><span class="badge ${getPlatformBadgeClass(item.platform)}">${escapeHtml(item.platform || '-')}</span></td></tr>
-              <tr><td>Estimasi Harga</td><td class="font-mono">${item.price ? formatRupiah(item.price) : 'Rp 0'}</td></tr>
+              ${(!!this.state.user || !this.state.publicConfig || this.state.publicConfig.public_show_prices !== false) ? `<tr><td>Estimasi Harga</td><td class="font-mono">${item.price ? formatRupiah(item.price) : 'Rp 0'}</td></tr>` : ''}
             ` : ''}
             ${item.type === 'EMULATOR' ? `
               <tr><td>Konsol Asal</td><td><span class="badge badge-neutral">${escapeHtml(item.console || '-')}</span></td></tr>

@@ -46,6 +46,7 @@ Object.assign(app, {
       { name: 'public_games_enabled', label: 'Tampilkan Katalog Games ke Publik' },
       { name: 'public_cinema_enabled', label: 'Tampilkan Katalog Cinema ke Publik' },
       { name: 'public_music_enabled', label: 'Tampilkan Katalog Musik ke Publik' },
+      { name: 'public_web_enabled', label: 'Tampilkan Katalog Web ke Publik' },
       { name: 'public_show_prices', label: 'Tampilkan Informasi Estimasi Harga Game ke Publik' }
     ];
     return `
@@ -105,7 +106,7 @@ Object.assign(app, {
           <!-- Master Switch Box -->
           <div class="sharing-master-box">
             <label style="display:flex; align-items:flex-start; gap:12px; cursor:pointer; margin:0;">
-              <input type="checkbox" name="public_sharing_enabled" value="true" ${s.public_sharing_enabled === 'true' ? 'checked' : ''} style="width:18px; height:18px; accent-color:var(--accent-color, #d4af37); margin-top:2px;">
+              <input type="checkbox" name="public_sharing_enabled" value="true" ${s.public_sharing_enabled !== 'false' ? 'checked' : ''} onchange="app.togglePublicSharingSubChecks(this.checked)" style="width:18px; height:18px; accent-color:var(--accent-color, #d4af37); margin-top:2px;">
               <div>
                 <strong style="font-size:0.9rem; color:var(--text-primary); display:block;">Aktifkan Akses Publik</strong>
                 <span style="font-size:0.78rem; color:var(--text-secondary); line-height:1.4; display:block; margin-top:2px;">
@@ -116,10 +117,10 @@ Object.assign(app, {
           </div>
 
           <!-- Sub Checklist Grid -->
-          <div class="sharing-sub-grid">
+          <div class="sharing-sub-grid" style="${s.public_sharing_enabled !== 'false' ? '' : 'opacity:0.45; pointer-events:none;'}">
             ${checks.map(c => `
               <label class="sharing-sub-item">
-                <input type="checkbox" name="${c.name}" value="true" ${s[c.name] === 'true' ? 'checked' : ''}>
+                <input type="checkbox" name="${c.name}" value="true" ${s[c.name] !== 'false' ? 'checked' : ''}>
                 <span>${c.label}</span>
               </label>
             `).join('')}
@@ -346,8 +347,19 @@ Object.assign(app, {
       await api.put('/api/settings', updates);
       showToast('Pengaturan aplikasi berhasil disimpan.', 'success');
       this.state.publicConfig = await api.get('/api/settings/public-config');
+      if (typeof this.applyBrandAndPublicConfig === 'function') {
+        this.applyBrandAndPublicConfig();
+      }
+      this.updateNavbar();
       this.renderSettings(document.getElementById('view-container'));
     } catch (err) { showToast(err.message, 'error'); }
+  },
+
+  togglePublicSharingSubChecks(enabled) {
+    const grid = document.querySelector('.sharing-sub-grid');
+    if (!grid) return;
+    grid.style.opacity = enabled ? '1' : '0.45';
+    grid.style.pointerEvents = enabled ? 'auto' : 'none';
   },
 
   toggleCustomApiCollapse() {

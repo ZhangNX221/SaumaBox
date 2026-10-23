@@ -215,8 +215,8 @@ router.post('/test-integration', requireAuth, (req, res) => {
   }, 200);
 });
 
-// GET /api/public/config — Konfigurasi untuk tampilan publik
-router.get('/public-config', (req, res) => {
+// GET /api/settings/public-config or /api/public/config — Konfigurasi untuk tampilan publik
+router.get(['/public-config', '/public/config'], (req, res) => {
   const db = getDb();
   const rows = db.prepare('SELECT key, value FROM app_settings').all();
   const settings = {};
@@ -224,13 +224,16 @@ router.get('/public-config', (req, res) => {
 
   res.json({
     app_name: settings.app_name || 'SaumaBox',
-    public_sharing_enabled: settings.public_sharing_enabled === 'true',
-    public_games_enabled: settings.public_games_enabled === 'true',
-    public_cinema_enabled: settings.public_cinema_enabled === 'true',
-    public_music_enabled: settings.public_music_enabled === 'true',
+    app_logo_url: settings.app_logo_url || '/images/logo-icon.png',
+    banner_title: settings.banner_title || 'Kurasi Digital Game, Sinema & Audio dalam Satu Presisi',
+    banner_subtitle: settings.banner_subtitle || 'Ruang arsip pribadi untuk menyimpan dan mengorganisasi koleksi game PC, emulator retro, serial sinema pilihan, dan arsip audio lossless dalam tampilan bersih dan tenang.',
+    public_sharing_enabled: settings.public_sharing_enabled !== 'false',
+    public_games_enabled: settings.public_games_enabled !== 'false',
+    public_cinema_enabled: settings.public_cinema_enabled !== 'false',
+    public_music_enabled: settings.public_music_enabled !== 'false',
     public_web_enabled: settings.public_web_enabled !== 'false',
-    public_show_prices: settings.public_show_prices === 'true',
-    public_show_ratings: settings.public_show_ratings === 'true',
+    public_show_prices: settings.public_show_prices !== 'false',
+    public_show_ratings: settings.public_show_ratings !== 'false',
     theme: settings.theme || 'dark'
   });
 });

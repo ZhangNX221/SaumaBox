@@ -15,6 +15,7 @@ Object.assign(app, {
     this.state.games.filterOptions = res.filter_options;
 
     const isAdmin = !!this.state.user;
+    const canShowPrice = isAdmin || (this.state.publicConfig && this.state.publicConfig.public_show_prices !== false);
 
     const defaultPlatforms = ['Steam', 'GOG', 'EGS', 'Ubisoft', 'EA Origin'];
     const allPlatforms = Array.from(new Set([...defaultPlatforms, ...(res.filter_options.platforms || [])]));
@@ -35,7 +36,7 @@ Object.assign(app, {
       else if (g.type === 'MOBILE') platformOrConsole = g.platform ? `<span class="badge badge-mobile">${escapeHtml(g.platform)}</span>` : '<span class="badge badge-mobile">Mobile</span>';
 
       const statusBadge = g.status ? `<span class="badge ${getStatusBadgeClass(g.status)}">${escapeHtml(g.status)}</span>` : '-';
-      const priceText = g.type === 'PC' && g.price > 0 ? formatRupiah(g.price) : (g.type === 'PC' ? 'Rp 0' : '-');
+      const priceText = canShowPrice && g.type === 'PC' && g.price > 0 ? formatRupiah(g.price) : (canShowPrice && g.type === 'PC' ? 'Rp 0' : '-');
       const actionButtons = isAdmin ? `<div style="display:inline-flex; gap:4px;"><button class="btn btn-secondary btn-sm" onclick="app.openEditGameModal(${g.id})" title="Edit">${getIcon('edit', 'ui-icon', 14)}</button><button class="btn btn-secondary btn-sm" onclick="app.confirmDeleteGame(${g.id}, '${escapeHtml(g.title)}')" title="Hapus">${getIcon('trash', 'ui-icon', 14)}</button></div>` : '';
 
       const completedCheckbox = isAdmin ? `
@@ -105,7 +106,7 @@ Object.assign(app, {
               ${g.status ? `<span class="badge ${getStatusBadgeClass(g.status)}">${escapeHtml(g.status)}</span>` : ''}
             </div>
             <div class="font-mono" style="font-weight:700;">
-              ${g.type === 'PC' && g.price > 0 ? formatRupiah(g.price) : ''}
+              ${canShowPrice && g.type === 'PC' && g.price > 0 ? formatRupiah(g.price) : ''}
             </div>
           </div>
           ${isAdmin ? `
@@ -130,7 +131,7 @@ Object.assign(app, {
       else if (g.type === 'MOBILE') platformPill = `<span class="badge badge-mobile">${escapeHtml(g.platform || 'Mobile')}</span>`;
       else platformPill = `<span class="badge badge-purple">${escapeHtml(g.port_version || 'Recomp')}</span>`;
 
-      const priceText = g.type === 'PC' && g.price > 0 ? formatRupiah(g.price) : (g.status || 'Tersedia');
+      const priceText = canShowPrice && g.type === 'PC' && g.price > 0 ? formatRupiah(g.price) : (g.status || 'Tersedia');
       const adminActions = isAdmin ? `<div class="ps-actions" onclick="event.stopPropagation()"><button class="btn btn-secondary btn-sm" onclick="app.openEditGameModal(${g.id})" title="Edit">${getIcon('edit', 'ui-icon', 14)}</button><button class="btn btn-secondary btn-sm" onclick="app.confirmDeleteGame(${g.id}, '${escapeHtml(g.title)}')" title="Hapus">${getIcon('trash', 'ui-icon', 14)}</button></div>` : '';
       const quickCompletedBtn = isAdmin ? `<button class="ps-heart-btn ${isCompleted ? 'active' : ''}" onclick="event.stopPropagation(); app.toggleGameCompleted(${g.id})" title="${isCompleted ? 'Tandai belum tamat' : 'Tandai sudah tamat'}">${isCompleted ? getIcon('check', 'ui-icon', 14) : '<span class="quick-check-empty"></span>'}</button>` : (isCompleted ? '<span class="badge badge-success" style="backdrop-filter:blur(4px); box-shadow:0 2px 6px rgba(0,0,0,0.4);">Tamat</span>' : '');
 
@@ -160,7 +161,7 @@ Object.assign(app, {
             <div class="ps-card-footer">
               <div>
                 <span class="badge ${getStatusBadgeClass(g.status)}">${escapeHtml(g.status || 'Playable')}</span>
-                <span class="font-mono card-media-extra" style="margin-left:6px; font-weight:700;">${priceText}</span>
+                ${canShowPrice && g.type === 'PC' && g.price > 0 ? `<span class="font-mono card-media-extra" style="margin-left:6px; font-weight:700;">${priceText}</span>` : ''}
               </div>
               ${adminActions}
             </div>
@@ -212,7 +213,7 @@ Object.assign(app, {
                   <th>Platform</th>
                   <th>Ukuran</th>
                   <th class="sortable ${this.state.games.sortBy === 'rating' ? 'sorted' : ''}" onclick="app.sortCatalog('games', 'rating')">Rating <span class="sort-indicator">${this.state.games.sortBy === 'rating' ? (this.state.games.sortOrder === 'asc' ? '▲' : '▼') : '↕'}</span></th>
-                  <th class="sortable ${this.state.games.sortBy === 'price' ? 'sorted' : ''}" onclick="app.sortCatalog('games', 'price')">Status &amp; Harga <span class="sort-indicator">${this.state.games.sortBy === 'price' ? (this.state.games.sortOrder === 'asc' ? '▲' : '▼') : '↕'}</span></th>
+                  <th class="sortable ${this.state.games.sortBy === 'price' ? 'sorted' : ''}" onclick="app.sortCatalog('games', 'price')">${canShowPrice ? 'Status &amp; Harga' : 'Status'} <span class="sort-indicator">${this.state.games.sortBy === 'price' ? (this.state.games.sortOrder === 'asc' ? '▲' : '▼') : '↕'}</span></th>
                   <th class="th-center">Unduh</th>
                   ${isAdmin ? '<th class="th-right">Aksi</th>' : ''}
                 </tr>
@@ -234,7 +235,7 @@ Object.assign(app, {
                 ${[10, 25, 50, 100].map(n => `<option value="${n}" ${limit === n ? 'selected' : ''}>${n} data</option>`).join('')}
               </select>
             </div>
-            ${this.state.publicConfig.public_show_prices && (type === 'PC' || type === 'ALL') ? `
+            ${canShowPrice && (type === 'PC' || type === 'ALL') ? `
               <span class="kpi-value" style="font-size:0.95rem; color:var(--text-primary); font-family:var(--font-mono);">
                 Estimasi Aset: <strong>${formatRupiah(this.state.games.totalPrice)}</strong>
               </span>` : '<span style="font-size:0.85rem; color:var(--text-secondary);">Koleksi game terkurasi.</span>'}

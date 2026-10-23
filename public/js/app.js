@@ -35,12 +35,27 @@ const app = {
 
       if (authRes.authenticated) this.state.user = authRes.user;
       if (configRes) this.state.publicConfig = configRes;
+      this.applyBrandAndPublicConfig();
 
       this.navigate(this.state.user ? 'dashboard' : 'landing');
     } catch (err) {
       console.error('Initialization error:', err);
       this.navigate('landing');
     }
+  },
+
+  applyBrandAndPublicConfig() {
+    const config = this.state.publicConfig || {};
+    const appName = config.app_name || 'SaumaBox';
+    const logoUrl = config.app_logo_url || '/images/logo-icon.png';
+
+    document.title = `${appName}: Personal Media Catalog`;
+    document.querySelectorAll('.brand-name').forEach(el => {
+      el.textContent = appName;
+    });
+    document.querySelectorAll('.brand-logo-img').forEach(el => {
+      if (logoUrl) el.src = logoUrl;
+    });
   },
 
   applyTheme() {
@@ -153,18 +168,42 @@ const app = {
       if (appEl) appEl.classList.remove('admin-mode');
       if (adminSidebar) adminSidebar.innerHTML = '';
 
-      navLinks.innerHTML = `
-        <button class="nav-btn ${curTab === 'landing' ? 'active' : ''}" onclick="app.navigate('landing')">Beranda</button>
-        <button class="nav-btn ${curTab === 'games' ? 'active' : ''}" onclick="app.navigate('games')">Koleksi Games</button>
-        <button class="nav-btn ${curTab === 'cinema' ? 'active' : ''}" onclick="app.navigate('cinema')">Koleksi Cinema</button>
-        <button class="nav-btn ${curTab === 'music' ? 'active' : ''}" onclick="app.navigate('music')">Koleksi Musik</button>
-        <button class="nav-btn ${curTab === 'web' ? 'active' : ''}" onclick="app.navigate('web')">Katalog Web</button>
-      `;
+      const cfg = this.state.publicConfig || {};
+      const isPublic = cfg.public_sharing_enabled !== false;
+
+      const navButtons = [
+        `<button class="nav-btn ${curTab === 'landing' ? 'active' : ''}" onclick="app.navigate('landing')">Beranda</button>`
+      ];
+
+      if (isPublic) {
+        if (cfg.public_games_enabled !== false) {
+          navButtons.push(`<button class="nav-btn ${curTab === 'games' ? 'active' : ''}" onclick="app.navigate('games')">Koleksi Games</button>`);
+        }
+        if (cfg.public_cinema_enabled !== false) {
+          navButtons.push(`<button class="nav-btn ${curTab === 'cinema' ? 'active' : ''}" onclick="app.navigate('cinema')">Koleksi Cinema</button>`);
+        }
+        if (cfg.public_music_enabled !== false) {
+          navButtons.push(`<button class="nav-btn ${curTab === 'music' ? 'active' : ''}" onclick="app.navigate('music')">Koleksi Musik</button>`);
+        }
+        if (cfg.public_web_enabled !== false) {
+          navButtons.push(`<button class="nav-btn ${curTab === 'web' ? 'active' : ''}" onclick="app.navigate('web')">Katalog Web</button>`);
+        }
+      }
+
+      navLinks.innerHTML = navButtons.join('');
 
       authActions.innerHTML = `<button class="btn btn-primary btn-sm btn-admin-demo" onclick="app.openLoginModal()" title="Masuk Mode Admin (Demo)">${getIcon('user', 'ui-icon-btn', 14)} <span>Masuk Admin</span></button>`;
 
       if (bottomNav) {
-        const bItems = [['landing','dashboard','Beranda'],['games','games','Games'],['cinema','cinema','Cinema'],['music','music','Musik'],['web','globe','Web'],['login','user','Admin']];
+        const bItems = [['landing','dashboard','Beranda']];
+        if (isPublic) {
+          if (cfg.public_games_enabled !== false) bItems.push(['games','games','Games']);
+          if (cfg.public_cinema_enabled !== false) bItems.push(['cinema','cinema','Cinema']);
+          if (cfg.public_music_enabled !== false) bItems.push(['music','music','Musik']);
+          if (cfg.public_web_enabled !== false) bItems.push(['web','globe','Web']);
+        }
+        bItems.push(['login','user','Admin']);
+
         bottomNav.innerHTML = `<div class="bottom-nav-inner">${bItems.map(([id, icon, txt]) => `
           <div class="bottom-nav-item ${curTab === id ? 'active' : ''}" onclick="app.navigate('${id}')">${getIcon(icon, 'ui-icon', 20)}<span>${txt}</span></div>
         `).join('')}</div>`;
@@ -375,6 +414,54 @@ const app = {
     this.updateNavbar();
     this.syncTopbarSearch(tab);
     const container = document.getElementById('view-container');
+
+    const cfg = this.state.publicConfig || {};
+    const isLoggedIn = !!this.state.user;
+
+    // Guard visibilitas publik bagi pengunjung tanpa login
+    if (!isLoggedIn && tab !== 'landing') {
+      if (cfg.public_sharing_enabled === false) {
+        container.innerHTML = `
+          <div class="state-container" style="max-width:540px; margin:40px auto; text-align:center; padding:48px 24px; background:var(--bg-surface); border:1px solid var(--border-color); border-radius:18px;">
+            <div class="state-icon" style="color:var(--accent-color);">${getIcon('lock', 'ui-icon', 48)}</div>
+            <h2 class="state-title" style="margin-top:16px; font-size:1.3rem;">Akses Publik Dinonaktifkan</h2>
+            <p class="state-desc" style="color:var(--text-secondary); margin:8px 0 24px 0; font-size:0.9rem;">
+              Administrator telah mengunci akses publik. Silakan masuk sebagai administrator untuk mengelola dan melihat katalog media.
+            </p>
+            <button class="btn btn-primary" onclick="app.openLoginModal()" style="display:inline-flex; align-items:center; gap:8px;">
+              ${getIcon('user', 'ui-icon-btn', 14)} <span>Masuk Mode Administrator</span>
+            </button>
+          </div>
+        `;
+        return;
+      }
+
+      const catFlagMap = {
+        games: cfg.public_games_enabled,
+        cinema: cfg.public_cinema_enabled,
+        music: cfg.public_music_enabled,
+        web: cfg.public_web_enabled
+      };
+
+      if (catFlagMap[tab] === false) {
+        const catLabels = { games: 'Katalog Game', cinema: 'Katalog Cinema', music: 'Katalog Musik', web: 'Katalog Web' };
+        container.innerHTML = `
+          <div class="state-container" style="max-width:540px; margin:40px auto; text-align:center; padding:48px 24px; background:var(--bg-surface); border:1px solid var(--border-color); border-radius:18px;">
+            <div class="state-icon" style="color:var(--accent-color);">${getIcon('lock', 'ui-icon', 48)}</div>
+            <h2 class="state-title" style="margin-top:16px; font-size:1.3rem;">${catLabels[tab] || 'Katalog'} Privat</h2>
+            <p class="state-desc" style="color:var(--text-secondary); margin:8px 0 24px 0; font-size:0.9rem;">
+              Administrator telah menonaktifkan visibilitas publik untuk ${catLabels[tab] || 'katalog ini'}.
+            </p>
+            <div style="display:flex; justify-content:center; gap:12px;">
+              <button class="btn btn-secondary" onclick="app.navigate('landing')">Kembali ke Beranda</button>
+              <button class="btn btn-primary" onclick="app.openLoginModal()">${getIcon('user', 'ui-icon-btn', 14)} Masuk Admin</button>
+            </div>
+          </div>
+        `;
+        return;
+      }
+    }
+
     container.innerHTML = getLoadingHtml('Memuat data katalog...', 'Menyiapkan koleksi media dan preferensi Anda');
 
     try {

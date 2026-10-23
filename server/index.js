@@ -42,6 +42,10 @@ app.get('/api/recent', (req, res, next) => {
   req.url = '/recent';
   settingsRoutes(req, res, next);
 });
+app.get(['/api/public/config', '/api/public-config'], (req, res, next) => {
+  req.url = '/public-config';
+  settingsRoutes(req, res, next);
+});
 
 // Health check endpoint for Docker, Kubernetes, & cloud PaaS (Render, Railway, Coolify)
 app.get(['/api/health', '/healthz'], (req, res) => {

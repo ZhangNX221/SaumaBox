@@ -247,6 +247,7 @@ function initDb(database) {
     ['public_games_enabled', 'true'],
     ['public_cinema_enabled', 'true'],
     ['public_music_enabled', 'true'],
+    ['public_web_enabled', 'true'],
     ['public_show_prices', 'true'],
     ['public_show_ratings', 'true'],
     ['last_backup_at', '']
