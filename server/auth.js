@@ -13,6 +13,7 @@ function verifyPassword(password, storedHash) {
   const [salt, key] = storedHash.split(':');
   const keyBuffer = Buffer.from(key, 'hex');
   const derivedKey = crypto.scryptSync(password, salt, 64);
+  if (keyBuffer.length !== derivedKey.length) return false;
   return crypto.timingSafeEqual(keyBuffer, derivedKey);
 }
 

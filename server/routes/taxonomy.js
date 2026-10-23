@@ -335,7 +335,9 @@ router.get('/posters/export-zip', requireAuth, (req, res) => {
   };
 
   if (process.platform === 'win32') {
-    execFile('powershell', ['-NoProfile', '-NonInteractive', '-Command', 'Compress-Archive', '-Path', filePaths.join(','), '-DestinationPath', tmpZipPath, '-Force'], (err) => {
+    const quotedPaths = filePaths.map(p => `'${p.replace(/'/g, "''")}'`).join(',');
+    const quotedDest = `'${tmpZipPath.replace(/'/g, "''")}'`;
+    execFile('powershell', ['-NoProfile', '-NonInteractive', '-Command', `Compress-Archive -Path ${quotedPaths} -DestinationPath ${quotedDest} -Force`], (err) => {
       if (err || !fs.existsSync(tmpZipPath)) {
         return res.status(500).json({ error: 'Gagal membuat berkas ZIP poster di server Windows.' });
       }

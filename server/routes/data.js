@@ -360,8 +360,14 @@ router.get('/export', requireAuth, (req, res) => {
   const filename = `saumabox_${targetModule}_${new Date().toISOString().slice(0, 10)}`;
 
   if (targetModule === 'games') {
-    const where = type && type !== 'ALL' ? "WHERE type = '" + type.toUpperCase() + "'" : '';
-    data = db.prepare(`SELECT * FROM games ${where} ORDER BY id ASC`).all();
+    let sql = 'SELECT * FROM games';
+    const params = [];
+    if (type && type !== 'ALL') {
+      sql += ' WHERE type = ?';
+      params.push(type.toUpperCase());
+    }
+    sql += ' ORDER BY id ASC';
+    data = db.prepare(sql).all(...params);
     headers = [
       { key: 'id', label: 'ID' },
       { key: 'type', label: 'Tipe' },
@@ -387,8 +393,14 @@ router.get('/export', requireAuth, (req, res) => {
       { key: 'completed', label: 'Tamat (1/0)' }
     ];
   } else if (targetModule === 'cinema') {
-    const where = type && type !== 'ALL' ? "WHERE type = '" + type.toUpperCase() + "'" : '';
-    data = db.prepare(`SELECT * FROM cinema ${where} ORDER BY id ASC`).all();
+    let sql = 'SELECT * FROM cinema';
+    const params = [];
+    if (type && type !== 'ALL') {
+      sql += ' WHERE type = ?';
+      params.push(type.toUpperCase());
+    }
+    sql += ' ORDER BY id ASC';
+    data = db.prepare(sql).all(...params);
     headers = [
       { key: 'id', label: 'ID' },
       { key: 'type', label: 'Tipe' },

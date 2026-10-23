@@ -36,7 +36,7 @@ router.get('/search', requireAuth, async (req, res) => {
         const sData = await sRes.json();
         const items = (sData.items || []).slice(0, 4);
 
-        for (const item of items) {
+        const detailedItems = await Promise.all(items.map(async (item) => {
           let developer = '';
           let publisher = '';
           let genre = '';
@@ -64,7 +64,7 @@ router.get('/search', requireAuth, async (req, res) => {
             }
           } catch (_) {}
 
-          results.push({
+          return {
             id: `steam-${item.id}`,
             source: 'Steam Store (Open Access)',
             type: 'PC',
@@ -77,8 +77,9 @@ router.get('/search', requireAuth, async (req, res) => {
             price: item.price ? Math.round(item.price.final / 100) : 0,
             cover_url: headerImg,
             rating: 8.5
-          });
-        }
+          };
+        }));
+        results.push(...detailedItems);
       }
 
       if (results.length === 0) {

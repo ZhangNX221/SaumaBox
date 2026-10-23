@@ -44,7 +44,7 @@ function cleanWatched(val) {
   if (val === true || val === 1 || val === '1') return 1;
   if (!val) return 0;
   const str = String(val).trim().toLowerCase();
-  return (str === 'sudah' || str === 'ya' || str === 'yes' || str === 'completed' || str === 'true' || str === 'checked' || str === '1') ? 1 : 0;
+  return (str === 'sudah' || str === 'ya' || str === 'yes' || str === 'completed' || str === 'tamat' || str === 'sudah tamat' || str === 'true' || str === 'checked' || str === '1') ? 1 : 0;
 }
 
 // Robust CSV Parser (RFC 4180 compliant)
