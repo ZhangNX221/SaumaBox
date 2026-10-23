@@ -116,8 +116,11 @@ Object.assign(app, {
 
         return `
           <tr id="poster-row-${encodeURIComponent(p.filename)}" class="${isSelected ? 'selected' : ''}" onclick="app.toggleSelectPoster('${escapeHtml(p.filename)}')">
-            <td class="th-center" style="width:36px;" onclick="event.stopPropagation();">
-              <input type="checkbox" class="poster-checkbox-input" value="${escapeHtml(p.filename)}" ${isSelected ? 'checked' : ''} onchange="app.toggleSelectPoster('${escapeHtml(p.filename)}', this.checked)" style="width:16px; height:16px; cursor:pointer; accent-color:var(--accent-color);">
+            <td class="th-center" style="width:48px;" onclick="event.stopPropagation();">
+              <label class="table-checkbox-wrap" title="Pilih ${escapeHtml(p.filename)}">
+                <input type="checkbox" class="poster-checkbox-input table-checkbox-input" value="${escapeHtml(p.filename)}" ${isSelected ? 'checked' : ''} onchange="app.toggleSelectPoster('${escapeHtml(p.filename)}', this.checked)">
+                <span class="table-checkbox-custom">${getIcon('check', 'ui-icon', 12)}</span>
+              </label>
             </td>
             <td style="width:52px; text-align:center;">
               <img src="${escapeHtml(p.url)}" alt="${escapeHtml(p.filename)}" style="width:36px; height:48px; object-fit:cover; border-radius:4px; border:1px solid var(--border-color); vertical-align:middle;" onerror="this.src='/images/logo-icon.png'">
@@ -155,7 +158,10 @@ Object.assign(app, {
           <div class="mobile-data-card ${isSelected ? 'selected' : ''}" id="poster-mcard-${encodeURIComponent(p.filename)}" onclick="app.toggleSelectPoster('${escapeHtml(p.filename)}')">
             <div class="mobile-card-row">
               <div style="display:flex; gap:8px; align-items:center;" onclick="event.stopPropagation();">
-                <input type="checkbox" class="poster-checkbox-input" value="${escapeHtml(p.filename)}" ${isSelected ? 'checked' : ''} onchange="app.toggleSelectPoster('${escapeHtml(p.filename)}', this.checked)" style="width:18px; height:18px; cursor:pointer; accent-color:var(--accent-color);">
+                <label class="table-checkbox-wrap" title="Pilih ${escapeHtml(p.filename)}" style="min-width:28px; min-height:28px; padding:0;">
+                  <input type="checkbox" class="poster-checkbox-input table-checkbox-input" value="${escapeHtml(p.filename)}" ${isSelected ? 'checked' : ''} onchange="app.toggleSelectPoster('${escapeHtml(p.filename)}', this.checked)">
+                  <span class="table-checkbox-custom">${getIcon('check', 'ui-icon', 12)}</span>
+                </label>
                 <span class="badge badge-neutral">${p.ext}</span>
                 <span class="font-mono" style="font-size:0.75rem; color:var(--text-secondary);">${p.size_formatted}</span>
               </div>
@@ -185,8 +191,11 @@ Object.assign(app, {
           <table class="data-table">
             <thead>
               <tr>
-                <th class="th-center" style="width:36px;">
-                  <input type="checkbox" id="poster-table-select-all" ${isAllSelected ? 'checked' : ''} onchange="app.toggleSelectAllCurrentPagePosters()" style="width:16px; height:16px; cursor:pointer; accent-color:var(--accent-color);" title="Pilih Semua di Halaman Ini">
+                <th class="th-center" style="width:48px;" title="Pilih Semua Poster">
+                  <label class="table-checkbox-wrap" onclick="event.stopPropagation();" title="Pilih Semua">
+                    <input type="checkbox" id="poster-table-select-all" class="table-checkbox-input" ${isAllSelected ? 'checked' : ''} onchange="app.toggleSelectAllCurrentPagePosters()">
+                    <span class="table-checkbox-custom">${getIcon('check', 'ui-icon', 12)}</span>
+                  </label>
                 </th>
                 <th style="width:52px; text-align:center;">Poster</th>
                 ${sortTh('filename', 'Nama Berkas')}
@@ -244,9 +253,11 @@ Object.assign(app, {
   isAllPostersSelectedOnPage() {
     const s = this.state.taxonomy || {};
     const selected = s.selectedPosters || [];
-    const pagedCbs = document.querySelectorAll('.poster-checkbox-input');
+    const pagedCbs = document.querySelectorAll('.poster-checkbox-input, .table-checkbox-input');
     if (pagedCbs.length === 0) return false;
-    return Array.from(pagedCbs).every(cb => selected.includes(cb.value));
+    const values = Array.from(new Set(Array.from(pagedCbs).map(cb => cb.value).filter(Boolean)));
+    if (values.length === 0) return false;
+    return values.every(val => selected.includes(val));
   },
 
   toggleSelectAllCurrentPagePosters() {
@@ -276,14 +287,14 @@ Object.assign(app, {
     const row = document.getElementById(`poster-row-${encodeURIComponent(filename)}`);
     if (row) {
       row.classList.toggle('selected', shouldSelect);
-      const cb = row.querySelector('.poster-checkbox-input');
+      const cb = row.querySelector('.poster-checkbox-input, .table-checkbox-input');
       if (cb) cb.checked = shouldSelect;
     }
 
     const mcard = document.getElementById(`poster-mcard-${encodeURIComponent(filename)}`);
     if (mcard) {
       mcard.classList.toggle('selected', shouldSelect);
-      const cb = mcard.querySelector('.poster-checkbox-input');
+      const cb = mcard.querySelector('.poster-checkbox-input, .table-checkbox-input');
       if (cb) cb.checked = shouldSelect;
     }
 
@@ -295,8 +306,7 @@ Object.assign(app, {
     const allBtn = document.getElementById('btn-select-all-posters');
     if (allBtn) {
       allBtn.classList.toggle('btn-select-all-active', isAll);
-      const span = allBtn.querySelector('span');
-      if (span) span.textContent = isAll ? 'Batal Pilih' : 'Pilih Semua';
+      allBtn.title = isAll ? 'Batalkan pilihan semua poster' : 'Pilih semua poster di halaman ini';
     }
 
     this.updatePostersToolbar();
@@ -305,10 +315,11 @@ Object.assign(app, {
   toggleSelectAllPosters(isChecked) {
     const s = this.state.taxonomy = this.state.taxonomy || {};
     s.selectedPosters = s.selectedPosters || [];
-    const pagedCbs = document.querySelectorAll('.poster-checkbox-input');
+    const pagedCbs = document.querySelectorAll('.poster-checkbox-input, .table-checkbox-input');
 
     pagedCbs.forEach(cb => {
       const fname = cb.value;
+      if (!fname) return;
       cb.checked = isChecked;
       const idx = s.selectedPosters.indexOf(fname);
       if (isChecked && idx === -1) s.selectedPosters.push(fname);
@@ -329,8 +340,7 @@ Object.assign(app, {
     const allBtn = document.getElementById('btn-select-all-posters');
     if (allBtn) {
       allBtn.classList.toggle('btn-select-all-active', isChecked);
-      const span = allBtn.querySelector('span');
-      if (span) span.textContent = isChecked ? 'Batal Pilih' : 'Pilih Semua';
+      allBtn.title = isChecked ? 'Batalkan pilihan semua poster' : 'Pilih semua poster di halaman ini';
     }
 
     this.updatePostersToolbar();
@@ -340,7 +350,7 @@ Object.assign(app, {
     const s = this.state.taxonomy = this.state.taxonomy || {};
     s.selectedPosters = [];
     document.querySelectorAll('.poster-admin-card, .data-table tr, .mobile-data-card').forEach(c => c.classList.remove('selected'));
-    document.querySelectorAll('.poster-checkbox-input').forEach(cb => cb.checked = false);
+    document.querySelectorAll('.poster-checkbox-input, .table-checkbox-input').forEach(cb => cb.checked = false);
     const allCb = document.getElementById('poster-select-all-cb');
     if (allCb) allCb.checked = false;
     const tableAllCb = document.getElementById('poster-table-select-all');
@@ -348,8 +358,7 @@ Object.assign(app, {
     const allBtn = document.getElementById('btn-select-all-posters');
     if (allBtn) {
       allBtn.classList.remove('btn-select-all-active');
-      const span = allBtn.querySelector('span');
-      if (span) span.textContent = 'Pilih Semua';
+      allBtn.title = 'Pilih semua poster di halaman ini';
     }
     this.updatePostersToolbar();
   },

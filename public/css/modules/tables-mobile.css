@@ -179,7 +179,16 @@
     flex-wrap: wrap;
   }
 
-  .posters-toolbar-actions .btn {
+  .posters-toolbar-actions .btn.btn-icon {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    min-height: 36px;
+    padding: 0;
+    flex: 0 0 auto;
+    justify-content: center;
+  }
+  .posters-toolbar-actions .btn:not(.btn-icon) {
     min-height: 34px;
     padding: 6px 8px;
     font-size: 0.75rem;

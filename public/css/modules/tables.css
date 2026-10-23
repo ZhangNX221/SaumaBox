@@ -499,6 +499,69 @@
   color: #000000 !important;
   box-shadow: 0 0 10px rgba(212, 175, 55, 0.45);
 }
+
+/* Table Checkbox Column */
+.table-checkbox-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  margin: 0;
+  min-width: 34px;
+  min-height: 34px;
+  padding: 4px;
+  position: relative;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.table-checkbox-input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+.table-checkbox-custom {
+  width: 20px;
+  height: 20px;
+  border-radius: 5px;
+  background: var(--bg-surface-elevated, #1a1e28);
+  border: 1.5px solid var(--border-color, rgba(255, 255, 255, 0.25));
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: transparent;
+  transition: all 0.15s ease;
+}
+.table-checkbox-wrap:hover .table-checkbox-custom {
+  border-color: var(--accent-color, #d4af37);
+  background: var(--bg-surface-hover, #222736);
+}
+.table-checkbox-input:checked + .table-checkbox-custom,
+.data-table tr.selected .table-checkbox-custom,
+.mobile-data-card.selected .table-checkbox-custom {
+  background: var(--accent-color, #d4af37) !important;
+  border-color: var(--accent-color, #d4af37) !important;
+  color: #000000 !important;
+  box-shadow: 0 0 8px rgba(212, 175, 55, 0.4);
+}
+.table-checkbox-custom svg {
+  width: 12px;
+  height: 12px;
+  stroke-width: 3;
+}
+.data-table tr.selected {
+  background-color: rgba(212, 175, 55, 0.08) !important;
+}
+.data-table tr.selected:hover {
+  background-color: rgba(212, 175, 55, 0.12) !important;
+}
+.btn-select-all-active {
+  background: rgba(212, 175, 55, 0.2) !important;
+  border-color: var(--accent-color, #d4af37) !important;
+  color: var(--accent-color, #d4af37) !important;
+}
+
 .poster-badge-format {
   position: absolute;
   top: 8px;

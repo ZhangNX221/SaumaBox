@@ -56,31 +56,22 @@ Object.assign(app, {
     const viewMode = s.posterViewMode || localStorage.getItem('saumabox_view_posters') || 'grid';
 
     return `
-      <div class="posters-toolbar-actions" style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+      <div class="posters-toolbar-actions" style="display:flex; gap:8px; align-items:center;">
         <div class="view-toggle-group" role="group" aria-label="Pilihan Tampilan Poster">
           <button class="view-toggle-btn ${viewMode === 'grid' ? 'active' : ''}" onclick="app.setCatalogViewMode('posters', 'grid')" title="Tampilan Grid Poster" aria-label="Tampilan Grid">${getIcon('grid', 'ui-icon', 16)}</button>
           <button class="view-toggle-btn ${viewMode === 'table' ? 'active' : ''}" onclick="app.setCatalogViewMode('posters', 'table')" title="Tampilan Tabel Spreadsheet" aria-label="Tampilan Tabel">${getIcon('table', 'ui-icon', 16)}</button>
         </div>
-        ${count > 0 ? `
-          <button class="btn btn-danger btn-sm" onclick="app.confirmDeleteSelectedPosters()" title="Hapus ${count} poster terpilih">
-            ${getIcon('trash', 'ui-icon-btn', 14)} <span>Hapus (${count})</span>
-          </button>
-          <button class="btn btn-secondary btn-sm" onclick="app.downloadSelectedPosters()" title="Download ${count} poster terpilih">
-            ${getIcon('download', 'ui-icon-btn', 14)} <span>Download (${count})</span>
-          </button>
-          <button class="btn btn-secondary btn-sm" onclick="app.compressSelectedPosters()" title="Kompres ${count} poster terpilih (maks. 200 KB)">
-            ${getIcon('refresh', 'ui-icon-btn', 14)} <span>Kompres (${count})</span>
-          </button>
-        ` : ''}
-        <button class="btn btn-secondary btn-sm" onclick="app.compressAllPosters()" title="Kompres semua poster agar ukurannya tidak melebihi 200 KB">
-          ${getIcon('refresh', 'ui-icon-btn', 14)} <span>Kompres Semua</span>
-        </button>
-        <button type="button" class="btn btn-secondary btn-sm ${isAllSelected ? 'btn-select-all-active' : ''}" onclick="app.toggleSelectAllCurrentPagePosters()" id="btn-select-all-posters" title="${isAllSelected ? 'Batalkan pilihan semua poster di halaman ini' : 'Pilih semua poster di halaman ini'}" style="display:inline-flex; align-items:center; gap:6px;">
-          <input type="checkbox" id="poster-select-all-cb" ${isAllSelected ? 'checked' : ''} style="margin:0; pointer-events:none; cursor:pointer; accent-color:var(--accent-color);" aria-hidden="true">
-          <span>Pilih Semua</span>
-        </button>
-        <button class="btn btn-secondary btn-sm" onclick="app.exportPostersZip()" title="Ekspor semua poster dalam berkas ZIP">${getIcon('download', 'ui-icon-btn', 14)} <span>Ekspor ZIP</span></button>
-        <button class="btn btn-primary btn-sm" onclick="app.openImportPosterModal()" title="Import gambar poster baru">${getIcon('upload', 'ui-icon-btn', 14)} <span>Import Poster</span></button>
+        <div class="toolbar-actions-group">
+          <button class="btn btn-primary btn-icon" onclick="app.openImportPosterModal()" title="Import / Unggah Poster Baru" aria-label="Import Poster">${getIcon('plus', 'ui-icon-btn', 16)}</button>
+          <button class="btn btn-secondary btn-icon" onclick="app.exportPostersZip()" title="Ekspor semua poster dalam berkas ZIP" aria-label="Ekspor ZIP">${getIcon('download', 'ui-icon-btn', 16)}</button>
+          <button class="btn btn-secondary btn-icon" onclick="app.compressAllPosters()" title="Kompres semua poster agar ukurannya tidak melebihi 200 KB" aria-label="Kompres Semua">${getIcon('refresh', 'ui-icon-btn', 16)}</button>
+          <button type="button" class="btn btn-secondary btn-icon ${isAllSelected ? 'btn-select-all-active' : ''}" onclick="app.toggleSelectAllCurrentPagePosters()" id="btn-select-all-posters" title="${isAllSelected ? 'Batalkan pilihan semua poster di halaman ini' : 'Pilih semua poster di halaman ini'}" aria-label="${isAllSelected ? 'Batalkan pilihan semua' : 'Pilih semua'}">${getIcon('check', 'ui-icon-btn', 16)}</button>
+          ${count > 0 ? `
+            <button class="btn btn-secondary btn-icon" onclick="app.downloadSelectedPosters()" title="Download ${count} poster terpilih" aria-label="Download ${count} poster terpilih">${getIcon('download', 'ui-icon-btn', 16)}</button>
+            <button class="btn btn-secondary btn-icon" onclick="app.compressSelectedPosters()" title="Kompres ${count} poster terpilih (maks. 200 KB)" aria-label="Kompres ${count} poster terpilih">${getIcon('refresh', 'ui-icon-btn', 16)}</button>
+            <button class="btn btn-danger btn-icon" onclick="app.confirmDeleteSelectedPosters()" title="Hapus ${count} poster terpilih" aria-label="Hapus ${count} poster terpilih">${getIcon('trash', 'ui-icon-btn', 16)}</button>
+          ` : ''}
+        </div>
       </div>
     `;
   },
