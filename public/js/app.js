@@ -177,15 +177,13 @@ const app = {
       if (bottomNav) {
         const bItems = [
           ['dashboard', 'dashboard', 'Dashboard'],
-          ['games', 'games', 'Games'],
-          ['cinema', 'cinema', 'Cinema'],
-          ['music', 'music', 'Musik'],
-          ['web', 'globe', 'Web'],
-          ['menu', 'layers', 'Menu']
+          ['menu', 'layers', 'Menu'],
+          ['settings', 'settings', 'Pengaturan']
         ];
         const isAct = (id) => {
           if (id === curTab) return true;
-          if (id === 'menu' && (curTab === 'taxonomy' || curTab === 'settings')) return true;
+          if (id === 'settings' && curTab === 'settings') return true;
+          if (id === 'menu' && curTab !== 'dashboard' && curTab !== 'settings') return true;
           return false;
         };
         bottomNav.innerHTML = `<div class="bottom-nav-inner">${bItems.map(([id, icon, txt]) => `
