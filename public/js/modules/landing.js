@@ -47,25 +47,25 @@ Object.assign(app, {
 
             <div class="hero-metric-strip">
               ${isGames ? `
-                <div class="metric-chip" onclick="app.setRecentCategory('games'); app.scrollToShowcase();" role="button" tabindex="0">
+                <div class="metric-chip" onclick="app.scrollToCategory('games');" role="button" tabindex="0">
                   <span class="metric-num">${stats.totals.games}</span>
                   <span class="metric-lbl">Permainan</span>
                 </div>
               ` : ''}
               ${isCinema ? `
-                <div class="metric-chip" onclick="app.setRecentCategory('cinema'); app.scrollToShowcase();" role="button" tabindex="0">
+                <div class="metric-chip" onclick="app.scrollToCategory('cinema');" role="button" tabindex="0">
                   <span class="metric-num">${stats.totals.cinema}</span>
                   <span class="metric-lbl">Sinema</span>
                 </div>
               ` : ''}
               ${isMusic ? `
-                <div class="metric-chip" onclick="app.setRecentCategory('music'); app.scrollToShowcase();" role="button" tabindex="0">
+                <div class="metric-chip" onclick="app.scrollToCategory('music');" role="button" tabindex="0">
                   <span class="metric-num">${stats.totals.music}</span>
                   <span class="metric-lbl">Musik</span>
                 </div>
               ` : ''}
               ${isWeb ? `
-                <div class="metric-chip" onclick="app.setRecentCategory('web'); app.scrollToShowcase();" role="button" tabindex="0">
+                <div class="metric-chip" onclick="app.scrollToCategory('web');" role="button" tabindex="0">
                   <span class="metric-num">${stats.totals.web || 0}</span>
                   <span class="metric-lbl">Bookmark Web</span>
                 </div>
@@ -113,16 +113,6 @@ Object.assign(app, {
             <div class="showcase-heading-group">
               <h2 class="showcase-title">Pilihan Koleksi Terbaru</h2>
               <p class="showcase-subtitle">Eksplorasi entri media terbaru per kategori dengan slider interaktif (Maksimal 10 poster per baris)</p>
-            </div>
-
-            <div class="showcase-toolbar-group">
-              <div class="showcase-tabs" role="tablist" aria-label="Filter Kategori Media">
-                <button class="showcase-tab-btn ${this.state.recentCategory === 'all' ? 'active' : ''}" data-cat="all" onclick="app.setRecentCategory('all')" role="tab">Semua <span class="tab-count">${totalCount}</span></button>
-                ${isGames ? `<button class="showcase-tab-btn ${this.state.recentCategory === 'games' ? 'active' : ''}" data-cat="games" onclick="app.setRecentCategory('games')" role="tab">Games <span class="tab-count">${allGames.length}</span></button>` : ''}
-                ${isCinema ? `<button class="showcase-tab-btn ${this.state.recentCategory === 'cinema' ? 'active' : ''}" data-cat="cinema" onclick="app.setRecentCategory('cinema')" role="tab">Sinema <span class="tab-count">${allCinema.length}</span></button>` : ''}
-                ${isMusic ? `<button class="showcase-tab-btn ${this.state.recentCategory === 'music' ? 'active' : ''}" data-cat="music" onclick="app.setRecentCategory('music')" role="tab">Musik <span class="tab-count">${allMusic.length}</span></button>` : ''}
-                ${isWeb ? `<button class="showcase-tab-btn ${this.state.recentCategory === 'web' ? 'active' : ''}" data-cat="web" onclick="app.setRecentCategory('web')" role="tab">Web <span class="tab-count">${allWeb.length}</span></button>` : ''}
-              </div>
             </div>
           </div>
 
@@ -267,13 +257,13 @@ Object.assign(app, {
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
   },
 
+  scrollToCategory(category) {
+    const el = document.getElementById(`row-${category}`) || document.getElementById('public-showcase-section');
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  },
+
   setRecentCategory(category) {
-    this.state.recentCategory = category;
-    document.querySelectorAll('.showcase-tab-btn').forEach(btn => {
-      btn.classList.toggle('active', btn.dataset.cat === category);
-    });
-    const grid = document.getElementById('recent-media-grid');
-    if (grid) grid.innerHTML = this.renderRecentShowcase();
+    this.scrollToCategory(category);
   },
 
   slideShowcase(category, direction) {
@@ -301,7 +291,6 @@ Object.assign(app, {
 
   renderRecentShowcase() {
     const recent = this.state.recent || { games: [], cinema: [], music: [] };
-    const activeCat = this.state.recentCategory || 'all';
     const query = this.state.landingSearch || '';
     const sortBy = this.state.landingSort || 'newest';
 
@@ -318,9 +307,7 @@ Object.assign(app, {
     if (isMusic) categories.push({ key: 'music', label: 'Musik', icon: 'music', link: 'music' });
     if (isWeb) categories.push({ key: 'web', label: 'Bookmark Web', icon: 'globe', link: 'web' });
 
-    const selectedCats = activeCat === 'all' 
-      ? categories 
-      : categories.filter(c => c.key === activeCat);
+    const selectedCats = categories;
 
     const renderedRows = [];
 

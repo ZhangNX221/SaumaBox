@@ -623,45 +623,167 @@
   }
 }
 
-@media (max-width: 600px) {
-  .showcase-toolbar-group {
-    flex-direction: column;
-    align-items: stretch;
+@media (max-width: 768px) {
+  /* Banner Hero Centered on Mobile */
+  .editorial-hero {
+    padding: 28px 16px;
+    text-align: center;
   }
-  .showcase-tabs {
-    overflow-x: auto;
-    padding-bottom: 4px;
-    scrollbar-width: none;
-    flex-wrap: nowrap;
+  .hero-layout-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+    text-align: center;
   }
-  .showcase-tabs::-webkit-scrollbar {
-    display: none;
-  }
-  .showcase-filter-row {
-    width: 100%;
-    display: grid;
-    grid-template-columns: 1fr auto;
-  }
-  .showcase-search-wrap {
+  .hero-copy-col {
+    align-items: center;
+    text-align: center;
     width: 100%;
   }
+  .hero-status-pill {
+    margin: 0 auto 14px auto;
+    text-align: center;
+  }
+  .hero-display-title {
+    text-align: center;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .hero-lead-text {
+    text-align: center;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .hero-metric-strip {
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 20px;
+  }
+  .metric-chip {
+    justify-content: center;
+  }
+  .hero-action-cluster {
+    justify-content: center;
+    width: 100%;
+  }
+  .hero-illustration-col {
+    order: -1;
+    justify-content: center;
+    width: 100%;
+  }
+  .hero-app-showcase-card {
+    max-width: 300px;
+    margin: 0 auto;
+    text-align: center;
+  }
+  .app-showcase-pillars {
+    justify-content: center;
+  }
+
+  /* Showcase Heading Centered on Mobile */
+  .showcase-control-bar {
+    margin-bottom: 18px;
+    text-align: center;
+  }
+  .showcase-heading-group {
+    text-align: center;
+    width: 100%;
+  }
+
+  /* Footer Minimalist & Compact on Mobile */
   .site-public-footer {
-    padding: 28px 18px 20px;
-    margin-top: 40px;
-    border-radius: 16px;
+    padding: 24px 18px 20px;
+    margin-top: 36px;
+    border-radius: 18px;
   }
   .footer-grid {
-    grid-template-columns: 1fr;
-    gap: 28px;
-    padding-bottom: 24px;
+    grid-template-columns: 1fr !important;
+    gap: 18px;
+    padding-bottom: 18px;
   }
+  .footer-brand-col {
+    align-items: center;
+    text-align: center;
+  }
+  .footer-brand-wrap {
+    margin: 0 auto 8px auto;
+  }
+  .footer-brand-desc {
+    text-align: center;
+    font-size: 0.82rem;
+    line-height: 1.5;
+    max-width: 320px;
+    margin: 0 auto 12px auto;
+  }
+  .footer-pill-badge {
+    margin: 0 auto;
+    font-size: 0.72rem;
+    padding: 4px 10px;
+  }
+  .footer-nav-col {
+    align-items: center;
+    text-align: center;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    padding-top: 16px;
+  }
+  .footer-col-title {
+    text-align: center;
+    font-size: 0.78rem;
+    margin-bottom: 10px;
+  }
+  .footer-links-list {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px 10px;
+  }
+  .footer-link-btn {
+    font-size: 0.8rem;
+    padding: 5px 10px;
+    background: var(--bg-surface-elevated);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+  }
+  .footer-link-btn:hover {
+    transform: none;
+    border-color: var(--accent-color);
+  }
+
+  /* Sembunyikan bagian arsitektur sistem & proyek panjang di mobile agar rapi dan ringkas */
+  .footer-tech-col,
+  .footer-meta-col {
+    display: none !important;
+  }
+
   .footer-bottom-bar {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: center;
+    text-align: center;
     gap: 12px;
+    padding-top: 16px;
+  }
+  .footer-copy-text {
+    font-size: 0.76rem;
+    text-align: center;
   }
   .footer-bottom-actions {
     width: 100%;
-    justify-content: space-between;
+    justify-content: center;
+    gap: 16px;
   }
 }
+
+@media (max-width: 480px) {
+  .hero-display-title {
+    font-size: 1.75rem;
+  }
+  .metric-chip {
+    padding: 6px 12px;
+    font-size: 0.8rem;
+  }
+  .hero-app-showcase-card {
+    padding: 18px 14px;
+  }
+}
+
