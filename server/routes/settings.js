@@ -43,6 +43,14 @@ router.get('/stats', (req, res) => {
   const totalGames = db.prepare('SELECT COUNT(*) as c FROM games').get().c;
   const totalCinema = db.prepare('SELECT COUNT(*) as c FROM cinema').get().c;
   const totalMusic = db.prepare('SELECT COUNT(*) as c FROM music').get().c;
+  const totalWeb = db.prepare('SELECT COUNT(*) as c FROM web_bookmarks').get()?.c || 0;
+  const pinnedWeb = db.prepare('SELECT COUNT(*) as c FROM web_bookmarks WHERE is_pinned = 1').get()?.c || 0;
+  const webCategories = db.prepare(`
+    SELECT category, COUNT(*) as count
+    FROM web_bookmarks
+    GROUP BY category
+    ORDER BY count DESC
+  `).all();
 
   // Games breakdown
   const pcGames = db.prepare("SELECT COUNT(*) as c FROM games WHERE type = 'PC'").get().c;
@@ -142,6 +150,7 @@ router.get('/stats', (req, res) => {
       games: totalGames,
       cinema: totalCinema,
       music: totalMusic,
+      web: totalWeb,
       spending: totalSpending,
       watched: watchedCount,
       favorite_music: favMusic,
@@ -174,6 +183,11 @@ router.get('/stats', (req, res) => {
       albums: totalAlbums,
       genres: genreStats,
       platforms: musicPlatforms
+    },
+    web: {
+      total: totalWeb,
+      pinned: pinnedWeb,
+      categories: webCategories
     },
     popular: {
       games: popularGames,
@@ -214,6 +228,7 @@ router.get('/public-config', (req, res) => {
     public_games_enabled: settings.public_games_enabled === 'true',
     public_cinema_enabled: settings.public_cinema_enabled === 'true',
     public_music_enabled: settings.public_music_enabled === 'true',
+    public_web_enabled: settings.public_web_enabled !== 'false',
     public_show_prices: settings.public_show_prices === 'true',
     public_show_ratings: settings.public_show_ratings === 'true',
     theme: settings.theme || 'dark'
@@ -246,7 +261,14 @@ router.get('/recent', (req, res) => {
     LIMIT ?
   `).all(limit);
 
-  res.json({ games, cinema, music });
+  const web = db.prepare(`
+    SELECT id, title, url, category, icon_url, description, bg_color, is_pinned
+    FROM web_bookmarks
+    ORDER BY is_pinned DESC, sort_order ASC, id DESC
+    LIMIT ?
+  `).all(limit);
+
+  res.json({ games, cinema, music, web });
 });
 
 // GET /api/settings/version — Dapatkan informasi versi aplikasi saat ini

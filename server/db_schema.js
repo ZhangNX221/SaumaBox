@@ -59,6 +59,23 @@ function setupExtendedSchema(database) {
       status     TEXT NOT NULL DEFAULT 'open' CHECK(status IN ('open', 'resolved', 'dismissed')),
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
+
+    CREATE TABLE IF NOT EXISTS web_bookmarks (
+      id          INTEGER PRIMARY KEY AUTOINCREMENT,
+      title       TEXT NOT NULL,
+      url         TEXT NOT NULL,
+      category    TEXT NOT NULL DEFAULT 'Umum',
+      icon_url    TEXT DEFAULT '',
+      description TEXT DEFAULT '',
+      bg_color    TEXT DEFAULT '#272830',
+      is_pinned   INTEGER NOT NULL DEFAULT 0,
+      sort_order  INTEGER NOT NULL DEFAULT 0,
+      created_at  TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at  TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_web_bookmarks_category ON web_bookmarks(category);
+    CREATE INDEX IF NOT EXISTS idx_web_bookmarks_title ON web_bookmarks(title);
+    CREATE INDEX IF NOT EXISTS idx_web_bookmarks_pinned ON web_bookmarks(is_pinned DESC, sort_order ASC);
   `);
 
   // Migrasi kolom tambahan tabel games
@@ -197,6 +214,30 @@ function seedExtendedData(database) {
     insertUser.run('editor_cinema', hash, 'Editor Cinema', 'editor_cinema', 'active', 'cinema.editor@saumabox.local');
     insertUser.run('moderator1', hash, 'Staff Moderator', 'moderator', 'active', 'mod@saumabox.local');
     insertUser.run('member_rizki', hash, 'Rizki Pratama', 'member', 'active', 'rizki@example.com');
+  }
+
+  // 7. Seed Web Bookmarks (Katalog Web & Bookmark Aplikasi)
+  const bookmarkCount = database.prepare('SELECT COUNT(*) as c FROM web_bookmarks').get().c;
+  if (bookmarkCount === 0) {
+    const insertBookmark = database.prepare(`
+      INSERT INTO web_bookmarks (title, url, category, icon_url, description, bg_color, is_pinned, sort_order)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+    const seedBookmarks = [
+      ['CasaOS', 'http://192.168.10.8:80', 'Homelab', 'https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/casaos.png', 'Personal Cloud OS untuk home server', '#1d4ed8', 1, 1],
+      ['ZimaOS', 'http://192.168.10.8:81', 'Homelab', 'https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/zimaos.png', 'Next-gen OS untuk home server dan AI edge', '#0284c7', 1, 2],
+      ['AdGuard Home', 'http://192.168.10.8:3000', 'Homelab', 'https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/adguard-home.png', 'DNS sinkhole & adblocker jaringan lokal', '#10b981', 1, 3],
+      ['Portainer', 'http://192.168.10.8:9000', 'Homelab', 'https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/portainer.png', 'Container & stack management GUI', '#0ea5e9', 0, 4],
+      ['GitHub', 'https://github.com', 'Pengembangan', 'https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/github.png', 'Platform kolaborasi kode & repositori git', '#181717', 1, 5],
+      ['ChatGPT', 'https://chatgpt.com', 'Produktivitas', 'https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/chatgpt.png', 'Asisten kecerdasan buatan percakapan', '#10a37f', 0, 6],
+      ['YouTube', 'https://www.youtube.com', 'Media', 'https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/youtube.png', 'Platform streaming video global', '#dc2626', 0, 7],
+      ['Spotify', 'https://open.spotify.com', 'Media', 'https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/spotify.png', 'Streaming musik & podcast digital', '#16a34a', 0, 8],
+      ['Netflix', 'https://www.netflix.com', 'Media', 'https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/netflix.png', 'Layanan sinema film & serial dunia', '#b91c1c', 0, 9],
+      ['Google Drive', 'https://drive.google.com', 'Produktivitas', 'https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/google-drive.png', 'Penyimpanan berkas dan dokumen cloud', '#2563eb', 0, 10]
+    ];
+    for (const b of seedBookmarks) {
+      insertBookmark.run(...b);
+    }
   }
 }
 

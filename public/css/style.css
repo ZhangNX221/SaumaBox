@@ -19,6 +19,7 @@
 @import url('modules/slider.css');
 @import url('modules/catalog.css');
 @import url('modules/music.css');
+@import url('modules/web-catalog.css');
 
 /* 4. Dashboard & Analytics */
 @import url('modules/dashboard-kpi.css');

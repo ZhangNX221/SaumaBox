@@ -382,6 +382,18 @@ router.get('/export', requireAuth, (req, res) => {
       { key: 'notes', label: 'Catatan' },
       { key: 'cover_url', label: 'URL Cover' }
     ];
+  } else if (targetModule === 'web') {
+    data = db.prepare('SELECT * FROM web_bookmarks ORDER BY is_pinned DESC, sort_order ASC, id ASC').all();
+    headers = [
+      { key: 'id', label: 'ID' },
+      { key: 'title', label: 'Judul Web' },
+      { key: 'url', label: 'URL Website' },
+      { key: 'category', label: 'Kategori' },
+      { key: 'description', label: 'Deskripsi' },
+      { key: 'icon_url', label: 'URL Ikon' },
+      { key: 'bg_color', label: 'Warna Aksen' },
+      { key: 'is_pinned', label: 'Disematkan (1/0)' }
+    ];
   } else {
     return res.status(400).json({ error: 'Modul export tidak dikenal.' });
   }

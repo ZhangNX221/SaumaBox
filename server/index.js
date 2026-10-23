@@ -13,6 +13,7 @@ const settingsRoutes = require('./routes/settings');
 const dataRoutes = require('./routes/data');
 const taxonomyRoutes = require('./routes/taxonomy');
 const metadataRoutes = require('./routes/metadata');
+const webRoutes = require('./routes/web');
 
 const app = express();
 const PORT = parseInt(process.env.PORT || '3000', 10);
@@ -32,6 +33,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/games', gamesRoutes);
 app.use('/api/cinema', cinemaRoutes);
 app.use('/api/music', musicRoutes);
+app.use('/api/web', webRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/data', dataRoutes);
 app.use('/api/taxonomy', taxonomyRoutes);

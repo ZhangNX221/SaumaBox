@@ -4,8 +4,12 @@
 
 Object.assign(app, {
   async renderDashboard(container) {
-    const stats = await api.get('/api/settings/stats');
+    const [stats, webRes] = await Promise.all([
+      api.get('/api/settings/stats'),
+      api.get('/api/web')
+    ]);
     this.state.stats = stats;
+    const webBookmarks = webRes?.items || [];
 
     const totalMedia = (stats.totals.games || 0) + (stats.totals.cinema || 0) + (stats.totals.music || 0);
 
@@ -221,6 +225,14 @@ Object.assign(app, {
             <span class="stat-sub">${stats.music?.albums || 0} Album • ${stats.music?.artists || 0} Musisi</span>
           </div>
         </div>
+        <div class="stat-card" onclick="app.navigate('web')" role="button" tabindex="0" onkeydown="if(event.key==='Enter')app.navigate('web')" title="Buka Katalog Web &amp; Bookmark">
+          <div class="stat-icon" style="color:var(--accent-color);">${getIcon('globe', 'ui-icon', 22)}</div>
+          <div class="stat-info">
+            <span class="stat-label">Bookmark Web</span>
+            <span class="stat-value font-mono">${stats.totals.web || 0}</span>
+            <span class="stat-sub">${stats.web?.pinned || 0} Disematkan • Akses Cepat</span>
+          </div>
+        </div>
         <div class="stat-card" onclick="app.navigate('taxonomy', 'genres')" role="button" tabindex="0" onkeydown="if(event.key==='Enter')app.navigate('taxonomy', 'genres')" title="Buka Taksonomi Koleksi">
           <div class="stat-icon">${getIcon('layers', 'ui-icon', 22)}</div>
           <div class="stat-info">
@@ -239,7 +251,26 @@ Object.assign(app, {
         </div>
       </section>
 
-      <!-- 2. ANALISIS DIAGRAM & KONTEN POPULER -->
+      <!-- 2. PELUNCUR CEPAT WEB & HOMELAB (Launchpad Grid) -->
+      ${webBookmarks.length > 0 ? `
+        <section class="web-launcher-section" style="margin-bottom:var(--space-xl);">
+          <div class="web-launcher-header">
+            <div class="web-launcher-title">
+              ${getIcon('globe', 'ui-icon', 18)}
+              <span>Peluncur Cepat Web &amp; Homelab</span>
+            </div>
+            <a class="web-launcher-all-link" onclick="app.navigate('web')">
+              <span>Buka Semua (${webBookmarks.length})</span>
+              ${getIcon('chevronRight', 'ui-icon', 14)}
+            </a>
+          </div>
+          <div class="web-app-grid">
+            ${webBookmarks.slice(0, 8).map(b => this.renderWebTile(b, true)).join('')}
+          </div>
+        </section>
+      ` : ''}
+
+      <!-- 3. ANALISIS DIAGRAM & KONTEN POPULER -->
       <section class="dashboard-analytics-section">
         <div class="dashboard-section-header">
           <div>
@@ -407,6 +438,13 @@ Object.assign(app, {
                 <span class="menu-item-desc">Audio lossless FLAC &amp; album</span>
               </div>
             </button>
+            <button type="button" class="add-catalog-menu-item" onclick="app.selectAddCatalog('web')" role="menuitem">
+              <span class="menu-item-icon icon-web" style="background:rgba(212,175,55,0.15); color:var(--accent-color);">${getIcon('globe', 'ui-icon', 18)}</span>
+              <div class="menu-item-text">
+                <span class="menu-item-title">Bookmark Web</span>
+                <span class="menu-item-desc">Tautan aplikasi, homelab &amp; situs favorit</span>
+              </div>
+            </button>
           </div>
         </div>
       </div>
@@ -433,6 +471,7 @@ Object.assign(app, {
     if (type === 'game') this.openAddGameModal();
     else if (type === 'cinema') this.openAddCinemaModal();
     else if (type === 'music') this.openAddMusicModal();
+    else if (type === 'web') this.openAddWebModal();
   },
 
   slidePopularRow(sliderId, direction) {

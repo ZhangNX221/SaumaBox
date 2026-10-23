@@ -16,6 +16,7 @@ Aplikasi katalog multimedia mandiri untuk mengelola koleksi game, sinema, dan mu
 - **Koleksi Game**: Catat game PC, emulator retro (PS2, PSP, Wii U, Switch), dan recompilation port (Ship of Harkinian, OpenGOAL). Lengkap dengan platform pembelian, status tamat, format ROM, dan kalkulasi total pengeluaran koleksi.
 - **Koleksi Sinema**: Pantau film, anime, dan serial TV. Tersedia catatan status tontonan, rating, jumlah episode, musim, studio, dan negara asal.
 - **Koleksi Musik**: Kelola album fisik, rilisan digital (FLAC, MP3), maupun tautan layanan streaming beserta penanda lagu favorit.
+- **Katalog Web & Bookmark Aplikasi**: Simpan tautan web favorit, dashboard homelab (CasaOS, ZimaOS, Portainer, AdGuard Home), dan alat kerja dalam bentuk kartu kisi peluncur aplikasi (launchpad) dengan pengambilan favicon otomatis.
 - **Mode Poster dan Tabel**: Telusuri koleksi dengan galeri kartu visual atau beralih ke tampilan tabel ringkas dengan pencarian cepat dan pengurutan kolom.
 - **Data 100% Milik Anda**: Seluruh data tersimpan dalam satu file SQLite lokal (`data/saumabox.sqlite`) dengan mode WAL. Dilengkapi fitur unduh cadangan (backup) dan ekspor-impor file CSV dalam satu klik.
 - **Kompresi Gambar Otomatis**: Gambar sampul dan avatar otomatis dioptimasi ke format WebP ringan (di bawah 200 KB) agar halaman tetap cepat dibuka.

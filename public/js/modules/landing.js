@@ -17,7 +17,8 @@ Object.assign(app, {
     const allGames = recent.games || [];
     const allCinema = recent.cinema || [];
     const allMusic = recent.music || [];
-    const totalCount = allGames.length + allCinema.length + allMusic.length;
+    const allWeb = recent.web || [];
+    const totalCount = allGames.length + allCinema.length + allMusic.length + allWeb.length;
 
     container.innerHTML = `
       <section class="editorial-hero">
@@ -48,6 +49,10 @@ Object.assign(app, {
                 <span class="metric-num">${stats.totals.music}</span>
                 <span class="metric-lbl">Musik</span>
               </div>
+              <div class="metric-chip" onclick="app.setRecentCategory('web'); app.scrollToShowcase();" role="button" tabindex="0">
+                <span class="metric-num">${stats.totals.web || 0}</span>
+                <span class="metric-lbl">Bookmark Web</span>
+              </div>
               <div class="metric-chip">
                 <span class="metric-num font-mono">${formatRupiah(stats.totals.spending)}</span>
                 <span class="metric-lbl">Investasi Koleksi</span>
@@ -70,6 +75,7 @@ Object.assign(app, {
                 <span class="pillar-tag">${getIcon('games', 'ui-icon', 14)} Games</span>
                 <span class="pillar-tag">${getIcon('cinema', 'ui-icon', 14)} Sinema</span>
                 <span class="pillar-tag">${getIcon('music', 'ui-icon', 14)} Musik</span>
+                <span class="pillar-tag">${getIcon('globe', 'ui-icon', 14)} Web</span>
               </div>
             </div>
           </div>
@@ -89,6 +95,7 @@ Object.assign(app, {
               <button class="showcase-tab-btn ${this.state.recentCategory === 'games' ? 'active' : ''}" data-cat="games" onclick="app.setRecentCategory('games')" role="tab">Games <span class="tab-count">${allGames.length}</span></button>
               <button class="showcase-tab-btn ${this.state.recentCategory === 'cinema' ? 'active' : ''}" data-cat="cinema" onclick="app.setRecentCategory('cinema')" role="tab">Sinema <span class="tab-count">${allCinema.length}</span></button>
               <button class="showcase-tab-btn ${this.state.recentCategory === 'music' ? 'active' : ''}" data-cat="music" onclick="app.setRecentCategory('music')" role="tab">Musik <span class="tab-count">${allMusic.length}</span></button>
+              <button class="showcase-tab-btn ${this.state.recentCategory === 'web' ? 'active' : ''}" data-cat="web" onclick="app.setRecentCategory('web')" role="tab">Web <span class="tab-count">${allWeb.length}</span></button>
             </div>
           </div>
         </div>
@@ -192,7 +199,8 @@ Object.assign(app, {
     const categories = [
       { key: 'games', label: 'Games', icon: 'games', link: 'games' },
       { key: 'cinema', label: 'Sinema', icon: 'cinema', link: 'cinema' },
-      { key: 'music', label: 'Musik', icon: 'music', link: 'music' }
+      { key: 'music', label: 'Musik', icon: 'music', link: 'music' },
+      { key: 'web', label: 'Bookmark Web', icon: 'globe', link: 'web' }
     ];
 
     const selectedCats = activeCat === 'all' 
@@ -220,7 +228,11 @@ Object.assign(app, {
       items = items.slice(0, 10);
 
       if (items.length > 0) {
-        renderedRows.push(this.renderShowcaseCategoryRow(cat, items));
+        if (cat.key === 'web') {
+          renderedRows.push(this.renderShowcaseWebRow(cat, items));
+        } else {
+          renderedRows.push(this.renderShowcaseCategoryRow(cat, items));
+        }
       }
     }
 
@@ -268,6 +280,28 @@ Object.assign(app, {
           <div class="media-slider-track" id="slider-${cat.key}">
             ${cardsHtml}
           </div>
+        </div>
+      </section>
+    `;
+  },
+
+  renderShowcaseWebRow(cat, items) {
+    const tilesHtml = items.map(item => typeof this.renderWebTile === 'function' ? this.renderWebTile(item, false) : '').join('');
+
+    return `
+      <section class="showcase-category-row" id="row-web">
+        <div class="showcase-row-header">
+          <div class="showcase-row-title-wrap">
+            <span class="showcase-row-icon">${getIcon('globe', 'ui-icon', 18)}</span>
+            <h3 class="showcase-row-title">${cat.label}</h3>
+            <span class="badge badge-neutral font-mono">${items.length}</span>
+            <button class="showcase-view-all-link" onclick="app.navigate('web')" title="Buka katalog web lengkap">
+              Lihat Semua ↗
+            </button>
+          </div>
+        </div>
+        <div class="web-app-grid" style="margin-top:12px;">
+          ${tilesHtml}
         </div>
       </section>
     `;

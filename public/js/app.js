@@ -11,6 +11,7 @@ const app = {
     games: { items: [], type: 'ALL', completed: 'ALL', q: '', platform: 'ALL', status: 'ALL', console: 'ALL', sortBy: 'id', sortOrder: 'desc', page: 1, limit: 10, totalPages: 1, totalPrice: 0, filterOptions: {}, viewMode: localStorage.getItem('saumabox_view_games') || 'grid' },
     cinema: { items: [], type: 'ALL', watched: 'ALL', genre: 'ALL', q: '', sortBy: 'id', sortOrder: 'desc', page: 1, limit: 10, totalPages: 1, filterOptions: {}, viewMode: localStorage.getItem('saumabox_view_cinema') || 'grid' },
     music: { items: [], subTab: 'all', platform: 'ALL', genre: 'ALL', favorite: 'ALL', q: '', sortBy: 'id', sortOrder: 'desc', page: 1, limit: 10, totalPages: 1, filterOptions: {}, viewMode: localStorage.getItem('saumabox_view_music') || 'grid' },
+    web: { q: '', category: 'Semua' },
     stats: null,
     notifications: [],
     unreadNotifications: 0,
@@ -98,7 +99,12 @@ const app = {
         const avatarMarkup = user.avatarUrl ? `<img src="${escapeHtml(user.avatarUrl)}" alt="Avatar" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">` : username.charAt(0).toUpperCase();
         const sec = [
           { title: '1. Ringkasan', links: [{ id: 'dashboard', icon: 'dashboard', label: 'Dashboard', active: curTab === 'dashboard', click: "app.navigate('dashboard')" }] },
-          { title: '2. Katalog Media', links: [{ id: 'games', icon: 'games', label: 'Katalog Game', active: curTab === 'games', click: "app.navigate('games')" }, { id: 'cinema', icon: 'cinema', label: 'Katalog Cinema', active: curTab === 'cinema', click: "app.navigate('cinema')" }, { id: 'music', icon: 'music', label: 'Katalog Musik', active: curTab === 'music', click: "app.navigate('music')" }] },
+          { title: '2. Katalog Media', links: [
+            { id: 'games', icon: 'games', label: 'Katalog Game', active: curTab === 'games', click: "app.navigate('games')" },
+            { id: 'cinema', icon: 'cinema', label: 'Katalog Cinema', active: curTab === 'cinema', click: "app.navigate('cinema')" },
+            { id: 'music', icon: 'music', label: 'Katalog Musik', active: curTab === 'music', click: "app.navigate('music')" },
+            { id: 'web', icon: 'globe', label: 'Katalog Web', active: curTab === 'web', click: "app.navigate('web')" }
+          ] },
           { title: '3. Kategori Data', links: [{ id: 'genres', icon: 'tag', label: 'Genre', active: curTab === 'taxonomy' && this.state.taxonomy?.subTab === 'genres', click: "app.navigate('taxonomy', 'genres')" }, { id: 'posters', icon: 'image', label: 'Poster', active: curTab === 'taxonomy' && this.state.taxonomy?.subTab === 'posters', click: "app.navigate('taxonomy', 'posters')" }, { id: 'platforms', icon: 'layers', label: 'Platform', active: curTab === 'taxonomy' && this.state.taxonomy?.subTab === 'platforms', click: "app.navigate('taxonomy', 'platforms')" }, { id: 'statuses', icon: 'shield', label: 'Status', active: curTab === 'taxonomy' && this.state.taxonomy?.subTab === 'statuses', click: "app.navigate('taxonomy', 'statuses')" }] },
           { title: '4. Pengaturan', links: [{ id: 'profile', icon: 'user', label: 'Profil', active: curTab === 'settings' && this.state.settingsTab === 'profile', click: "app.navigate('settings', 'profile')" }, { id: 'layout', icon: 'palette', label: 'Tampilan', active: curTab === 'settings' && this.state.settingsTab === 'layout', click: "app.navigate('settings', 'layout')" }, { id: 'api', icon: 'code', label: 'API', active: curTab === 'settings' && this.state.settingsTab === 'api', click: "app.navigate('settings', 'api')" }, { id: 'data', icon: 'database', label: 'Atur Data', active: curTab === 'settings' && this.state.settingsTab === 'data', click: "app.navigate('settings', 'data')" }, { id: 'system', icon: 'refresh', label: 'Pembaruan', active: curTab === 'settings' && this.state.settingsTab === 'system', click: "app.navigate('settings', 'system')" }] }
         ];
@@ -137,7 +143,7 @@ const app = {
       if (authActions) authActions.innerHTML = typeof this.renderAddCatalogDropdown === 'function' ? this.renderAddCatalogDropdown() : '';
 
       if (bottomNav) {
-        const bItems = [['dashboard','dashboard','Dashboard'],['games','games','Games'],['cinema','cinema','Cinema'],['music','music','Musik'],['settings','settings','Setelan']];
+        const bItems = [['dashboard','dashboard','Dashboard'],['games','games','Games'],['cinema','cinema','Cinema'],['music','music','Musik'],['web','globe','Web'],['settings','settings','Setelan']];
         const isAct = (id) => curTab === id || (id === 'settings' && curTab === 'taxonomy');
         bottomNav.innerHTML = `<div class="bottom-nav-inner">${bItems.map(([id, icon, txt]) => `
           <div class="bottom-nav-item ${isAct(id) ? 'active' : ''}" onclick="app.navigate('${id}')">${getIcon(icon, 'ui-icon', 20)}<span>${txt}</span></div>
@@ -152,12 +158,13 @@ const app = {
         <button class="nav-btn ${curTab === 'games' ? 'active' : ''}" onclick="app.navigate('games')">Koleksi Games</button>
         <button class="nav-btn ${curTab === 'cinema' ? 'active' : ''}" onclick="app.navigate('cinema')">Koleksi Cinema</button>
         <button class="nav-btn ${curTab === 'music' ? 'active' : ''}" onclick="app.navigate('music')">Koleksi Musik</button>
+        <button class="nav-btn ${curTab === 'web' ? 'active' : ''}" onclick="app.navigate('web')">Katalog Web</button>
       `;
 
       authActions.innerHTML = `<button class="btn btn-primary btn-sm btn-admin-demo" onclick="app.openLoginModal()" title="Masuk Mode Admin (Demo)">${getIcon('user', 'ui-icon-btn', 14)} <span>Masuk Admin</span></button>`;
 
       if (bottomNav) {
-        const bItems = [['landing','dashboard','Beranda'],['games','games','Games'],['cinema','cinema','Cinema'],['music','music','Musik'],['login','user','Admin']];
+        const bItems = [['landing','dashboard','Beranda'],['games','games','Games'],['cinema','cinema','Cinema'],['music','music','Musik'],['web','globe','Web'],['login','user','Admin']];
         bottomNav.innerHTML = `<div class="bottom-nav-inner">${bItems.map(([id, icon, txt]) => `
           <div class="bottom-nav-item ${curTab === id ? 'active' : ''}" onclick="app.navigate('${id}')">${getIcon(icon, 'ui-icon', 20)}<span>${txt}</span></div>
         `).join('')}</div>`;
@@ -378,6 +385,7 @@ const app = {
       } else if (tab === 'games') await this.renderGames(container);
       else if (tab === 'cinema') await this.renderCinema(container);
       else if (tab === 'music') await this.renderMusic(container);
+      else if (tab === 'web') await this.renderWeb(container);
       else if (tab === 'taxonomy') {
         if (!this.state.user) { this.openLoginModal(); return this.navigate('landing'); }
         await this.renderTaxonomy(container);
@@ -466,6 +474,11 @@ const app = {
     if (tab === 'games') { this.state.games.q = q; this.state.games.page = 1; this.renderGames(c); }
     else if (tab === 'cinema') { this.state.cinema.q = q; this.state.cinema.page = 1; this.renderCinema(c); }
     else if (tab === 'music') { this.state.music.q = q; this.state.music.page = 1; this.renderMusic(c); }
+    else if (tab === 'web') {
+      if (!this.stateWeb) this.stateWeb = { items: [], categories: [], activeCategory: 'Semua', q: '' };
+      this.stateWeb.q = q;
+      this.renderWeb(c);
+    }
     else if (tab === 'taxonomy') { if (this.state.taxonomy) { this.state.taxonomy.q = q; this.loadTaxonomyData(); } }
     else if (tab === 'landing') { if (typeof this.handleLandingSearch === 'function') this.handleLandingSearch(query); }
     else if (q) { this.state.cinema.q = q; this.state.cinema.page = 1; this.navigate('cinema'); }
@@ -475,11 +488,11 @@ const app = {
     const inp = document.getElementById('topbar-search-input');
     const clr = document.getElementById('topbar-search-clear');
     if (!inp) return;
-    const qMap = { games: this.state.games?.q, cinema: this.state.cinema?.q, music: this.state.music?.q, taxonomy: this.state.taxonomy?.q, landing: this.state.landingSearch };
+    const qMap = { games: this.state.games?.q, cinema: this.state.cinema?.q, music: this.state.music?.q, web: this.stateWeb?.q, taxonomy: this.state.taxonomy?.q, landing: this.state.landingSearch };
     const q = qMap[tab] || '';
     inp.value = q;
     if (clr) clr.classList.toggle('hidden', !q);
-    const phMap = { games: 'Cari judul, publisher, genre...', cinema: 'Cari judul, studio, genre...', music: 'Cari trek, artis, album...', taxonomy: 'Cari data master...', landing: 'Cari di SaumaBox...' };
+    const phMap = { games: 'Cari judul, publisher, genre...', cinema: 'Cari judul, studio, genre...', music: 'Cari trek, artis, album...', web: 'Cari bookmark web, tautan, domain...', taxonomy: 'Cari data master...', landing: 'Cari di SaumaBox...' };
     inp.placeholder = phMap[tab] || 'Cari koleksi katalog...';
   }
 };
