@@ -257,7 +257,7 @@ Object.assign(app, {
             </a>
           </div>
           <div class="web-app-grid">
-            ${webBookmarks.slice(0, 12).map(b => this.renderWebTile(b, true)).join('')}
+            ${webBookmarks.slice(0, 10).map(b => this.renderWebTile(b, true)).join('')}
           </div>
         </section>
       ` : ''}

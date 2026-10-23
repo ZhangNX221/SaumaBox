@@ -159,11 +159,11 @@
   align-items: center;
 }
 
-/* App Launcher Grid */
+/* App Launcher Grid — Mode Web (Desktop): 1 baris 10 item */
 .web-app-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(136px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+  gap: 10px;
   width: 100%;
 }
 
@@ -175,28 +175,29 @@
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 18px 12px 14px 12px;
+  padding: 12px 6px 10px 6px;
   background: rgba(26, 27, 32, 0.65);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   border: 1px solid rgba(255, 255, 255, 0.07);
-  border-radius: 18px;
+  border-radius: 14px;
   cursor: pointer;
   text-decoration: none;
   transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1),
               box-shadow 0.2s cubic-bezier(0.2, 0, 0, 1),
               border-color 0.2s ease,
               background 0.2s ease;
-  min-height: 136px;
+  min-height: 108px;
   user-select: none;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
 }
 
 .web-app-tile:hover {
   transform: translateY(-3px);
   background: rgba(34, 36, 43, 0.85);
   border-color: rgba(212, 175, 55, 0.35);
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
 }
 
 .web-app-tile:active {
@@ -210,13 +211,13 @@
 
 /* Squircle Icon Container inside Tile */
 .web-app-icon-wrap {
-  width: 54px;
-  height: 54px;
-  border-radius: 14px;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 10px;
+  margin-bottom: 6px;
   position: relative;
   flex-shrink: 0;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.28);
@@ -229,8 +230,8 @@
 }
 
 .web-app-icon-img {
-  width: 36px;
-  height: 36px;
+  width: 28px;
+  height: 28px;
   object-fit: contain;
   display: block;
 }
@@ -241,7 +242,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.4rem;
+  font-size: 1.15rem;
   font-weight: 700;
   color: #ffffff;
   text-transform: uppercase;
@@ -249,7 +250,7 @@
 
 /* App Title & Metadata */
 .web-app-title {
-  font-size: 0.84rem;
+  font-size: 0.76rem;
   font-weight: 600;
   color: var(--text-primary, #f8fafc);
   margin-bottom: 2px;
@@ -257,11 +258,11 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  line-height: 1.25;
+  line-height: 1.2;
 }
 
 .web-app-domain {
-  font-size: 0.7rem;
+  font-size: 0.64rem;
   color: var(--text-muted, #94a3b8);
   font-family: var(--font-mono);
   width: 100%;
@@ -273,22 +274,23 @@
 /* Pin indicator */
 .web-app-pin {
   position: absolute;
-  top: 8px;
-  right: 8px;
+  top: 5px;
+  right: 5px;
   color: var(--accent-color, #d4af37);
   opacity: 0.9;
   display: flex;
   align-items: center;
   justify-content: center;
+  font-size: 11px;
 }
 
 /* Admin Card Actions on Hover */
 .web-app-admin-actions {
   position: absolute;
-  top: 6px;
-  left: 6px;
+  top: 4px;
+  left: 4px;
   display: flex;
-  gap: 4px;
+  gap: 2px;
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.15s ease;
@@ -301,10 +303,10 @@
 }
 
 .web-action-btn {
-  width: 26px;
-  height: 26px;
-  border-radius: 6px;
-  background: rgba(18, 19, 22, 0.9);
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
+  background: rgba(18, 19, 22, 0.92);
   border: 1px solid rgba(255, 255, 255, 0.15);
   color: var(--text-secondary, #cbd5e1);
   display: flex;
@@ -312,6 +314,7 @@
   justify-content: center;
   cursor: pointer;
   transition: all 0.15s ease;
+  padding: 0;
 }
 
 .web-action-btn:hover {
@@ -427,10 +430,32 @@
 }
 
 /* Responsive Breakpoints (/antislop-layoutmobile) */
-@media (max-width: 992px) {
+@media (max-width: 1100px) and (min-width: 769px) {
+  /* Mode Web di layar laptop/tablet horizontal: tetap 1 baris 10 item dengan penyesuaian ukuran */
   .web-app-grid {
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-    gap: 14px;
+    grid-template-columns: repeat(10, minmax(0, 1fr));
+    gap: 6px;
+  }
+  .web-app-tile {
+    min-height: 98px;
+    padding: 10px 4px 8px 4px;
+    border-radius: 12px;
+  }
+  .web-app-icon-wrap {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    margin-bottom: 5px;
+  }
+  .web-app-icon-img {
+    width: 24px;
+    height: 24px;
+  }
+  .web-app-title {
+    font-size: 0.72rem;
+  }
+  .web-app-domain {
+    font-size: 0.6rem;
   }
 }
 
@@ -453,40 +478,118 @@
     max-width: 100%;
     min-width: 100%;
   }
+
+  /* Mode Mobile: tepat 1 baris 5 item */
   .web-app-grid {
-    grid-template-columns: repeat(4, 1fr);
-    gap: 12px;
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    gap: 8px;
+  }
+  .web-app-tile {
+    min-height: 94px;
+    padding: 10px 4px 8px 4px;
+    border-radius: 12px;
+  }
+  .web-app-icon-wrap {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    margin-bottom: 5px;
+  }
+  .web-app-icon-img {
+    width: 26px;
+    height: 26px;
+  }
+  .web-app-icon-fallback {
+    font-size: 1.1rem;
+  }
+  .web-app-title {
+    font-size: 0.72rem;
+  }
+  .web-app-domain {
+    font-size: 0.6rem;
   }
   .web-app-admin-actions {
     opacity: 1;
     pointer-events: auto;
+    top: 3px;
+    left: 3px;
+    gap: 2px;
+  }
+  .web-action-btn {
+    width: 20px;
+    height: 20px;
+  }
+  .web-app-pin {
+    top: 4px;
+    right: 4px;
   }
 }
 
 @media (max-width: 480px) {
+  /* Mode Mobile di layar smartphone: tetap 1 baris 5 item */
   .web-app-grid {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    gap: 6px;
   }
   .web-app-tile {
-    min-height: 116px;
-    padding: 12px 6px 10px 6px;
-    border-radius: 14px;
+    min-height: 84px;
+    padding: 8px 3px 6px 3px;
+    border-radius: 11px;
   }
   .web-app-icon-wrap {
-    width: 46px;
-    height: 46px;
-    border-radius: 12px;
-    margin-bottom: 6px;
+    width: 36px;
+    height: 36px;
+    border-radius: 9px;
+    margin-bottom: 4px;
   }
   .web-app-icon-img {
-    width: 28px;
-    height: 28px;
+    width: 22px;
+    height: 22px;
+  }
+  .web-app-icon-fallback {
+    font-size: 0.95rem;
   }
   .web-app-title {
-    font-size: 0.76rem;
+    font-size: 0.67rem;
+    line-height: 1.15;
   }
   .web-app-domain {
-    font-size: 0.65rem;
+    font-size: 0.56rem;
+  }
+  .web-app-pin {
+    top: 3px;
+    right: 3px;
+  }
+  .web-action-btn {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+@media (max-width: 360px) {
+  .web-app-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    gap: 4px;
+  }
+  .web-app-tile {
+    min-height: 76px;
+    padding: 6px 2px 5px 2px;
+    border-radius: 9px;
+  }
+  .web-app-icon-wrap {
+    width: 30px;
+    height: 30px;
+    border-radius: 7px;
+    margin-bottom: 3px;
+  }
+  .web-app-icon-img {
+    width: 18px;
+    height: 18px;
+  }
+  .web-app-title {
+    font-size: 0.6rem;
+  }
+  .web-app-domain {
+    font-size: 0.5rem;
   }
 }
