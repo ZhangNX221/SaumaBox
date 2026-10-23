@@ -542,5 +542,295 @@ Object.assign(app, {
       const pillTag = btn.dataset.genre;
       if (pillTag) btn.classList.toggle('active', list.some(g => g.toLowerCase() === pillTag.toLowerCase()));
     });
+  },
+
+  // ============================================================
+  // Mobile Bottom Sheets: Menu (Pengganti Sidebar) & Profil Pop-Up
+  // ============================================================
+  closeBottomSheet() {
+    const sheet = document.getElementById('bottom-sheet-backdrop');
+    if (!sheet) return;
+    sheet.classList.remove('open');
+    setTimeout(() => {
+      if (sheet && sheet.parentNode) sheet.remove();
+    }, 260);
+  },
+
+  openMobileMenuSheet() {
+    this.closeBottomSheet();
+    const curTab = this.state.currentTab;
+    const subTab = this.state.taxonomy?.subTab || '';
+    const setTab = this.state.settingsTab || '';
+
+    const backdrop = document.createElement('div');
+    backdrop.className = 'bottom-sheet-backdrop';
+    backdrop.id = 'bottom-sheet-backdrop';
+
+    const isA = (tab, sub = null) => {
+      if (sub && tab === 'taxonomy') return curTab === 'taxonomy' && subTab === sub;
+      if (sub && tab === 'settings') return curTab === 'settings' && setTab === sub;
+      return curTab === tab;
+    };
+
+    backdrop.innerHTML = `
+      <div class="bottom-sheet-dialog" role="dialog" aria-modal="true" aria-label="Menu Utama SaumaBox">
+        <div class="bottom-sheet-drag-handle" aria-hidden="true"></div>
+        <div class="bottom-sheet-header">
+          <div class="bottom-sheet-title-group">
+            <h2 class="bottom-sheet-title">
+              ${getIcon('layers', 'ui-icon', 20)}
+              <span>Menu SaumaBox</span>
+            </h2>
+            <span class="bottom-sheet-subtitle">Navigasi lengkap seluruh katalog, taksonomi, dan pengaturan</span>
+          </div>
+          <button type="button" class="bottom-sheet-close-btn" onclick="app.closeBottomSheet()" title="Tutup menu" aria-label="Tutup menu">
+            ${getIcon('close', 'ui-icon', 16)}
+          </button>
+        </div>
+
+        <div class="bottom-sheet-body">
+          <!-- 1. Ringkasan -->
+          <div class="sheet-menu-section">
+            <div class="sheet-menu-label">1. Ringkasan</div>
+            <div class="sheet-menu-grid">
+              <div class="sheet-menu-item ${isA('dashboard') ? 'active' : ''}" onclick="app.navigate('dashboard'); app.closeBottomSheet();" role="button" tabindex="0">
+                <div class="sheet-item-icon-box">${getIcon('dashboard', 'ui-icon', 18)}</div>
+                <div class="sheet-item-text">
+                  <span class="sheet-item-title">Dashboard</span>
+                  <span class="sheet-item-sub">Analisis &amp; ringkasan</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. Katalog Media -->
+          <div class="sheet-menu-section">
+            <div class="sheet-menu-label">2. Katalog Media</div>
+            <div class="sheet-menu-grid">
+              <div class="sheet-menu-item ${isA('games') ? 'active' : ''}" onclick="app.navigate('games'); app.closeBottomSheet();" role="button" tabindex="0">
+                <div class="sheet-item-icon-box">${getIcon('games', 'ui-icon', 18)}</div>
+                <div class="sheet-item-text">
+                  <span class="sheet-item-title">Katalog Game</span>
+                  <span class="sheet-item-sub">PC, retro emu &amp; port</span>
+                </div>
+              </div>
+              <div class="sheet-menu-item ${isA('cinema') ? 'active' : ''}" onclick="app.navigate('cinema'); app.closeBottomSheet();" role="button" tabindex="0">
+                <div class="sheet-item-icon-box">${getIcon('cinema', 'ui-icon', 18)}</div>
+                <div class="sheet-item-text">
+                  <span class="sheet-item-title">Katalog Cinema</span>
+                  <span class="sheet-item-sub">Film, serial &amp; anime</span>
+                </div>
+              </div>
+              <div class="sheet-menu-item ${isA('music') ? 'active' : ''}" onclick="app.navigate('music'); app.closeBottomSheet();" role="button" tabindex="0">
+                <div class="sheet-item-icon-box">${getIcon('music', 'ui-icon', 18)}</div>
+                <div class="sheet-item-text">
+                  <span class="sheet-item-title">Katalog Musik</span>
+                  <span class="sheet-item-sub">Album, lagu &amp; artis</span>
+                </div>
+              </div>
+              <div class="sheet-menu-item ${isA('web') ? 'active' : ''}" onclick="app.navigate('web'); app.closeBottomSheet();" role="button" tabindex="0">
+                <div class="sheet-item-icon-box">${getIcon('globe', 'ui-icon', 18)}</div>
+                <div class="sheet-item-text">
+                  <span class="sheet-item-title">Katalog Web</span>
+                  <span class="sheet-item-sub">30 bookmark homelab</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. Kategori Data (Taksonomi) -->
+          <div class="sheet-menu-section">
+            <div class="sheet-menu-label">3. Kategori Data (Taksonomi)</div>
+            <div class="sheet-menu-grid">
+              <div class="sheet-menu-item ${isA('taxonomy', 'genres') ? 'active' : ''}" onclick="app.navigate('taxonomy', 'genres'); app.closeBottomSheet();" role="button" tabindex="0">
+                <div class="sheet-item-icon-box">${getIcon('tag', 'ui-icon', 18)}</div>
+                <div class="sheet-item-text">
+                  <span class="sheet-item-title">Genre &amp; Tag</span>
+                  <span class="sheet-item-sub">Kelola taksonomi genre</span>
+                </div>
+              </div>
+              <div class="sheet-menu-item ${isA('taxonomy', 'posters') ? 'active' : ''}" onclick="app.navigate('taxonomy', 'posters'); app.closeBottomSheet();" role="button" tabindex="0">
+                <div class="sheet-item-icon-box">${getIcon('image', 'ui-icon', 18)}</div>
+                <div class="sheet-item-text">
+                  <span class="sheet-item-title">Galeri Poster</span>
+                  <span class="sheet-item-sub">Semua sampul visual</span>
+                </div>
+              </div>
+              <div class="sheet-menu-item ${isA('taxonomy', 'platforms') ? 'active' : ''}" onclick="app.navigate('taxonomy', 'platforms'); app.closeBottomSheet();" role="button" tabindex="0">
+                <div class="sheet-item-icon-box">${getIcon('layers', 'ui-icon', 18)}</div>
+                <div class="sheet-item-text">
+                  <span class="sheet-item-title">Platform</span>
+                  <span class="sheet-item-sub">Distribusi &amp; konsol</span>
+                </div>
+              </div>
+              <div class="sheet-menu-item ${isA('taxonomy', 'statuses') ? 'active' : ''}" onclick="app.navigate('taxonomy', 'statuses'); app.closeBottomSheet();" role="button" tabindex="0">
+                <div class="sheet-item-icon-box">${getIcon('shield', 'ui-icon', 18)}</div>
+                <div class="sheet-item-text">
+                  <span class="sheet-item-title">Status Koleksi</span>
+                  <span class="sheet-item-sub">Tamat, backlog, dll</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 4. Pengaturan Sistem -->
+          <div class="sheet-menu-section">
+            <div class="sheet-menu-label">4. Pengaturan Sistem</div>
+            <div class="sheet-menu-grid">
+              <div class="sheet-menu-item ${isA('settings', 'layout') ? 'active' : ''}" onclick="app.navigate('settings', 'layout'); app.closeBottomSheet();" role="button" tabindex="0">
+                <div class="sheet-item-icon-box">${getIcon('palette', 'ui-icon', 18)}</div>
+                <div class="sheet-item-text">
+                  <span class="sheet-item-title">Tampilan</span>
+                  <span class="sheet-item-sub">Tema, brand &amp; hero</span>
+                </div>
+              </div>
+              <div class="sheet-menu-item ${isA('settings', 'api') ? 'active' : ''}" onclick="app.navigate('settings', 'api'); app.closeBottomSheet();" role="button" tabindex="0">
+                <div class="sheet-item-icon-box">${getIcon('code', 'ui-icon', 18)}</div>
+                <div class="sheet-item-text">
+                  <span class="sheet-item-title">API &amp; Integrasi</span>
+                  <span class="sheet-item-sub">Steam, TMDB, Spotify</span>
+                </div>
+              </div>
+              <div class="sheet-menu-item ${isA('settings', 'data') ? 'active' : ''}" onclick="app.navigate('settings', 'data'); app.closeBottomSheet();" role="button" tabindex="0">
+                <div class="sheet-item-icon-box">${getIcon('database', 'ui-icon', 18)}</div>
+                <div class="sheet-item-text">
+                  <span class="sheet-item-title">Atur Data</span>
+                  <span class="sheet-item-sub">Backup SQLite &amp; CSV</span>
+                </div>
+              </div>
+              <div class="sheet-menu-item ${isA('settings', 'system') ? 'active' : ''}" onclick="app.navigate('settings', 'system'); app.closeBottomSheet();" role="button" tabindex="0">
+                <div class="sheet-item-icon-box">${getIcon('refresh', 'ui-icon', 18)}</div>
+                <div class="sheet-item-text">
+                  <span class="sheet-item-title">Pembaruan</span>
+                  <span class="sheet-item-sub">Versi &amp; update git</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Aksi Tambahan -->
+          <div style="display:flex; gap:10px; margin-top:4px;">
+            <button type="button" class="profile-sheet-btn" onclick="app.openMobileProfileSheet();" style="flex:1;">
+              <span class="profile-sheet-btn-left">
+                ${getIcon('user', 'ui-icon', 16)}
+                <span>Profil Akun</span>
+              </span>
+              ${getIcon('chevronRight', 'ui-icon', 14)}
+            </button>
+            <button type="button" class="profile-sheet-btn danger" onclick="app.closeBottomSheet(); app.logout();" style="flex:1;">
+              <span class="profile-sheet-btn-left">
+                ${getIcon('logout', 'ui-icon', 16)}
+                <span>Keluar</span>
+              </span>
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    backdrop.addEventListener('click', (e) => {
+      if (e.target === backdrop) this.closeBottomSheet();
+    });
+
+    document.body.appendChild(backdrop);
+    requestAnimationFrame(() => {
+      backdrop.classList.add('open');
+    });
+  },
+
+  openMobileProfileSheet() {
+    this.closeBottomSheet();
+    const user = this.state.user || {};
+    const username = user.displayName || user.username || 'Administrator';
+    const handle = user.username ? `@${user.username}` : '@admin';
+    const email = user.email || 'admin@saumabox.local';
+    const role = (user.role || 'administrator').toUpperCase();
+    const avatarMarkup = user.avatarUrl
+      ? `<img src="${escapeHtml(user.avatarUrl)}" alt="Avatar">`
+      : username.charAt(0).toUpperCase();
+
+    const backdrop = document.createElement('div');
+    backdrop.className = 'bottom-sheet-backdrop';
+    backdrop.id = 'bottom-sheet-backdrop';
+
+    backdrop.innerHTML = `
+      <div class="bottom-sheet-dialog" role="dialog" aria-modal="true" aria-label="Profil Pengguna">
+        <div class="bottom-sheet-drag-handle" aria-hidden="true"></div>
+        <div class="bottom-sheet-header">
+          <div class="bottom-sheet-title-group">
+            <h2 class="bottom-sheet-title">
+              ${getIcon('user', 'ui-icon', 18)}
+              <span>Profil Pengguna</span>
+            </h2>
+            <span class="bottom-sheet-subtitle">Informasi akun dan akses sistem SaumaBox</span>
+          </div>
+          <button type="button" class="bottom-sheet-close-btn" onclick="app.closeBottomSheet()" title="Tutup" aria-label="Tutup">
+            ${getIcon('close', 'ui-icon', 16)}
+          </button>
+        </div>
+
+        <div class="bottom-sheet-body">
+          <!-- User Profile Card -->
+          <div class="profile-sheet-card">
+            <div class="profile-sheet-avatar">
+              ${avatarMarkup}
+            </div>
+            <div class="profile-sheet-info">
+              <div class="profile-sheet-name">${escapeHtml(username)}</div>
+              <div class="profile-sheet-handle">${escapeHtml(handle)} • ${escapeHtml(email)}</div>
+              <div class="profile-sheet-badge-row">
+                <span class="badge badge-success font-mono" style="font-size:0.7rem; gap:4px;">
+                  <span style="width:6px; height:6px; border-radius:50%; background:#10b981; display:inline-block;"></span>
+                  ${escapeHtml(role)}
+                </span>
+                <span class="badge badge-neutral font-mono" style="font-size:0.7rem;">Sesi Aktif</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Profile Actions List -->
+          <div class="profile-sheet-actions-list">
+            <button type="button" class="profile-sheet-btn" onclick="app.navigate('settings', 'profile'); app.closeBottomSheet();">
+              <span class="profile-sheet-btn-left">
+                ${getIcon('user', 'ui-icon', 16)}
+                <span>Edit Nama &amp; Foto Profil</span>
+              </span>
+              ${getIcon('chevronRight', 'ui-icon', 14)}
+            </button>
+            <button type="button" class="profile-sheet-btn" onclick="app.navigate('settings', 'profile'); app.closeBottomSheet();">
+              <span class="profile-sheet-btn-left">
+                ${getIcon('key', 'ui-icon', 16)}
+                <span>Keamanan &amp; Ganti Password</span>
+              </span>
+              ${getIcon('chevronRight', 'ui-icon', 14)}
+            </button>
+            <button type="button" class="profile-sheet-btn" onclick="app.navigate('settings', 'layout'); app.closeBottomSheet();">
+              <span class="profile-sheet-btn-left">
+                ${getIcon('palette', 'ui-icon', 16)}
+                <span>Kustomisasi Tampilan &amp; Branding</span>
+              </span>
+              ${getIcon('chevronRight', 'ui-icon', 14)}
+            </button>
+            <button type="button" class="profile-sheet-btn danger" onclick="app.closeBottomSheet(); app.logout();">
+              <span class="profile-sheet-btn-left">
+                ${getIcon('logout', 'ui-icon', 16)}
+                <span>Keluar dari Akun (Logout)</span>
+              </span>
+              ${getIcon('chevronRight', 'ui-icon', 14)}
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    backdrop.addEventListener('click', (e) => {
+      if (e.target === backdrop) this.closeBottomSheet();
+    });
+
+    document.body.appendChild(backdrop);
+    requestAnimationFrame(() => {
+      backdrop.classList.add('open');
+    });
   }
 });
+

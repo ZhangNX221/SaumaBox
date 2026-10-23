@@ -39,7 +39,7 @@
             <button class="btn btn-secondary btn-icon" id="btn-toggle-sidebar" onclick="app.toggleSidebar()" title="Perkecil menu sidebar" aria-label="Toggle menu sidebar">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
             </button>
-            <a class="brand-logo" onclick="app.navigate(app.state.user ? 'dashboard' : 'landing')" aria-label="Beranda SaumaBox">
+            <a class="brand-logo" onclick="app.handleBrandLogoClick()" aria-label="Beranda SaumaBox">
               <img src="/images/logo-icon.png" class="brand-logo-img" alt="Logo SaumaBox" width="28" height="28">
               <span class="brand-name">SaumaBox</span>
               <span class="brand-badge" id="header-brand-badge">Catalog</span>

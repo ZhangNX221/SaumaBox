@@ -75,13 +75,30 @@ const app = {
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
         this.closeAllModals();
+        if (typeof this.closeBottomSheet === 'function') this.closeBottomSheet();
         this.toggleAdminSidebar(false);
         const nd = document.getElementById('notifications-dropdown');
         if (nd) nd.classList.add('hidden');
         const ad = document.getElementById('add-catalog-dropdown');
         if (ad) ad.classList.add('hidden');
       }
+
+      // Pintasan rahasia login admin: Ctrl + Shift + L
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'l') {
+        e.preventDefault();
+        this.openLoginModal();
+      }
     });
+
+    // Deteksi hash URL #login atau #admin
+    window.addEventListener('hashchange', () => {
+      if (window.location.hash === '#login' || window.location.hash === '#admin') {
+        this.openLoginModal();
+      }
+    });
+    if (window.location.hash === '#login' || window.location.hash === '#admin') {
+      setTimeout(() => this.openLoginModal(), 350);
+    }
 
     document.addEventListener('click', (e) => {
       const nw = document.getElementById('notifications-wrapper');
@@ -158,10 +175,25 @@ const app = {
       if (authActions) authActions.innerHTML = typeof this.renderAddCatalogDropdown === 'function' ? this.renderAddCatalogDropdown() : '';
 
       if (bottomNav) {
-        const bItems = [['dashboard','dashboard','Dashboard'],['games','games','Games'],['cinema','cinema','Cinema'],['music','music','Musik'],['web','globe','Web'],['settings','settings','Setelan']];
-        const isAct = (id) => curTab === id || (id === 'settings' && curTab === 'taxonomy');
+        const bItems = [
+          ['dashboard', 'dashboard', 'Dashboard'],
+          ['games', 'games', 'Games'],
+          ['cinema', 'cinema', 'Cinema'],
+          ['music', 'music', 'Musik'],
+          ['web', 'globe', 'Web'],
+          ['menu', 'layers', 'Menu'],
+          ['profile', 'user', 'Profil']
+        ];
+        const isAct = (id) => {
+          if (id === curTab) return true;
+          if (id === 'menu' && (curTab === 'taxonomy' || curTab === 'settings')) return true;
+          return false;
+        };
         bottomNav.innerHTML = `<div class="bottom-nav-inner">${bItems.map(([id, icon, txt]) => `
-          <div class="bottom-nav-item ${isAct(id) ? 'active' : ''}" onclick="app.navigate('${id}')">${getIcon(icon, 'ui-icon', 20)}<span>${txt}</span></div>
+          <div class="bottom-nav-item ${isAct(id) ? 'active' : ''}" onclick="app.handleBottomNavClick('${id}')" id="bottom-nav-${id}" role="button" tabindex="0">
+            ${getIcon(icon, 'ui-icon', 18)}
+            <span>${txt}</span>
+          </div>
         `).join('')}</div>`;
       }
     } else {
@@ -192,7 +224,8 @@ const app = {
 
       navLinks.innerHTML = navButtons.join('');
 
-      authActions.innerHTML = `<button class="btn btn-primary btn-sm btn-admin-demo" onclick="app.openLoginModal()" title="Masuk Mode Administrator">${getIcon('user', 'ui-icon-btn', 14)} <span>Masuk Admin</span></button>`;
+      // Tombol admin dihapus dari navbar publik sesuai permintaan
+      authActions.innerHTML = '';
 
       if (bottomNav) {
         const bItems = [['landing','dashboard','Beranda']];
@@ -202,10 +235,13 @@ const app = {
           if (cfg.public_music_enabled !== false) bItems.push(['music','music','Musik']);
           if (cfg.public_web_enabled !== false) bItems.push(['web','globe','Web']);
         }
-        bItems.push(['login','user','Admin']);
+        // Tombol login admin juga dihapus dari bottomNav publik sesuai permintaan
 
         bottomNav.innerHTML = `<div class="bottom-nav-inner">${bItems.map(([id, icon, txt]) => `
-          <div class="bottom-nav-item ${curTab === id ? 'active' : ''}" onclick="app.navigate('${id}')">${getIcon(icon, 'ui-icon', 20)}<span>${txt}</span></div>
+          <div class="bottom-nav-item ${curTab === id ? 'active' : ''}" onclick="app.navigate('${id}')" role="button" tabindex="0">
+            ${getIcon(icon, 'ui-icon', 18)}
+            <span>${txt}</span>
+          </div>
         `).join('')}</div>`;
       }
     }
@@ -214,9 +250,35 @@ const app = {
     this.updateNotificationBadge();
   },
 
+  handleBottomNavClick(id) {
+    if (id === 'menu') {
+      this.openMobileMenuSheet();
+    } else if (id === 'profile') {
+      this.openMobileProfileSheet();
+    } else {
+      this.navigate(id);
+    }
+  },
+
+  handleBrandLogoClick() {
+    if (this.state.user) {
+      this.navigate('dashboard');
+    } else {
+      this._brandClickCount = (this._brandClickCount || 0) + 1;
+      clearTimeout(this._brandClickTimer);
+      this._brandClickTimer = setTimeout(() => { this._brandClickCount = 0; }, 700);
+      if (this._brandClickCount >= 3) {
+        this._brandClickCount = 0;
+        this.openLoginModal();
+        return;
+      }
+      this.navigate('landing');
+    }
+  },
+
   toggleSidebar() {
     if (window.innerWidth <= 768) {
-      this.toggleAdminSidebar();
+      this.openMobileMenuSheet();
     } else {
       this.toggleSidebarMinimize();
     }

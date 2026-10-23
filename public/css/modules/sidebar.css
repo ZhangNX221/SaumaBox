@@ -54,40 +54,26 @@
     overflow-x: hidden;
   }
 
-  /* Pada mobile, sidebar menjadi off-canvas drawer dan TIDAK memakan ruang layout */
+  /* Pada mode mobile fitur sidebar tidak ditampilkan sesuai permintaan */
+  #admin-sidebar,
+  .admin-sidebar,
   #app.admin-mode .admin-sidebar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    bottom: 0;
-    width: 280px;
-    max-width: 85vw;
-    min-width: 0;
-    height: 100%;
-    z-index: 1000;
-    background-color: var(--bg-surface);
-    border-right: 1px solid var(--border-color);
-    padding: 16px 14px 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    overflow-y: auto;
-    transform: translateX(-100%);
-    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    visibility: hidden;
-    pointer-events: none;
-    box-shadow: none;
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
   }
 
-  #app.admin-mode .admin-sidebar.open {
-    transform: translateX(0);
-    visibility: visible;
-    pointer-events: auto;
-    box-shadow: 4px 0 28px rgba(0, 0, 0, 0.75);
+  #sidebar-backdrop,
+  .sidebar-backdrop {
+    display: none !important;
+  }
+
+  #btn-toggle-sidebar {
+    display: none !important;
   }
 
   #app.admin-mode .sidebar-close-btn {
-    display: inline-flex;
+    display: none !important;
   }
 
   /* Brand logo selalu tampil di header atas mobile */

@@ -97,9 +97,9 @@
     bottom: 0;
     left: 0;
     right: 0;
-    height: calc(58px + env(safe-area-inset-bottom, 0px));
+    height: calc(56px + env(safe-area-inset-bottom, 0px));
     padding-bottom: env(safe-area-inset-bottom, 0px);
-    background: rgba(18, 18, 21, 0.94);
+    background: rgba(18, 18, 21, 0.95);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
     border-top: 1px solid var(--border-color);
@@ -110,11 +110,12 @@
   .bottom-nav-inner {
     display: flex;
     align-items: center;
-    justify-content: space-around;
-    height: 58px;
-    max-width: 540px;
+    justify-content: space-between;
+    height: 56px;
+    max-width: 600px;
     margin: 0 auto;
     padding: 0 4px;
+    gap: 2px;
   }
 
   .bottom-nav-item {
@@ -122,20 +123,33 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    flex: 1;
+    flex: 1 1 0;
+    min-width: 0;
     height: 100%;
     color: var(--text-secondary);
     text-decoration: none;
-    font-size: 0.7rem;
+    font-size: 0.64rem;
     font-weight: 500;
     gap: 3px;
     cursor: pointer;
     user-select: none;
     -webkit-tap-highlight-color: transparent;
     transition: color 0.15s ease, transform 0.15s ease;
+    padding: 4px 1px;
+  }
+
+  .bottom-nav-item span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    line-height: 1.1;
   }
 
   .bottom-nav-item .ui-icon {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
     transition: transform 0.15s ease, color 0.15s ease;
   }
 
