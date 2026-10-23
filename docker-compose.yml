@@ -70,6 +70,5 @@ x-casaos:
   port_map: "3088"
   scheme: http
   title:
-    custom: SaumaBox
     en_us: SaumaBox
 
