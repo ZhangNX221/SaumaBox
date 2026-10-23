@@ -143,51 +143,122 @@ Object.assign(app, {
         </section>
       `}
 
-      <section class="editorial-bento-section">
-        <div class="bento-header">
-          <div class="hero-status-pill">
-            <span class="status-pill-text">ARSITEKTUR & FITUR PUSTAKA</span>
+      <footer class="site-public-footer" role="contentinfo" aria-label="Informasi Footer Publik">
+        <div class="footer-container">
+          <div class="footer-grid">
+            <div class="footer-col footer-brand-col">
+              <div class="footer-brand-wrap" onclick="app.navigate('landing')" role="button" tabindex="0" title="Beranda ${appName}">
+                <img src="${appLogo}" alt="${appName}" class="footer-brand-logo" width="30" height="30" onerror="this.src='/images/logo-icon.png'">
+                <div class="footer-brand-title-group">
+                  <span class="footer-brand-name">${appName}</span>
+                  <span class="footer-version-tag">v0.5.2</span>
+                </div>
+              </div>
+              <p class="footer-brand-desc">
+                Pustaka multimedia personal mandiri. Mengarsipkan katalog game, sinema film & serial, audio lossless, serta peluncur web favorit dalam satu wadah privat yang tenang.
+              </p>
+              <div class="footer-pill-badge">
+                <span class="footer-pulse-dot" aria-hidden="true"></span>
+                <span>Local-First • SQLite WAL • Bebas Pelacak</span>
+              </div>
+            </div>
+
+            <div class="footer-col footer-nav-col">
+              <h4 class="footer-col-title">Navigasi Pustaka</h4>
+              <ul class="footer-links-list">
+                <li><button type="button" class="footer-link-btn" onclick="app.navigate('landing')">${getIcon('dashboard', 'footer-link-icon', 14)} <span>Beranda Publik</span></button></li>
+                ${isGames ? `<li><button type="button" class="footer-link-btn" onclick="app.navigate('games')">${getIcon('games', 'footer-link-icon', 14)} <span>Katalog Games</span></button></li>` : ''}
+                ${isCinema ? `<li><button type="button" class="footer-link-btn" onclick="app.navigate('cinema')">${getIcon('cinema', 'footer-link-icon', 14)} <span>Koleksi Sinema</span></button></li>` : ''}
+                ${isMusic ? `<li><button type="button" class="footer-link-btn" onclick="app.navigate('music')">${getIcon('music', 'footer-link-icon', 14)} <span>Arsip Musik FLAC</span></button></li>` : ''}
+                ${isWeb ? `<li><button type="button" class="footer-link-btn" onclick="app.navigate('web')">${getIcon('globe', 'footer-link-icon', 14)} <span>Peluncur Web & Bookmark</span></button></li>` : ''}
+              </ul>
+            </div>
+
+            <div class="footer-col footer-tech-col">
+              <h4 class="footer-col-title">Arsitektur Sistem</h4>
+              <ul class="footer-info-list">
+                <li class="footer-info-item">
+                  <span class="footer-info-icon">${getIcon('database', 'footer-mini-icon', 14)}</span>
+                  <div class="footer-info-content">
+                    <span class="footer-info-label">Basis Data SQLite</span>
+                    <span class="footer-info-sub">Penyimpanan lokal cepat dengan WAL mode</span>
+                  </div>
+                </li>
+                <li class="footer-info-item">
+                  <span class="footer-info-icon">${getIcon('shield', 'footer-mini-icon', 14)}</span>
+                  <div class="footer-info-content">
+                    <span class="footer-info-label">100% Privasi Mandiri</span>
+                    <span class="footer-info-sub">Self-hosted tanpa pelacak pihak ketiga</span>
+                  </div>
+                </li>
+                <li class="footer-info-item">
+                  <span class="footer-info-icon">${getIcon('layers', 'footer-mini-icon', 14)}</span>
+                  <div class="footer-info-content">
+                    <span class="footer-info-label">PWA & Desain Responsif</span>
+                    <span class="footer-info-sub">Optimal di perangkat mobile & desktop</span>
+                  </div>
+                </li>
+              </ul>
+            </div>
+
+            <div class="footer-col footer-meta-col">
+              <h4 class="footer-col-title">Proyek & Ekosistem</h4>
+              <ul class="footer-links-list">
+                <li>
+                  <a href="https://github.com/sauma/SaumaBox" target="_blank" rel="noopener noreferrer" class="footer-link-btn external" title="Buka repositori GitHub di tab baru">
+                    <svg class="footer-link-icon" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+                    <span>Repositori GitHub</span>
+                    ${getIcon('externalLink', 'footer-ext-icon', 11)}
+                  </a>
+                </li>
+                <li>
+                  <span class="footer-link-btn static-item">
+                    ${getIcon('code', 'footer-link-icon', 14)}
+                    <span>Lisensi Terbuka MIT</span>
+                  </span>
+                </li>
+                <li>
+                  <span class="footer-link-btn static-item">
+                    ${getIcon('refresh', 'footer-link-icon', 14)}
+                    <span>Rilis Versi 0.5.2</span>
+                  </span>
+                </li>
+                <li>
+                  <span class="footer-link-btn static-item">
+                    ${getIcon('sparkles', 'footer-link-icon', 14)}
+                    <span>Ekspor / Impor JSON & CSV</span>
+                  </span>
+                </li>
+              </ul>
+            </div>
           </div>
-          <h2 class="bento-title">Didesain untuk Pengalaman Eksplorasi Tanpa Kompromi</h2>
-          <p class="bento-desc">DitherOS Architecture: Struktur modular, basis data lokal cepat, dan visual sinematik.</p>
+
+          <div class="footer-bottom-bar">
+            <div class="footer-copy-text">
+              &copy; ${new Date().getFullYear()} <strong>${appName}</strong>. Seluruh koleksi tersimpan secara lokal dan mandiri.
+            </div>
+
+            <div class="footer-bottom-actions">
+              ${!!this.state.user ? `
+                <button type="button" class="footer-action-trigger" onclick="app.navigate('dashboard')" title="Buka Dashboard Admin">
+                  ${getIcon('dashboard', 'footer-btn-icon', 13)}
+                  <span>Dashboard Admin</span>
+                </button>
+              ` : `
+                <button type="button" class="footer-action-trigger" onclick="app.openLoginModal()" title="Masuk Mode Administrator (Pintasan: Ctrl + Shift + L)">
+                  ${getIcon('lock', 'footer-btn-icon', 13)}
+                  <span>Masuk Admin</span>
+                </button>
+              `}
+              <span class="footer-bottom-dot" aria-hidden="true">&bull;</span>
+              <button type="button" class="footer-back-to-top" onclick="window.scrollTo({ top: 0, behavior: 'smooth' })" title="Kembali ke atas halaman" aria-label="Kembali ke atas">
+                <span>Ke Atas</span>
+                ${getIcon('chevronUp', 'footer-btn-icon', 13)}
+              </button>
+            </div>
+          </div>
         </div>
-
-        <div class="bento-grid">
-          <article class="bento-card bento-card-featured">
-            <div class="bento-icon-badge">${getIcon('games', 'ui-icon', 26)}</div>
-            <h3 class="bento-card-title">Multi-Platform & Emulation Engine</h3>
-            <p class="bento-card-text">Pengarsipan komprehensif untuk PC Steam/GOG/Epic, koleksi ROM konsol PlayStation 2 & Switch, hingga port native recompilation yang berjalan di 60+ FPS.</p>
-            <div class="bento-tags">
-              <span class="badge badge-neutral">PC Master Race</span>
-              <span class="badge badge-neutral">PCSX2 & Yuzu</span>
-              <span class="badge badge-purple">N64 Recomp</span>
-              <span class="badge badge-mobile">Android & iOS</span>
-            </div>
-          </article>
-
-          <article class="bento-card">
-            <div class="bento-icon-badge">${getIcon('cinema', 'ui-icon', 26)}</div>
-            <h3 class="bento-card-title">Watchlist & Cinema Tracking</h3>
-            <p class="bento-card-text">Lacak status tontonan film layar lebar, progress episode serial TV, dan kurasi serial anime favorit lengkap dengan rating IMDb terverifikasi.</p>
-            <div class="bento-tags">
-              <span class="badge badge-info">Film Layar Lebar</span>
-              <span class="badge badge-purple">Serial Multi-Season</span>
-              <span class="badge badge-danger">Anime Seasons</span>
-            </div>
-          </article>
-
-          <article class="bento-card">
-            <div class="bento-icon-badge">${getIcon('music', 'ui-icon', 26)}</div>
-            <h3 class="bento-card-title">Lossless Audio & Master Vault</h3>
-            <p class="bento-card-text">Manajemen metadata trek FLAC resolusi tinggi, integrasi streaming, kurasi album legendaris, serta penanda trek bintang pilihan.</p>
-            <div class="bento-tags">
-              <span class="badge badge-success">FLAC Lossless</span>
-              <span class="badge badge-neutral">Trek Favorit</span>
-              <span class="badge badge-info">Spotify / Apple</span>
-            </div>
-          </article>
-        </div>
-      </section>
+      </footer>
     `;
   },
 

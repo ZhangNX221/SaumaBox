@@ -317,99 +317,290 @@
   margin-bottom: 20px;
 }
 
-   Editorial Bento Section (DitherOS Inspired Architecture)
+/* ============================================================
+   Public Site Footer (Minimalist & Compact - /antislop-ui)
    ============================================================ */
-.editorial-bento-section {
+.site-public-footer {
   margin-top: 56px;
-  margin-bottom: 36px;
-}
-
-.bento-header {
-  margin-bottom: 28px;
-}
-
-.bento-title {
-  font-family: 'Outfit', var(--font-sans);
-  font-size: clamp(1.5rem, 3vw, 2.1rem);
-  font-weight: 700;
-  letter-spacing: -0.025em;
-  color: var(--text-primary);
-  margin: 6px 0 10px;
-}
-
-.bento-desc {
-  font-size: 0.95rem;
-  color: var(--text-secondary);
-  max-width: 600px;
-  line-height: 1.6;
-}
-
-.bento-grid {
-  display: grid;
-  grid-template-columns: 1.35fr 1fr 1fr;
-  gap: 20px;
-}
-
-.bento-card {
-  background: var(--bg-surface);
+  margin-bottom: 20px;
+  position: relative;
+  background: linear-gradient(180deg, rgba(24, 24, 27, 0.45) 0%, rgba(15, 15, 18, 0.85) 100%);
   border: 1px solid var(--border-color);
   border-radius: 20px;
-  padding: 30px;
+  padding: 40px 32px 24px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+}
+
+.site-public-footer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 20%;
+  right: 20%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.4), transparent);
+  pointer-events: none;
+}
+
+.footer-container {
+  max-width: 100%;
+}
+
+.footer-grid {
+  display: grid;
+  grid-template-columns: 1.8fr 1.1fr 1.25fr 1.15fr;
+  gap: 36px 32px;
+  padding-bottom: 32px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.footer-col {
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  box-shadow: var(--shadow-sm);
-  transition: transform 0.26s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease, box-shadow 0.26s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.bento-card:hover {
-  transform: translateY(-3px);
-  border-color: var(--text-secondary);
-  box-shadow: var(--shadow-md);
+/* Brand Column */
+.footer-brand-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  width: fit-content;
 }
 
-.bento-card:active {
-  transform: translateY(-1px) scale(0.99);
+.footer-brand-logo {
+  border-radius: 8px;
+  object-fit: contain;
 }
 
-.bento-card-featured {
-  background: linear-gradient(145deg, var(--bg-surface) 0%, var(--bg-surface-elevated) 100%);
+.footer-brand-title-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.bento-icon-badge {
-  width: 52px;
-  height: 52px;
-  border-radius: 14px;
+.footer-brand-name {
+  font-family: 'Outfit', var(--font-sans);
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+}
+
+.footer-version-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--accent-color);
+  background: rgba(99, 102, 241, 0.12);
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  padding: 2px 7px;
+  border-radius: 999px;
+  line-height: 1.2;
+}
+
+.footer-brand-desc {
+  font-size: 0.88rem;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+  max-width: 380px;
+}
+
+.footer-pill-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.74rem;
+  color: var(--text-muted);
   background: var(--bg-surface-elevated);
   border: 1px solid var(--border-color);
+  border-radius: 999px;
+  padding: 5px 12px;
+  width: fit-content;
+}
+
+.footer-pulse-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+}
+
+/* Column Titles */
+.footer-col-title {
+  font-family: 'Outfit', var(--font-sans);
+  font-size: 0.84rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-primary);
+  margin-bottom: 16px;
+}
+
+/* Links & Buttons List */
+.footer-links-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.footer-link-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 0.86rem;
+  padding: 4px 0;
+  cursor: pointer;
+  text-decoration: none;
+  transition: color 0.18s ease, transform 0.18s ease;
+  text-align: left;
+}
+
+.footer-link-btn:hover {
+  color: var(--text-primary);
+  transform: translateX(2px);
+}
+
+.footer-link-btn .footer-link-icon {
+  color: var(--text-muted);
+  flex-shrink: 0;
+  transition: color 0.18s ease;
+}
+
+.footer-link-btn:hover .footer-link-icon {
+  color: var(--accent-color);
+}
+
+.footer-link-btn.static-item {
+  cursor: default;
+  color: var(--text-muted);
+}
+
+.footer-link-btn.static-item:hover {
+  transform: none;
+  color: var(--text-muted);
+}
+
+.footer-ext-icon {
+  opacity: 0.6;
+  margin-left: 2px;
+}
+
+/* Tech Info List */
+.footer-info-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.footer-info-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.footer-info-icon {
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-color);
   color: var(--accent-color);
-  margin-bottom: 22px;
+  flex-shrink: 0;
+  margin-top: 1px;
 }
 
-.bento-card-title {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin-bottom: 10px;
-  letter-spacing: -0.015em;
-}
-
-.bento-card-text {
-  font-size: 0.92rem;
-  line-height: 1.65;
-  color: var(--text-secondary);
-  margin-bottom: 24px;
-  flex: 1;
-}
-
-.bento-tags {
+.footer-info-content {
   display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.footer-info-label {
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.3;
+}
+
+.footer-info-sub {
+  font-size: 0.76rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+/* Footer Bottom Bar */
+.footer-bottom-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 20px;
   flex-wrap: wrap;
+  gap: 14px;
+}
+
+.footer-copy-text {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+.footer-copy-text strong {
+  color: var(--text-secondary);
+}
+
+.footer-bottom-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.footer-action-trigger,
+.footer-back-to-top {
+  display: inline-flex;
+  align-items: center;
   gap: 6px;
-  margin-top: auto;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  padding: 5px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.footer-action-trigger:hover,
+.footer-back-to-top:hover {
+  color: var(--text-primary);
+  background: var(--bg-surface-elevated);
+  border-color: var(--border-color);
+}
+
+.footer-action-trigger:active,
+.footer-back-to-top:active {
+  transform: scale(0.97);
+}
+
+.footer-bottom-dot {
+  color: var(--border-color);
+  font-size: 0.8rem;
 }
 
 @media (max-width: 900px) {
@@ -423,9 +614,9 @@
   .hero-app-showcase-card {
     max-width: 100%;
   }
-  .bento-grid {
-    grid-template-columns: 1fr;
-    gap: 16px;
+  .footer-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 32px 24px;
   }
   .editorial-hero {
     padding: 36px 20px;
@@ -454,6 +645,23 @@
   .showcase-search-wrap {
     width: 100%;
   }
+  .site-public-footer {
+    padding: 28px 18px 20px;
+    margin-top: 40px;
+    border-radius: 16px;
+  }
+  .footer-grid {
+    grid-template-columns: 1fr;
+    gap: 28px;
+    padding-bottom: 24px;
+  }
+  .footer-bottom-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .footer-bottom-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
 }
-
-/* ============================================================
