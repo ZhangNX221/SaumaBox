@@ -102,23 +102,12 @@ Object.assign(app, {
           <div class="login-modal-desc">Kelola pustaka Game, Cinema, Musik, taksonomi, serta konfigurasi sistem dalam satu dasbor.</div>
         </div>
 
-        <div class="login-demo-card">
-          <div class="login-demo-header">
-            <div class="login-demo-title">${getIcon('key', 'ui-icon', 13)} <span>Kredensial Demo Cepat</span></div>
-            <span class="badge badge-success font-mono" style="font-size:0.65rem;">Super Admin</span>
-          </div>
-          <div class="login-demo-body">
-            <div class="login-demo-text">Akun: <strong>zhang</strong> • Sandi: <strong>admin123</strong></div>
-            <button type="button" class="btn-demo-fill" onclick="app.fillDemoLogin('zhang', 'admin123')" title="Otomatis isi formulir demo">${getIcon('sparkles', 'ui-icon', 12)} <span>Gunakan Demo</span></button>
-          </div>
-        </div>
-
         <form id="form-login" onsubmit="app.handleLoginSubmit(event)">
           <div class="form-group">
             <label class="form-label" style="display:flex; justify-content:space-between;"><span>Username atau ID Akun</span><span style="font-size:0.7rem; color:var(--text-muted);">Wajib</span></label>
             <div class="input-with-icon-wrap">
               <span class="input-leading-icon">${getIcon('user', 'ui-icon', 16)}</span>
-              <input type="text" class="form-input input-with-icon" id="login-username" name="username" required autofocus placeholder="Masukkan username..." value="zhang">
+              <input type="text" class="form-input input-with-icon" id="login-username" name="username" required autofocus placeholder="Masukkan username..." value="">
             </div>
           </div>
 
@@ -126,7 +115,7 @@ Object.assign(app, {
             <label class="form-label" style="display:flex; justify-content:space-between;"><span>Kata Sandi (Password)</span><span style="font-size:0.7rem; color:var(--text-muted);">Terenkripsi</span></label>
             <div class="input-with-icon-wrap">
               <span class="input-leading-icon">${getIcon('lock', 'ui-icon', 16)}</span>
-              <input type="password" class="form-input input-with-icon" id="login-password" name="password" required placeholder="Masukkan kata sandi..." value="admin123">
+              <input type="password" class="form-input input-with-icon" id="login-password" name="password" required placeholder="Masukkan kata sandi..." value="">
               <button type="button" class="input-trailing-action" onclick="app.toggleLoginPasswordVisibility()" title="Tampilkan/sembunyikan kata sandi" aria-label="Toggle password visibility">${getIcon('eye', 'ui-icon', 15)}</button>
             </div>
           </div>
@@ -140,11 +129,6 @@ Object.assign(app, {
         </form>
       </div>
     `);
-  },
-
-  fillDemoLogin(u = 'zhang', p = 'admin123') {
-    const uInput = document.getElementById('login-username'), pInput = document.getElementById('login-password');
-    if (uInput && pInput) { uInput.value = u; pInput.value = p; showToast(`Kredensial demo (${u}) diisikan.`, 'info'); }
   },
 
   toggleLoginPasswordVisibility() {

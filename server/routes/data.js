@@ -291,6 +291,48 @@ router.post('/import-execute', requireAuth, (req, res) => {
         );
         successCount++;
       }
+    } else if (targetModule === 'web') {
+      const stmt = db.prepare(`
+        INSERT INTO web_bookmarks (
+          title, url, category, description, icon_url, bg_color, is_pinned
+        ) VALUES (?, ?, ?, ?, ?, ?, ?)
+      `);
+
+      for (const row of rows) {
+        const titleVal = row[mapping.title];
+        const urlVal = row[mapping.url];
+        if (!titleVal || !String(titleVal).trim() || !urlVal || !String(urlVal).trim()) {
+          failedCount++;
+          continue;
+        }
+
+        const cleanUrl = String(urlVal).trim();
+        let iconUrl = '';
+        if (mapping.icon_url && row[mapping.icon_url]) {
+          iconUrl = cleanText(row[mapping.icon_url]);
+        } else {
+          try {
+            const parsed = new URL(cleanUrl.startsWith('http') ? cleanUrl : `https://${cleanUrl}`);
+            iconUrl = `https://www.google.com/s2/favicons?domain=${parsed.hostname}&sz=128`;
+          } catch (_) {
+            iconUrl = '';
+          }
+        }
+
+        const isPinnedVal = row[mapping.is_pinned];
+        const isPinned = isPinnedVal === 1 || isPinnedVal === '1' || String(isPinnedVal).toLowerCase() === 'true' ? 1 : 0;
+
+        stmt.run(
+          String(titleVal).trim(),
+          cleanUrl,
+          cleanText(row[mapping.category]) || 'Umum',
+          cleanText(row[mapping.description]) || '',
+          iconUrl,
+          cleanText(row[mapping.bg_color]) || '#272830',
+          isPinned
+        );
+        successCount++;
+      }
     }
 
     fs.unlink(filePath, () => {});

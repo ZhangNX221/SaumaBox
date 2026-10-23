@@ -192,7 +192,7 @@ const app = {
 
       navLinks.innerHTML = navButtons.join('');
 
-      authActions.innerHTML = `<button class="btn btn-primary btn-sm btn-admin-demo" onclick="app.openLoginModal()" title="Masuk Mode Admin (Demo)">${getIcon('user', 'ui-icon-btn', 14)} <span>Masuk Admin</span></button>`;
+      authActions.innerHTML = `<button class="btn btn-primary btn-sm btn-admin-demo" onclick="app.openLoginModal()" title="Masuk Mode Administrator">${getIcon('user', 'ui-icon-btn', 14)} <span>Masuk Admin</span></button>`;
 
       if (bottomNav) {
         const bItems = [['landing','dashboard','Beranda']];

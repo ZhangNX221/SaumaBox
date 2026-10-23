@@ -27,6 +27,7 @@ Object.assign(app, {
             <option value="games" ${selectedModule === 'games' ? 'selected' : ''}>Katalog Games</option>
             <option value="cinema" ${selectedModule === 'cinema' ? 'selected' : ''}>Katalog Cinema</option>
             <option value="music" ${selectedModule === 'music' ? 'selected' : ''}>Katalog Musik</option>
+            <option value="web" ${selectedModule === 'web' ? 'selected' : ''}>Katalog Web</option>
           </select>
         </div>
 
@@ -131,7 +132,8 @@ Object.assign(app, {
     const targetFields = ({
       games: [{ key: 'title', label: 'Judul Game' }, { key: 'type', label: 'Tipe' }, { key: 'year', label: 'Tahun Rilis' }, { key: 'genre', label: 'Genre' }, { key: 'developer', label: 'Pengembang' }, { key: 'publisher', label: 'Penerbit' }, { key: 'platform', label: 'Platform' }, { key: 'price', label: 'Harga' }, { key: 'rating', label: 'Rating' }, { key: 'status', label: 'Status' }],
       cinema: [{ key: 'title', label: 'Judul Tayangan' }, { key: 'type', label: 'Tipe' }, { key: 'year', label: 'Tahun Rilis' }, { key: 'genre', label: 'Genre' }, { key: 'director', label: 'Sutradara' }, { key: 'studio', label: 'Studio' }, { key: 'rating', label: 'Rating' }, { key: 'watched', label: 'Ditonton' }],
-      music: [{ key: 'title', label: 'Judul Trek' }, { key: 'artist', label: 'Artis' }, { key: 'album', label: 'Album' }, { key: 'year', label: 'Tahun' }, { key: 'genre', label: 'Genre' }, { key: 'platform', label: 'Platform' }, { key: 'rating', label: 'Rating' }, { key: 'is_favorite', label: 'Favorit' }]
+      music: [{ key: 'title', label: 'Judul Trek' }, { key: 'artist', label: 'Artis' }, { key: 'album', label: 'Album' }, { key: 'year', label: 'Tahun' }, { key: 'genre', label: 'Genre' }, { key: 'platform', label: 'Platform' }, { key: 'rating', label: 'Rating' }, { key: 'is_favorite', label: 'Favorit' }],
+      web: [{ key: 'title', label: 'Judul Web / Nama Aplikasi' }, { key: 'url', label: 'URL Website' }, { key: 'category', label: 'Kategori' }, { key: 'description', label: 'Deskripsi' }, { key: 'icon_url', label: 'URL Ikon / Favicon' }, { key: 'bg_color', label: 'Warna Aksen' }, { key: 'is_pinned', label: 'Disematkan (1/0)' }]
     })[targetModule] || [];
 
     const mappingRows = targetFields.map(f => `
@@ -175,6 +177,7 @@ Object.assign(app, {
     const mapping = {};
     selects.forEach(sel => { if (sel.value) mapping[sel.dataset.key] = sel.value; });
     if (!mapping.title) return showToast('Kolom Judul wajib dipetakan agar data tersimpan dengan benar.', 'warning');
+    if (targetModule === 'web' && !mapping.url) return showToast('Kolom URL Website wajib dipetakan untuk Katalog Web.', 'warning');
 
     const sheetSelect = document.getElementById('import-sheet-select');
     const sheetName = sheetSelect ? sheetSelect.value : null;
@@ -216,6 +219,7 @@ Object.assign(app, {
           <option value="games" ${selectedModule === 'games' ? 'selected' : ''}>Katalog Games</option>
           <option value="cinema" ${selectedModule === 'cinema' ? 'selected' : ''}>Katalog Cinema</option>
           <option value="music" ${selectedModule === 'music' ? 'selected' : ''}>Katalog Musik</option>
+          <option value="web" ${selectedModule === 'web' ? 'selected' : ''}>Katalog Web</option>
         </select>
       </div>
 

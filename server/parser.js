@@ -138,7 +138,7 @@ function generateCSV(headers, data) {
 
 // Smart Column Mapping dictionary
 const COLUMN_ALIASES = {
-  title: ['games aaa', 'judul', 'title', 'nama game', 'judul game', 'name', 'nama', 'judul lagu / album', 'judul lagu', 'trek'],
+  title: ['games aaa', 'judul', 'title', 'nama game', 'judul game', 'name', 'nama', 'judul lagu / album', 'judul lagu', 'trek', 'judul web', 'nama web', 'nama aplikasi', 'bookmark'],
   year: ['year', 'tahun', 'tahun rilis', 'release year'],
   publisher: ['publisher', 'penerbit'],
   developer: ['developer', 'pengembang', 'studio'],
@@ -166,7 +166,13 @@ const COLUMN_ALIASES = {
   artist: ['artis', 'artist', 'penyanyi', 'band', 'komposer', 'artis / band'],
   album: ['album', 'album & tahun rilis'],
   size_mb: ['ukuran file', 'size mb', 'size (mb)', 'size_mb'],
-  is_favorite: ['favorit', 'is_favorite', 'favorite', 'fav', 'status favorit']
+  is_favorite: ['favorit', 'is_favorite', 'favorite', 'fav', 'status favorit'],
+  url: ['url website', 'url', 'link', 'tautan', 'website', 'alamat web', 'web url', 'href'],
+  category: ['kategori', 'category', 'kelompok', 'grup', 'group', 'tag'],
+  description: ['deskripsi', 'description', 'keterangan', 'ringkasan', 'catatan'],
+  icon_url: ['url ikon', 'icon_url', 'icon', 'favicon', 'logo', 'ikon'],
+  bg_color: ['warna aksen', 'bg_color', 'color', 'warna', 'latar belakang', 'background'],
+  is_pinned: ['disematkan (1/0)', 'disematkan', 'pinned', 'pin', 'is_pinned']
 };
 
 function autoMapColumns(inputHeaders) {

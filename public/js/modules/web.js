@@ -106,10 +106,16 @@ Object.assign(app, {
               </p>
             </div>
             ${isAdmin ? `
-              <div class="web-header-actions">
+              <div class="web-header-actions" style="display:flex; align-items:center; gap:8px;">
                 <button class="btn btn-primary btn-sm" onclick="app.openAddWebModal()" title="Tambah Bookmark Baru">
                   ${getIcon('plus', 'ui-icon-btn', 14)}
-                  <span>Tambah Web Baru</span>
+                  <span>Tambah Web</span>
+                </button>
+                <button class="btn btn-secondary btn-icon" onclick="app.openImportModal('web')" title="Import Data Web" aria-label="Import Data Web">
+                  ${getIcon('upload', 'ui-icon-btn', 15)}
+                </button>
+                <button class="btn btn-secondary btn-icon" onclick="app.openExportModal('web')" title="Ekspor Data Web" aria-label="Ekspor Data Web">
+                  ${getIcon('download', 'ui-icon-btn', 15)}
                 </button>
               </div>
             ` : ''}
