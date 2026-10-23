@@ -4,7 +4,7 @@
 
 Object.assign(app, {
   renderSettingsSystem(s) {
-    const curVer = 'v0.5.2';
+    const curVer = 'v0.5.3';
     return `
       <div style="display:flex; flex-direction:column; gap:20px;">
         <!-- Card Utama: Status & Pembaruan Sistem -->
@@ -81,63 +81,35 @@ Object.assign(app, {
         <div class="module-card">
           <h3 style="font-size:1.05rem; margin-bottom:6px; display:flex; align-items:center; gap:8px;">
             <span style="color:var(--accent-color);">${getIcon('layers', 'ui-icon', 16)}</span>
-            Catatan Pembaruan Terkini (v0.5.2)
+            Catatan Pembaruan Terkini (v0.5.3)
           </h3>
           <p style="font-size:0.83rem; color:var(--text-secondary); margin-bottom:14px;">
             Peningkatan fitur, efisiensi penyimpanan, dan perbaikan antarmuka pada rilis ini:
           </p>
           <div class="changelog-list">
             <div class="changelog-item">
+              <span class="changelog-tag tag-ui">Antarmuka</span>
+              <span><strong>Redesain Form Tambah &amp; Edit Minimalis:</strong> Seluruh modul formulir katalog (Game, Sinema, Musik, Poster, Tautan, Taksonomi) dirancang ulang menjadi ringkas, hemat ruang vertikal, dan ergonomis sesuai standar antislop.</span>
+            </div>
+            <div class="changelog-item">
               <span class="changelog-tag tag-new">Fitur Baru</span>
-              <span><strong>Ekspansi 30 Bookmark Web &amp; Homelab:</strong> Koleksi bawaan diperluas menjadi 30 layanan terkelola lengkap dengan ikon dashboard resmi, kategori terstruktur, dan fitur ekspor/impor CSV.</span>
+              <span><strong>Generasi ID Unik Otomatis &amp; Relasi Tautan:</strong> Setiap item baru otomatis mendapatkan penanda ID unik ringkas untuk memudahkan penautan relasi antar konten secara instan.</span>
             </div>
             <div class="changelog-item">
               <span class="changelog-tag tag-ui">Antarmuka</span>
-              <span><strong>Pembaruan Header Brand &amp; Tata Letak:</strong> Tampilan visual judul banner baru, pembersihan kartu statistik redundan di dashboard, serta grid peluncur aplikasi yang lebih responsif.</span>
+              <span><strong>Mode Tabel &amp; Checkbox Seleksi Galeri Poster:</strong> Dukungan beralih ke mode tabel terstruktur pada modul Poster dengan multi-select checkbox dan tombol aksi ikonik ringkas.</span>
+            </div>
+            <div class="changelog-item">
+              <span class="changelog-tag tag-ui">Antarmuka</span>
+              <span><strong>Dropdown Kategori Langsung &amp; Navigasi Rapi:</strong> Dropdown filter menampilkan label kategori aktif tanpa teks 'Kategori' redundan, serta navbar mobile disederhanakan (Dashboard, Menu, Pengaturan).</span>
+            </div>
+            <div class="changelog-item">
+              <span class="changelog-tag tag-ui">Mobile</span>
+              <span><strong>Optimasi Navbar Mobile &amp; Profil Pengguna:</strong> Tombol profil akun diposisikan strategis di samping Dashboard, tab navigasi mobile dibatasi 4 dengan slider horizontal halus, dan footer mobile ultra-minimalis.</span>
             </div>
             <div class="changelog-item">
               <span class="changelog-tag tag-system">Stabilitas</span>
-              <span><strong>Audit Kualitas Ponytail Review:</strong> Peningkatan keamanan kueri SQL, pencegahan crash pengecekan password hash, dan konkurensi pengambilan metadata.</span>
-            </div>
-            <div class="changelog-item">
-              <span class="changelog-tag tag-new">Fitur Baru</span>
-              <span><strong>Kompresi Gambar Otomatis (100–200 KB):</strong> Engine optimasi gambar terintegrasi berbasis Sharp untuk seluruh upload poster, cover, dan avatar profil dengan batas ketat $\le 200$ KB.</span>
-            </div>
-            <div class="changelog-item">
-              <span class="changelog-tag tag-system">Media</span>
-              <span><strong>Kompresi Massal Galeri Poster:</strong> Optimasi seluruh koleksi gambar poster di disk tanpa menurunkan estetika tampilan, dilengkapi fitur Kompres Semua &amp; Kompres Selektif di UI.</span>
-            </div>
-            <div class="changelog-item">
-              <span class="changelog-tag tag-ui">Antarmuka</span>
-              <span><strong>Redesain Taksonomi &amp; Galeri:</strong> Restrukturisasi menu (Genre, Poster, Platform, Status), multi-select dengan aksi tombol ikon minimalis, download massal, dan hapus terpilih.</span>
-            </div>
-            <div class="changelog-item">
-              <span class="changelog-tag tag-ui">Antarmuka</span>
-              <span><strong>Modal Ekspor &amp; Impor Terpisah:</strong> Pop-up terpisah yang bersih dan fungsional untuk ekspor data CSV dan impor data per modul.</span>
-            </div>
-            <div class="changelog-item">
-              <span class="changelog-tag tag-system">Database</span>
-              <span><strong>Tabel Riwayat Cadangan &amp; Restore SQLite Minimalis:</strong> Riwayat snapshot backup otomatis, kartu restore single-card yang bersih, dan restrukturisasi tab pengaturan profil.</span>
-            </div>
-            <div class="changelog-item">
-              <span class="changelog-tag tag-system">Database</span>
-              <span><strong>Bundling Database &amp; Asset Koleksi:</strong> Penyatuan database lokal SQLite aktif beserta seluruh aset poster cover media ke dalam repositori.</span>
-            </div>
-            <div class="changelog-item">
-              <span class="changelog-tag tag-new">Fitur Baru</span>
-              <span><strong>Horizontal Category Sliders (Games, Sinema, Musik):</strong> Pemisahan koleksi media menjadi baris slider horizontal mandiri dengan 5 poster di desktop (10 data dimuat) dan 4 poster kompak pada mode mobile.</span>
-            </div>
-            <div class="changelog-item">
-              <span class="changelog-tag tag-ui">Antarmuka</span>
-              <span><strong>Tabel Katalog Bebas Scroll Horizontal:</strong> Penyesuaian layout tabel Game, Sinema, dan Musik agar seluruh kolom data tampil penuh di layar tanpa scroll bar.</span>
-            </div>
-            <div class="changelog-item">
-              <span class="changelog-tag tag-ui">Antarmuka</span>
-              <span><strong>Login Modal Mobile &amp; Logo Transparan:</strong> Modal login ramah mobile (bottom sheet) dan aset logo resmi transparan tanpa latar belakang.</span>
-            </div>
-            <div class="changelog-item">
-              <span class="changelog-tag tag-system">Perbaikan</span>
-              <span><strong>Stabilisasi Rerender Dashboard:</strong> Perbaikan bug reload saat mengedit atau menghapus konten dari peringkat terpopuler.</span>
+              <span><strong>Kompatibilitas Update Docker &amp; ZimaOS:</strong> Penyesuaian skrip in-app updater untuk unduhan rilis stabil pada kontainer tanpa git di server ZimaOS.</span>
             </div>
           </div>
         </div>
@@ -199,7 +171,7 @@ Object.assign(app, {
         if (statusBadge) statusBadge.innerHTML = '<span class="badge badge-success" style="font-size:0.75rem;">✓ Sistem Mutakhir</span>';
         if (banner) { banner.className = 'system-update-banner success'; }
         if (title) title.textContent = 'SaumaBox Berjalan Pada Versi Terbaru';
-        if (desc) desc.innerHTML = `Aplikasi Anda sudah sinkron dengan versi rilis/commit terbaru (<strong>${res.latestVersion || res.currentVersion || 'v0.5.2'}</strong>). Tidak ada pembaruan tertunda.`;
+        if (desc) desc.innerHTML = `Aplikasi Anda sudah sinkron dengan versi rilis/commit terbaru (<strong>${res.latestVersion || res.currentVersion || 'v0.5.3'}</strong>). Tidak ada pembaruan tertunda.`;
         if (btnApply) btnApply.disabled = true;
         showToast('SaumaBox sudah dalam versi terbaru.', 'info');
       }

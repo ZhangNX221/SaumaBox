@@ -141,7 +141,7 @@ Object.assign(app, {
                 <img src="${appLogo}" alt="${appName}" class="footer-brand-logo" width="30" height="30" onerror="this.src='/images/logo-icon.png'">
                 <div class="footer-brand-title-group">
                   <span class="footer-brand-name">${appName}</span>
-                  <span class="footer-version-tag">v0.5.2</span>
+                  <span class="footer-version-tag">v0.5.3</span>
                 </div>
               </div>
               <p class="footer-brand-desc">
@@ -210,7 +210,7 @@ Object.assign(app, {
                 <li>
                   <span class="footer-link-btn static-item">
                     ${getIcon('refresh', 'footer-link-icon', 14)}
-                    <span>Rilis Versi 0.5.2</span>
+                    <span>Rilis Versi 0.5.3</span>
                   </span>
                 </li>
                 <li>

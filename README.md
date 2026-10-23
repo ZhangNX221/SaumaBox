@@ -7,7 +7,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/ZhangNX221/SaumaBox/releases/tag/v0.5.2"><img src="https://img.shields.io/badge/version-v0.5.2-blue.svg" alt="Version"></a>
+  <a href="https://github.com/ZhangNX221/SaumaBox/releases/tag/v0.5.3"><img src="https://img.shields.io/badge/version-v0.5.3-blue.svg" alt="Version"></a>
   <a href="https://nodejs.org/"><img src="https://img.shields.io/badge/Node.js-22.x-green.svg" alt="Node.js"></a>
   <a href="https://sqlite.org/"><img src="https://img.shields.io/badge/Database-SQLite%20(WAL%20Mode)-003B57.svg" alt="Database"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License"></a>
