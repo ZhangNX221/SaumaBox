@@ -181,8 +181,7 @@ const app = {
           ['cinema', 'cinema', 'Cinema'],
           ['music', 'music', 'Musik'],
           ['web', 'globe', 'Web'],
-          ['menu', 'layers', 'Menu'],
-          ['profile', 'user', 'Profil']
+          ['menu', 'layers', 'Menu']
         ];
         const isAct = (id) => {
           if (id === curTab) return true;

@@ -600,6 +600,13 @@ Object.assign(app, {
                   <span class="sheet-item-sub">Analisis &amp; ringkasan</span>
                 </div>
               </div>
+              <div class="sheet-menu-item ${isA('settings', 'profile') ? 'active' : ''}" onclick="app.openMobileProfileSheet();" role="button" tabindex="0">
+                <div class="sheet-item-icon-box">${getIcon('user', 'ui-icon', 18)}</div>
+                <div class="sheet-item-text">
+                  <span class="sheet-item-title">Profil Akun</span>
+                  <span class="sheet-item-sub">Detail &amp; info akun</span>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -709,16 +716,9 @@ Object.assign(app, {
           </div>
 
           <!-- Aksi Tambahan -->
-          <div style="display:flex; gap:10px; margin-top:4px;">
-            <button type="button" class="profile-sheet-btn" onclick="app.openMobileProfileSheet();" style="flex:1;">
-              <span class="profile-sheet-btn-left">
-                ${getIcon('user', 'ui-icon', 16)}
-                <span>Profil Akun</span>
-              </span>
-              ${getIcon('chevronRight', 'ui-icon', 14)}
-            </button>
-            <button type="button" class="profile-sheet-btn danger" onclick="app.closeBottomSheet(); app.logout();" style="flex:1;">
-              <span class="profile-sheet-btn-left">
+          <div style="margin-top:4px;">
+            <button type="button" class="profile-sheet-btn danger" onclick="app.closeBottomSheet(); app.logout();" style="width:100%; justify-content:center;">
+              <span class="profile-sheet-btn-left" style="gap:8px;">
                 ${getIcon('logout', 'ui-icon', 16)}
                 <span>Keluar</span>
               </span>
