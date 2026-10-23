@@ -19,6 +19,21 @@ Object.assign(app, {
               <button class="sub-tab-btn ${subTab === 'platforms' ? 'active' : ''}" onclick="app.setTaxonomyTab('platforms')">Platform</button>
               <button class="sub-tab-btn ${subTab === 'statuses' ? 'active' : ''}" onclick="app.setTaxonomyTab('statuses')">Status</button>
             </div>
+            ${subTab === 'posters' ? `
+              <div class="toolbar-filters-row poster-toolbar-filters">
+                <select class="filter-select" id="filter-poster-domain" onchange="app.setPosterDomainFilter(this.value)" aria-label="Filter kategori poster">
+                  <option value="all" ${(this.state.taxonomy?.posterDomain || 'all') === 'all' ? 'selected' : ''}>Kategori: Semua</option>
+                  <option value="games" ${this.state.taxonomy?.posterDomain === 'games' ? 'selected' : ''}>Kategori: Game</option>
+                  <option value="cinema" ${this.state.taxonomy?.posterDomain === 'cinema' ? 'selected' : ''}>Kategori: Cinema</option>
+                  <option value="music" ${this.state.taxonomy?.posterDomain === 'music' ? 'selected' : ''}>Kategori: Musik</option>
+                  <option value="unlinked" ${this.state.taxonomy?.posterDomain === 'unlinked' ? 'selected' : ''}>Kategori: Belum Ditautkan</option>
+                </select>
+                <div class="search-box-wrap poster-search-wrap" style="position:relative; display:inline-flex; align-items:center;">
+                  <span style="position:absolute; left:10px; pointer-events:none; color:var(--text-secondary);">${getIcon('search', 'ui-icon', 13)}</span>
+                  <input type="text" class="form-input poster-search-input" placeholder="Cari poster..." value="${escapeHtml(q || '')}" onkeyup="if(event.key==='Enter'){app.state.taxonomy.q=this.value; app.state.taxonomy.page=1; app.loadTaxonomyData();}" onchange="app.state.taxonomy.q=this.value; app.state.taxonomy.page=1; app.loadTaxonomyData();" style="padding-left:30px; height:34px; font-size:0.8rem; border-radius:8px; width:160px;">
+                </div>
+              </div>
+            ` : ''}
           </div>
           <div class="toolbar-right" id="taxonomy-toolbar-right">
             ${subTab === 'genres' ? `<button class="btn btn-primary btn-icon" onclick="app.openAddGenreModal()" title="Tambah Genre" aria-label="Tambah Genre">${getIcon('plus', 'ui-icon-btn', 16)}</button>` : ''}
@@ -41,6 +56,7 @@ Object.assign(app, {
     const s = this.state.taxonomy || {};
     const selected = s.selectedPosters || [];
     const count = selected.length;
+    const isAllSelected = typeof this.isAllPostersSelectedOnPage === 'function' ? this.isAllPostersSelectedOnPage() : false;
 
     return `
       <div class="posters-toolbar-actions" style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
@@ -57,6 +73,10 @@ Object.assign(app, {
         ` : ''}
         <button class="btn btn-secondary btn-sm" onclick="app.compressAllPosters()" title="Kompres semua poster agar ukurannya tidak melebihi 200 KB">
           ${getIcon('refresh', 'ui-icon-btn', 14)} <span>Kompres Semua</span>
+        </button>
+        <button type="button" class="btn btn-secondary btn-sm ${isAllSelected ? 'btn-select-all-active' : ''}" onclick="app.toggleSelectAllCurrentPagePosters()" id="btn-select-all-posters" title="${isAllSelected ? 'Batalkan pilihan semua poster di halaman ini' : 'Pilih semua poster di halaman ini'}" style="display:inline-flex; align-items:center; gap:6px;">
+          <input type="checkbox" id="poster-select-all-cb" ${isAllSelected ? 'checked' : ''} style="margin:0; pointer-events:none; cursor:pointer; accent-color:var(--accent-color);" aria-hidden="true">
+          <span>Pilih Semua</span>
         </button>
         <button class="btn btn-secondary btn-sm" onclick="app.exportPostersZip()" title="Ekspor semua poster dalam berkas ZIP">${getIcon('download', 'ui-icon-btn', 14)} <span>Ekspor ZIP</span></button>
         <button class="btn btn-primary btn-sm" onclick="app.openImportPosterModal()" title="Import gambar poster baru">${getIcon('upload', 'ui-icon-btn', 14)} <span>Import Poster</span></button>

@@ -169,6 +169,53 @@
   .hero-section {
     padding: 36px 16px 24px;
   }
+
+  /* Poster Gallery Mobile Layout (antislop-layoutmobile) */
+  .posters-toolbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .posters-toolbar-actions .btn {
+    min-height: 34px;
+    padding: 6px 8px;
+    font-size: 0.75rem;
+    border-radius: 8px;
+    flex: 1 1 calc(50% - 6px);
+    justify-content: center;
+  }
+
+  .poster-toolbar-filters {
+    width: 100%;
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .poster-toolbar-filters .filter-select {
+    flex: 1 1 130px;
+    min-width: 0;
+    font-size: 0.74rem;
+  }
+
+  .poster-toolbar-filters .poster-search-wrap {
+    flex: 1 1 130px;
+    min-width: 0;
+  }
+
+  .poster-toolbar-filters .poster-search-input {
+    width: 100% !important;
+  }
+
+  .poster-actions .btn,
+  .poster-actions .btn-icon-sm {
+    height: 36px;
+    min-height: 36px;
+  }
 }
 
 /* ============================================================

@@ -24,27 +24,17 @@ Object.assign(app, {
     const curPage = Math.min(Math.max(1, page), totalPages);
     s.page = curPage;
     const paged = posters.slice((curPage - 1) * limit, curPage * limit);
-    const allSelectedOnPage = paged.length > 0 && paged.every(p => s.selectedPosters.includes(p.filename));
 
-    const filterBar = `
-      <div class="poster-filter-bar">
-        <div class="poster-filter-pills">
-          <button class="poster-pill-btn ${curDomain === 'all' ? 'active' : ''}" onclick="app.setPosterDomainFilter('all')">Semua (${total})</button>
-          <button class="poster-pill-btn ${curDomain === 'games' ? 'active' : ''}" onclick="app.setPosterDomainFilter('games')">🎮 Game</button>
-          <button class="poster-pill-btn ${curDomain === 'cinema' ? 'active' : ''}" onclick="app.setPosterDomainFilter('cinema')">🎬 Cinema</button>
-          <button class="poster-pill-btn ${curDomain === 'music' ? 'active' : ''}" onclick="app.setPosterDomainFilter('music')">🎵 Musik</button>
-          <button class="poster-pill-btn ${curDomain === 'unlinked' ? 'active' : ''}" onclick="app.setPosterDomainFilter('unlinked')">📁 Belum Ditautkan</button>
-        </div>
-        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-          <label class="poster-select-all-label" title="Pilih semua poster di halaman ini">
-            <input type="checkbox" id="poster-select-all-cb" ${allSelectedOnPage ? 'checked' : ''} onchange="app.toggleSelectAllPosters(this.checked)">
-            <span>Pilih Semua</span>
-          </label>
-          ${s.selectedPosters.length > 0 ? `<button class="btn btn-ghost btn-xs" onclick="app.clearPosterSelection()" style="font-size:0.75rem; color:var(--text-secondary); padding:2px 8px;">Batal (${s.selectedPosters.length})</button>` : ''}
-          <input type="text" class="form-input" style="padding:6px 12px; font-size:0.85rem; width:200px;" placeholder="Cari poster..." value="${escapeHtml(q)}" onkeyup="if(event.key==='Enter'){app.state.taxonomy.q=this.value; app.state.taxonomy.page=1; app.loadTaxonomyData();}">
-        </div>
+    const selectionBanner = s.selectedPosters.length > 0 ? `
+      <div class="poster-selection-banner" style="display:flex; align-items:center; justify-content:space-between; background:rgba(212,175,55,0.08); border:1px solid rgba(212,175,55,0.25); border-radius:10px; padding:8px 14px; margin-bottom:14px; font-size:0.82rem;">
+        <span style="color:var(--accent-color); font-weight:600; display:inline-flex; align-items:center; gap:6px;">
+          ${getIcon('check', 'ui-icon', 14)} <span><strong>${s.selectedPosters.length}</strong> poster dipilih</span>
+        </span>
+        <button type="button" class="btn btn-ghost btn-xs" onclick="app.clearPosterSelection()" style="color:var(--text-secondary); padding:2px 8px; font-size:0.75rem;">
+          ${getIcon('close', 'ui-icon', 12)} <span>Batalkan Seleksi</span>
+        </button>
       </div>
-    `;
+    ` : '';
 
     const cards = paged.map(p => {
       const hasLink = p.links && p.links.length > 0;
@@ -53,7 +43,7 @@ Object.assign(app, {
       return `
         <div class="poster-admin-card ${isSelected ? 'selected' : ''}" id="poster-card-${encodeURIComponent(p.filename)}" onclick="app.toggleSelectPoster('${escapeHtml(p.filename)}')">
           <div class="poster-thumb-wrap">
-            <label class="poster-select-box" onclick="event.stopPropagation();" title="Pilih poster ini">
+            <label class="poster-select-box" onclick="event.stopPropagation();" title="Pilih poster ini" aria-label="Pilih poster ${escapeHtml(p.filename)}">
               <input type="checkbox" class="poster-checkbox-input" value="${escapeHtml(p.filename)}" ${isSelected ? 'checked' : ''} onchange="app.toggleSelectPoster('${escapeHtml(p.filename)}', this.checked)">
               <span class="poster-custom-checkbox">${getIcon('check', 'poster-check-icon', 12)}</span>
             </label>
@@ -100,12 +90,29 @@ Object.assign(app, {
     `;
 
     content.innerHTML = `
-      ${filterBar}
+      ${selectionBanner}
       ${cards ? `<div class="poster-gallery-grid">${cards}</div>` : `<div class="state-container" style="padding:40px 16px;"><div class="state-icon">🖼️</div><div class="state-title">Tidak ada berkas poster yang cocok.</div><div class="state-desc" style="color:var(--text-secondary); font-size:0.85rem; margin-top:4px;">Gunakan tombol "Import Poster" untuk mengunggah poster baru.</div></div>`}
       ${footer}
     `;
 
+    // Sinkronisasi filter dropdown di toolbar jika ada
+    const sel = document.getElementById('filter-poster-domain');
+    if (sel && sel.value !== curDomain) sel.value = curDomain;
+
     this.updatePostersToolbar();
+  },
+
+  isAllPostersSelectedOnPage() {
+    const s = this.state.taxonomy || {};
+    const selected = s.selectedPosters || [];
+    const pagedCbs = document.querySelectorAll('.poster-checkbox-input');
+    if (pagedCbs.length === 0) return false;
+    return Array.from(pagedCbs).every(cb => selected.includes(cb.value));
+  },
+
+  toggleSelectAllCurrentPagePosters() {
+    const isAll = this.isAllPostersSelectedOnPage();
+    this.toggleSelectAllPosters(!isAll);
   },
 
   toggleSelectPoster(filename, forceState) {
@@ -127,10 +134,14 @@ Object.assign(app, {
       if (cb) cb.checked = shouldSelect;
     }
 
+    const isAll = this.isAllPostersSelectedOnPage();
     const allCb = document.getElementById('poster-select-all-cb');
-    const pagedCbs = document.querySelectorAll('.poster-checkbox-input');
-    if (allCb && pagedCbs.length > 0) {
-      allCb.checked = Array.from(pagedCbs).every(cb => cb.checked);
+    if (allCb) allCb.checked = isAll;
+    const allBtn = document.getElementById('btn-select-all-posters');
+    if (allBtn) {
+      allBtn.classList.toggle('btn-select-all-active', isAll);
+      const span = allBtn.querySelector('span');
+      if (span) span.textContent = isAll ? 'Batal Pilih' : 'Pilih Semua';
     }
 
     this.updatePostersToolbar();
@@ -152,6 +163,15 @@ Object.assign(app, {
       if (card) card.classList.toggle('selected', isChecked);
     });
 
+    const allCb = document.getElementById('poster-select-all-cb');
+    if (allCb) allCb.checked = isChecked;
+    const allBtn = document.getElementById('btn-select-all-posters');
+    if (allBtn) {
+      allBtn.classList.toggle('btn-select-all-active', isChecked);
+      const span = allBtn.querySelector('span');
+      if (span) span.textContent = isChecked ? 'Batal Pilih' : 'Pilih Semua';
+    }
+
     this.updatePostersToolbar();
   },
 
@@ -162,6 +182,12 @@ Object.assign(app, {
     document.querySelectorAll('.poster-checkbox-input').forEach(cb => cb.checked = false);
     const allCb = document.getElementById('poster-select-all-cb');
     if (allCb) allCb.checked = false;
+    const allBtn = document.getElementById('btn-select-all-posters');
+    if (allBtn) {
+      allBtn.classList.remove('btn-select-all-active');
+      const span = allBtn.querySelector('span');
+      if (span) span.textContent = 'Pilih Semua';
+    }
     this.updatePostersToolbar();
   },
 
