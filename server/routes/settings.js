@@ -1,9 +1,14 @@
 const express = require('express');
 const router = express.Router();
+const path = require('node:path');
+const fs = require('node:fs');
+const os = require('node:os');
 const { execSync } = require('child_process');
 const pkg = require('../../package.json');
 const { getDb, logActivity } = require('../db');
 const { requireAuth } = require('../auth');
+
+const appRoot = path.resolve(__dirname, '..', '..');
 
 // GET /api/settings — Pengaturan aplikasi
 router.get('/', (req, res) => {
@@ -278,71 +283,213 @@ router.get('/recent', (req, res) => {
 router.get('/version', (req, res) => {
   let commitHash = 'unknown';
   let branch = 'main';
-  try {
-    commitHash = execSync('git rev-parse --short HEAD', { encoding: 'utf8' }).trim();
-    branch = execSync('git rev-parse --abbrev-ref HEAD', { encoding: 'utf8' }).trim();
-  } catch (_) {}
+  const hasGit = fs.existsSync(path.join(appRoot, '.git'));
+
+  if (hasGit) {
+    try {
+      commitHash = execSync('git rev-parse --short HEAD', { cwd: appRoot, encoding: 'utf8' }).trim();
+      branch = execSync('git rev-parse --abbrev-ref HEAD', { cwd: appRoot, encoding: 'utf8' }).trim();
+    } catch (_) {}
+  } else {
+    // Di lingkungan Docker / ZimaOS tanpa .git, gunakan tag versi package
+    commitHash = `v${pkg.version}`;
+  }
 
   res.json({
     version: pkg.version,
     commit: commitHash,
     branch,
+    isDocker: !hasGit,
     repoUrl: 'https://github.com/ZhangNX221/SaumaBox'
   });
 });
 
 // GET /api/settings/check-update — Periksa apakah ada commit/versi baru dari remote GitHub
-router.get('/check-update', requireAuth, (req, res) => {
+router.get('/check-update', requireAuth, async (req, res) => {
   let localCommit = 'unknown';
   let remoteCommit = '';
   let branch = 'main';
   let hasUpdate = false;
   let remoteError = null;
+  let latestVersion = `v${pkg.version}`;
+  const hasGit = fs.existsSync(path.join(appRoot, '.git'));
 
-  try {
-    localCommit = execSync('git rev-parse --short HEAD', { encoding: 'utf8' }).trim();
-    branch = execSync('git rev-parse --abbrev-ref HEAD', { encoding: 'utf8' }).trim();
-  } catch (e) {
-    localCommit = 'unknown';
+  if (hasGit) {
+    try {
+      localCommit = execSync('git rev-parse --short HEAD', { cwd: appRoot, encoding: 'utf8' }).trim();
+      branch = execSync('git rev-parse --abbrev-ref HEAD', { cwd: appRoot, encoding: 'utf8' }).trim();
+    } catch (_) {
+      localCommit = 'unknown';
+    }
+  } else {
+    localCommit = `v${pkg.version}`;
   }
 
+  // Gunakan GitHub REST API terlebih dahulu (sangat andal di Docker/ZimaOS tanpa perlu CLI git)
   try {
-    const rawRemote = execSync(`git ls-remote origin refs/heads/${branch || 'main'}`, { encoding: 'utf8', timeout: 12000 });
-    if (rawRemote && rawRemote.trim()) {
-      remoteCommit = rawRemote.split('\t')[0].trim();
-      if (remoteCommit && !remoteCommit.startsWith(localCommit)) {
-        hasUpdate = true;
+    const ghHeaders = {
+      'User-Agent': 'SaumaBox-Updater',
+      'Accept': 'application/vnd.github.v3+json'
+    };
+
+    // 1. Periksa rilis resmi terbaru di GitHub
+    try {
+      const releaseRes = await fetch('https://api.github.com/repos/ZhangNX221/SaumaBox/releases/latest', {
+        headers: ghHeaders,
+        signal: AbortSignal.timeout(10000)
+      });
+      if (releaseRes.ok) {
+        const releaseData = await releaseRes.json();
+        if (releaseData && releaseData.tag_name) {
+          latestVersion = releaseData.tag_name;
+          const cleanLatest = latestVersion.replace(/^v/, '');
+          const cleanCurrent = pkg.version.replace(/^v/, '');
+          if (cleanLatest !== cleanCurrent) {
+            hasUpdate = true;
+          }
+        }
+      }
+    } catch (_) {}
+
+    // 2. Periksa commit terbaru di branch main
+    const commitRes = await fetch('https://api.github.com/repos/ZhangNX221/SaumaBox/commits/main', {
+      headers: ghHeaders,
+      signal: AbortSignal.timeout(10000)
+    });
+
+    if (commitRes.ok) {
+      const commitData = await commitRes.json();
+      if (commitData && commitData.sha) {
+        remoteCommit = commitData.sha.substring(0, 7);
+        if (hasGit && localCommit !== 'unknown' && !commitData.sha.startsWith(localCommit)) {
+          hasUpdate = true;
+        } else if (!hasGit && hasUpdate) {
+          // Versi rilis berbeda pada Docker
+          hasUpdate = true;
+        }
       }
     }
-  } catch (err) {
-    remoteError = err.message;
+  } catch (apiErr) {
+    // Fallback: jika REST API gagal (misal rate limit), gunakan git ls-remote jika ada Git CLI
+    if (hasGit) {
+      try {
+        const rawRemote = execSync(`git ls-remote origin refs/heads/${branch || 'main'}`, { cwd: appRoot, encoding: 'utf8', timeout: 12000 });
+        if (rawRemote && rawRemote.trim()) {
+          remoteCommit = rawRemote.split('\t')[0].trim().substring(0, 7);
+          if (remoteCommit && !remoteCommit.startsWith(localCommit)) {
+            hasUpdate = true;
+          }
+        }
+      } catch (gitErr) {
+        remoteError = gitErr.message;
+      }
+    } else {
+      remoteError = apiErr.message;
+    }
   }
 
   res.json({
     currentVersion: pkg.version,
     currentCommit: localCommit,
-    remoteCommit: remoteCommit ? remoteCommit.substring(0, 7) : '',
+    remoteCommit: remoteCommit || latestVersion,
+    latestVersion,
     branch,
     hasUpdate,
-    remoteError: remoteError ? 'Tidak dapat terhubung ke remote GitHub (periksa jaringan internet).' : null,
+    isDocker: !hasGit,
+    remoteError: remoteError ? 'Tidak dapat terhubung ke remote GitHub (periksa koneksi internet).' : null,
     checkedAt: new Date().toISOString()
   });
 });
 
-// POST /api/settings/apply-update — Lakukan git pull origin main untuk memperbarui aplikasi
-router.post('/apply-update', requireAuth, (req, res) => {
+// POST /api/settings/apply-update — Lakukan update sistem (Dukungan Git & Docker/ZimaOS)
+router.post('/apply-update', requireAuth, async (req, res) => {
   const db = getDb();
+  const hasGit = fs.existsSync(path.join(appRoot, '.git'));
+
+  // Skenario 1: Lingkungan Repository Git (Local / Server dengan Git)
+  if (hasGit) {
+    try {
+      const output = execSync('git pull origin main', { cwd: appRoot, encoding: 'utf8', timeout: 35000 });
+      logActivity(db, 'SYSTEM_UPDATE', 'system', req.user.id, req.user.username, `Pembaruan sistem via git: ${output.substring(0, 100)}`);
+      return res.json({
+        success: true,
+        message: 'Aplikasi berhasil diperbarui via Git! Halaman akan dimuat ulang.',
+        output,
+        isDocker: false
+      });
+    } catch (err) {
+      return res.status(500).json({
+        error: `Gagal memperbarui aplikasi via Git: ${err.message}`
+      });
+    }
+  }
+
+  // Skenario 2: Lingkungan Docker / ZimaOS / Standalone (Tanpa folder .git)
   try {
-    const output = execSync('git pull origin main', { encoding: 'utf8', timeout: 30000 });
-    logActivity(db, 'SYSTEM_UPDATE', 'system', req.user.id, req.user.username, `Pembaruan sistem: ${output.substring(0, 100)}`);
+    const tmpTarPath = path.join(os.tmpdir(), `saumabox-update-${Date.now()}.tar.gz`);
+    const tarUrl = 'https://github.com/ZhangNX221/SaumaBox/archive/refs/heads/main.tar.gz';
+
+    // 1. Unduh arsip kode terbaru dari GitHub
+    const resp = await fetch(tarUrl, {
+      headers: { 'User-Agent': 'SaumaBox-Updater' },
+      signal: AbortSignal.timeout(60000)
+    });
+    if (!resp.ok) throw new Error(`HTTP ${resp.status} ${resp.statusText} saat mengunduh paket dari GitHub`);
+
+    const arrayBuffer = await resp.arrayBuffer();
+    fs.writeFileSync(tmpTarPath, Buffer.from(arrayBuffer));
+
+    // 2. Ekstrak arsip ke folder sementara
+    const tmpExtractDir = path.join(os.tmpdir(), `saumabox-extract-${Date.now()}`);
+    fs.mkdirSync(tmpExtractDir, { recursive: true });
+
+    execSync(`tar -xzf "${tmpTarPath}" -C "${tmpExtractDir}"`, { encoding: 'utf8', timeout: 35000 });
+
+    // GitHub archive biasanya memiliki subfolder SaumaBox-main/
+    const extractedItems = fs.readdirSync(tmpExtractDir);
+    const sourceDir = extractedItems.length === 1 && fs.statSync(path.join(tmpExtractDir, extractedItems[0])).isDirectory()
+      ? path.join(tmpExtractDir, extractedItems[0])
+      : tmpExtractDir;
+
+    // 3. Salin file pembaruan ke appRoot DENGAN MEMPROTEKSI FOLDER data/ (Database SQLite & upload pengguna)
+    const itemsToCopy = ['public', 'server', 'package.json', 'package-lock.json', 'Dockerfile', 'docker-compose.yml', 'README.md', 'LICENSE'];
+    for (const item of itemsToCopy) {
+      const srcItem = path.join(sourceDir, item);
+      const destItem = path.join(appRoot, item);
+      if (fs.existsSync(srcItem)) {
+        fs.cpSync(srcItem, destItem, { recursive: true, force: true });
+      }
+    }
+
+    // 4. Bersihkan file sementara
+    try {
+      fs.unlinkSync(tmpTarPath);
+      fs.rmSync(tmpExtractDir, { recursive: true, force: true });
+    } catch (_) {}
+
+    // 5. Jalankan npm install jika diperlukan
+    try {
+      execSync('npm install --omit=dev', { cwd: appRoot, encoding: 'utf8', timeout: 60000 });
+    } catch (_) {}
+
+    logActivity(db, 'SYSTEM_UPDATE', 'system', req.user.id, req.user.username, 'Pembaruan sistem via GitHub Archive (Docker/ZimaOS)');
+
     res.json({
       success: true,
-      message: 'Aplikasi berhasil diperbarui ke commit terbaru! Halaman akan dimuat ulang.',
-      output
+      message: 'Pembaruan SaumaBox berhasil dipasang! Server container akan memuat ulang proses dalam 2 detik.',
+      isDocker: true
     });
+
+    // Beri jeda 1.5 detik agar respon HTTP sampai ke klien sebelum proses Node berhenti dan di-restart oleh Docker
+    setTimeout(() => {
+      console.log('Restarting SaumaBox after update...');
+      process.exit(0);
+    }, 1500);
+
   } catch (err) {
+    console.error('Docker update error:', err);
     res.status(500).json({
-      error: `Gagal memperbarui aplikasi: ${err.message}`
+      error: `Gagal memperbarui aplikasi di ZimaOS/Docker: ${err.message}`
     });
   }
 });

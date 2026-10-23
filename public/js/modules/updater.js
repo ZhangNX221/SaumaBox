@@ -148,10 +148,18 @@ Object.assign(app, {
   async initSystemVersionInfo() {
     try {
       const res = await api.get('/api/settings/version');
+      const elVer = document.getElementById('app-current-ver');
+      const elBadge = document.getElementById('system-version-badge');
       const elCommit = document.getElementById('app-current-commit');
       const elBranch = document.getElementById('app-branch-val');
-      if (elCommit && res.commit) elCommit.textContent = res.commit;
-      if (elBranch && res.branch) elBranch.textContent = res.branch;
+      if (elVer && res.version) elVer.textContent = `v${res.version}`;
+      if (elBadge && res.version) elBadge.textContent = `v${res.version}`;
+      if (elCommit && res.commit) {
+        elCommit.textContent = res.isDocker ? `${res.commit} (Docker)` : res.commit;
+      }
+      if (elBranch) {
+        elBranch.textContent = res.isDocker ? 'main (Release)' : (res.branch || 'main');
+      }
     } catch (_) {}
   },
 
@@ -175,20 +183,23 @@ Object.assign(app, {
       if (lastChecked) lastChecked.textContent = `Hari ini, ${nowStr}`;
 
       const elCommit = document.getElementById('app-current-commit');
-      if (elCommit && res.currentCommit) elCommit.textContent = res.currentCommit;
+      if (elCommit && res.currentCommit) {
+        elCommit.textContent = res.isDocker ? `${res.currentCommit} (Docker)` : res.currentCommit;
+      }
 
       if (res.hasUpdate) {
         if (statusBadge) statusBadge.innerHTML = '<span class="badge badge-warning" style="font-size:0.75rem;">🟢 Pembaruan Tersedia</span>';
         if (banner) { banner.className = 'system-update-banner warning'; }
         if (title) title.textContent = 'Pembaruan Sistem Baru Tersedia!';
-        if (desc) desc.innerHTML = `Ditemukan commit terbaru di remote GitHub (<strong>${res.remoteCommit || 'Latest'}</strong>). Tekan tombol <strong>Update Sekarang</strong> di bawah untuk memasang pembaruan secara otomatis.`;
+        const targetVer = res.latestVersion || res.remoteCommit || 'Versi Terbaru';
+        if (desc) desc.innerHTML = `Ditemukan versi terbaru di remote GitHub (<strong>${targetVer}</strong>${res.remoteCommit && res.remoteCommit !== targetVer ? ` - commit <code>${res.remoteCommit}</code>` : ''}). Tekan tombol <strong>Update Sekarang</strong> di bawah untuk memasang pembaruan secara otomatis.`;
         if (btnApply) btnApply.disabled = false;
-        showToast('Pembaruan sistem baru tersedia!', 'success');
+        showToast(`Pembaruan ${targetVer} tersedia!`, 'success');
       } else {
         if (statusBadge) statusBadge.innerHTML = '<span class="badge badge-success" style="font-size:0.75rem;">✓ Sistem Mutakhir</span>';
         if (banner) { banner.className = 'system-update-banner success'; }
         if (title) title.textContent = 'SaumaBox Berjalan Pada Versi Terbaru';
-        if (desc) desc.innerHTML = `Aplikasi Anda sudah sinkron dengan branch <strong>${res.branch || 'main'}</strong> (commit: <code>${res.currentCommit || 'OK'}</code>). Tidak ada pembaruan tertunda.`;
+        if (desc) desc.innerHTML = `Aplikasi Anda sudah sinkron dengan versi rilis/commit terbaru (<strong>${res.latestVersion || res.currentVersion || 'v0.5.2'}</strong>). Tidak ada pembaruan tertunda.`;
         if (btnApply) btnApply.disabled = true;
         showToast('SaumaBox sudah dalam versi terbaru.', 'info');
       }
@@ -211,7 +222,7 @@ Object.assign(app, {
     const ok = await showConfirmModal({
       title: 'Terapkan Pembaruan Sistem',
       message: 'Apakah Anda yakin ingin menerapkan pembaruan sistem sekarang?',
-      subtext: 'Sistem akan menjalankan sinkronisasi kode terbaru dan memuat ulang aplikasi.',
+      subtext: 'Sistem akan mengunduh kode terbaru dari GitHub dan memuat ulang aplikasi.',
       confirmText: 'Terapkan Update',
       type: 'warning'
     });
@@ -233,11 +244,13 @@ Object.assign(app, {
       const desc = document.getElementById('banner-status-desc');
       if (banner) banner.className = 'system-update-banner success';
       if (title) title.textContent = 'Pembaruan Berhasil Dipasang!';
-      if (desc) desc.textContent = 'Aplikasi akan otomatis memuat ulang dalam 2 detik untuk menerapkan perubahan.';
+      if (desc) desc.textContent = res.isDocker
+        ? 'File aplikasi telah diperbarui. Server container sedang memuat ulang proses (3-5 detik)...'
+        : 'Aplikasi akan otomatis memuat ulang dalam 2 detik untuk menerapkan perubahan.';
 
       setTimeout(() => {
         window.location.reload();
-      }, 2000);
+      }, res.isDocker ? 4500 : 2000);
     } catch (err) {
       showToast(err.message || 'Gagal menerapkan pembaruan.', 'error');
       if (btnApply) btnApply.disabled = false;

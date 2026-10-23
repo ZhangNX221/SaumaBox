@@ -8,8 +8,8 @@ FROM node:22-alpine
 LABEL maintainer="SaumaDev <ZhangNX221>"
 LABEL description="SaumaBox — Modern Self-Hosted Personal Media Catalog & Archiving System for Games, Cinema & Music"
 
-# Install curl and tzdata for healthcheck & timezone support
-RUN apk add --no-cache curl tzdata
+# Install curl, git, tar, and tzdata for healthcheck, updater & timezone support
+RUN apk add --no-cache curl tzdata git tar
 
 # Set working directory
 WORKDIR /app
