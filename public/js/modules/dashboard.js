@@ -233,14 +233,6 @@ Object.assign(app, {
             <span class="stat-sub">${stats.web?.pinned || 0} Disematkan • Akses Cepat</span>
           </div>
         </div>
-        <div class="stat-card" onclick="app.navigate('taxonomy', 'genres')" role="button" tabindex="0" onkeydown="if(event.key==='Enter')app.navigate('taxonomy', 'genres')" title="Buka Taksonomi Koleksi">
-          <div class="stat-icon">${getIcon('layers', 'ui-icon', 22)}</div>
-          <div class="stat-info">
-            <span class="stat-label">Total Pustaka</span>
-            <span class="stat-value font-mono">${totalMedia}</span>
-            <span class="stat-sub">Arsip multimedia tersimpan lokal</span>
-          </div>
-        </div>
         <div class="stat-card stat-card-wide" onclick="app.navigate('games')" role="button" tabindex="0" onkeydown="if(event.key==='Enter')app.navigate('games')" title="Buka Estimasi Investasi">
           <div class="stat-icon">${getIcon('tag', 'ui-icon', 22)}</div>
           <div class="stat-info">
@@ -265,7 +257,7 @@ Object.assign(app, {
             </a>
           </div>
           <div class="web-app-grid">
-            ${webBookmarks.slice(0, 8).map(b => this.renderWebTile(b, true)).join('')}
+            ${webBookmarks.slice(0, 12).map(b => this.renderWebTile(b, true)).join('')}
           </div>
         </section>
       ` : ''}
