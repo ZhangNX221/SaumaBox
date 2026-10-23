@@ -96,30 +96,37 @@ SaumaBox dirancang dengan prinsip **Zero-Bloat / High Performance**:
 
 SaumaBox dirancang untuk kemudahan *self-hosting* di berbagai infrastruktur:
 
-### A. Deploy dengan Docker & Docker Compose (Direkomendasikan)
-Cara tercepat dan paling bersih untuk menjalankan SaumaBox tanpa perlu memasang Node.js di sistem host:
+### A. Deploy dengan Docker, Stack Deploy & CasaOS/ZimaOS (Direkomendasikan)
 
-1. **Jalankan via Docker Compose**:
-   ```bash
-   docker compose up -d
-   ```
-   *Perintah ini otomatis membangun container berbasis `node:22-alpine` yang ringan dan mengamankan data SQLite pada volume folder `./data`.*
+SaumaBox mendukung deployment berbasis container instan baik via Docker Compose lokal maupun **Stack Deploy** (CasaOS, ZimaOS, Portainer, dan Docker Swarm).
 
-2. **Periksa Status & Log**:
-   ```bash
-   # Cek status kontainer dan healthcheck
-   docker compose ps
+#### 1. Stack Deploy di CasaOS / ZimaOS (1-Click YAML)
+1. Buka dashboard CasaOS / ZimaOS.
+2. Klik tombol **`+`** (Install a customized application / Custom App).
+3. Klik ikon terminal/dokumen di pojok kanan atas untuk **Import YAML**.
+4. Salin dan tempelkan seluruh isi berkas [`docker-compose.yml`](docker-compose.yml).
+5. Klik **Submit / Install**. Sistem akan langsung mengunduh image `ghcr.io/zhangnx221/saumabox:latest`, membuat volume persisten di `/DATA/AppData/saumabox/data`, dan menampilkan ikon SaumaBox pada dasbor (port `3088`).
 
-   # Pantau log sistem
-   docker compose logs -f
-   ```
+#### 2. Stack Deploy di Portainer / Docker Swarm
+1. Buka Portainer > **Stacks** > **Add stack**.
+2. Beri nama `saumabox`, pilih **Web editor**, dan tempelkan konfigurasi [`docker-compose.yml`](docker-compose.yml).
+3. Klik **Deploy the stack**.
 
-3. **Hentikan Layanan**:
-   ```bash
-   docker compose down
-   ```
+#### 3. Jalankan via Docker Compose Lokal
+```bash
+# Build dan jalankan di background
+docker compose up -d
 
----
+# Periksa status & healthcheck
+docker compose ps
+
+# Pantau log sistem
+docker compose logs -f
+
+# Hentikan layanan
+docker compose down
+```
+*Aplikasi dapat diakses di `http://localhost:3088` (container port `3000`), dengan volume persisten data SQLite otomatis tersimpan di folder data host.*
 
 ### B. Deploy di Linux VPS (Ubuntu / Debian) dengan PM2 & Nginx
 Untuk hosting mandiri di VPS (DigitalOcean, Hetzner, Linode, AWS EC2):

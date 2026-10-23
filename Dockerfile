@@ -6,9 +6,9 @@ FROM node:22-alpine
 
 # Label Metadata
 LABEL maintainer="SaumaDev <ZhangNX221>"
-LABEL description="SaumaBox — All-in-One Personal Media Catalog & Archiving System"
+LABEL description="SaumaBox — Modern Self-Hosted Personal Media Catalog & Archiving System for Games, Cinema & Music"
 
-# Install curl for container healthcheck
+# Install curl and tzdata for healthcheck & timezone support
 RUN apk add --no-cache curl tzdata
 
 # Set working directory
@@ -30,21 +30,17 @@ RUN npm ci --omit=dev && npm cache clean --force
 COPY public ./public
 COPY server ./server
 
-# Prepare data and backups directories, set permissions for non-root 'node' user
-RUN mkdir -p /app/data/backups && \
-    chown -R node:node /app
+# Prepare data, backups, uploads, and covers directories
+RUN mkdir -p /app/data/backups /app/data/uploads /app/public/images/covers
 
-# Switch to non-root user
-USER node
-
-# Expose web server port
+# Expose internal web server port
 EXPOSE 3000
 
-# Persistent volume for SQLite database and backups
+# Persistent volume for SQLite database, uploads, and backups
 VOLUME ["/app/data"]
 
 # Container healthcheck
-HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
   CMD curl -f http://localhost:3000/api/health || exit 1
 
 # Start SaumaBox

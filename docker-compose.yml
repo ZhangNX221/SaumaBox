@@ -1,24 +1,63 @@
+name: saumabox
+
 services:
   saumabox:
+    container_name: saumabox
+    image: ghcr.io/zhangnx221/saumabox:latest
     build:
       context: .
       dockerfile: Dockerfile
-    image: saumabox:latest
-    container_name: saumabox
     restart: unless-stopped
     ports:
-      - "${PORT:-3000}:3000"
+      - "3088:3000"
     environment:
       - NODE_ENV=production
       - PORT=3000
       - HOST=0.0.0.0
       - DATA_DIR=/app/data
     volumes:
-      # Data persisten (database SQLite & backups) tersimpan di folder host ./data
-      - ./data:/app/data
+      - type: bind
+        source: /DATA/AppData/saumabox/data
+        target: /app/data
+        bind:
+          create_host_path: true
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
       interval: 30s
       timeout: 5s
       retries: 3
-      start_period: 5s
+      start_period: 15s
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
+    labels:
+      icon: https://files.catbox.moe/sp0h63.png
+    x-casaos:
+      ports:
+        - container: "3000"
+          description:
+            en_us: SaumaBox WebUI HTTP Port
+      volumes:
+        - container: /app/data
+          description:
+            en_us: SaumaBox Database & Persistent Storage
+
+x-casaos:
+  architectures:
+    - amd64
+    - arm64
+  author: ZhangNX221
+  category: Entertainment
+  description:
+    en_us: SaumaBox — Modern Self-Hosted Personal Media Catalog & Archiving System for Games, Cinema & Music (Node.js, Express, SQLite, Vanilla JS)
+  developer: SaumaDev
+  icon: https://files.catbox.moe/sp0h63.png
+  index: /
+  is_uncontrolled: false
+  main: saumabox
+  port_map: "3088"
+  scheme: http
+  title:
+    custom: SaumaBox
+    en_us: SaumaBox
