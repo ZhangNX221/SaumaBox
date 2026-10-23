@@ -1,229 +1,103 @@
-# 🎮 SaumaBox
+# SaumaBox
 
-> **All-in-One Personal Media Catalog & Archiving System**  
-> Kelola, arsipkan, dan pantau seluruh koleksi Game, Cinema, dan Musik pribadi Anda dalam satu platform web modern, ringan, dan mandiri tanpa ketergantungan cloud pihak ketiga.
+Aplikasi katalog multimedia mandiri untuk mengelola koleksi game, sinema, dan musik pribadi tanpa ketergantungan layanan cloud.
 
-[![Version](https://img.shields.io/badge/version-v0.5.0-blue.svg)](https://github.com/ZhangNX221/SaumaBox/releases/tag/v0.5.0)
+[![Version](https://img.shields.io/badge/version-v0.5.1-blue.svg)](https://github.com/ZhangNX221/SaumaBox/releases/tag/v0.5.1)
 [![Node.js](https://img.shields.io/badge/Node.js-22.x-green.svg)](https://nodejs.org/)
 [![Database](https://img.shields.io/badge/Database-SQLite%20(WAL%20Mode)-003B57.svg)](https://sqlite.org/)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Design](https://img.shields.io/badge/Design-DitherOS%20Inspired-8B5CF6.svg)](#desain-antarmuka)
+
+![Pratinjau Antarmuka SaumaBox](docs/images/preview.jpg)
 
 ---
 
-## 🌟 Sorotan Fitur Utama
+## Yang Bisa Dilakukan SaumaBox
 
-### 1. Tampilan Fleksibel: Grid Poster vs Tabel Spreadsheet
-- **Visual Poster & Album Grid**: Terinspirasi dari antarmuka modern **PlayStation Plus Games Catalog** dan **Educatech Card Design**.
-  - **Rasio Poster Vertikal (3:4 & 2:3)** untuk Games dan Cinema, serta **Rasio Persegi (1:1)** untuk sampul album Musik.
-  - Badge kategori dinamis, skor bintang rating, label harga/ketersediaan (*Gratis/Premium*), dan *Avatar Inisial Berwarna* yang unik.
-  - Quick action buttons (status tontonan ☑️ dan favorit ❤️) langsung di kartu poster.
-- **Dense Spreadsheet Table**: Mode tabel padat untuk meninjau data dalam jumlah besar dengan cepat, lengkap dengan sorting kolom, filter multi-dimensi, dan pagination.
-- **Penyimpanan Preferensi Tampilan**: Preferensi tampilan (*Grid* atau *Tabel*) tersimpan otomatis di setiap modul.
-
-### 2. Tiga Pilar Manajemen Media
-- 🎮 **Katalog Game**:
-  - **PC Games**: Informasi publisher, developer, platform pembelian (Steam, Epic, GOG), harga beli, dan kartu **Auto-Sum Total Investasi Game**.
-  - **Emulator Games**: Pendataan konsol retro/modern (PS2, PSP, Wii U, Switch, dll.), software emulator (PCSX2, RPCS3, Cemu, Ryujinx), dan format ROM (`.iso`, `.chd`, `.nsp`).
-  - **Recompilation & PC Ports**: Pelacakan game decompiled/porting native modern (Ship of Harkinian, OpenGOAL, SM64 PC Port) beserta catatan modifikasi 60/120 FPS dan HD texture pack.
-- 🎬 **Katalog Cinema**:
-  - Mendukung **Movies**, **TV Series**, dan **Anime**.
-  - Pelacakan jumlah episode & season, studio produksi, negara asal, genre, dan rating IMDb.
-  - Tombol instan penanda status tontonan (⬜ Belum / ☑️ Sudah).
-- 🎵 **Katalog Musik**:
-  - Pengarsipan file lokal resolusi tinggi (FLAC, Hi-Res, MP3) dan streaming library (Spotify, Apple Music).
-  - Informasi ukuran file (MB), genre, tahun rilis, album, komposer/artis, serta pin lagu favorit.
-
-### 3. Keamanan & Kedaulatan Data Penuh
-- **Zero Cloud Lock-in**: Data Anda 100% milik Anda, disimpan di komputer lokal Anda menggunakan SQLite dengan mode WAL (*Write-Ahead Logging*) untuk performa baca/tulis tinggi dan anti-korupsi.
-- **One-Click Backup & Restore**: Unduh snapshot database `.sqlite` kapan saja. Dilengkapi fitur restore otomatis dengan uji integritas (`PRAGMA integrity_check;`) dan auto-snapshot rollback sebelum penimpaan database.
-- **Import & Export CSV**: Kemudahan ekspor seluruh data ke file CSV dan impor massal dari spreadsheet luar.
-- **Autentikasi Session Aman**: Hash sandi berstandar kriptografi PBKDF2 dengan salt acak dan token sesi SHA-256 yang aman dalam cookie `HttpOnly`.
-- **Mode Publik & Admin**: Tamu publik dapat menjelajahi katalog dengan bebas (read-only), sementara akses tambah, edit, hapus, impor, dan restore terkunci khusus akun administrator.
+- **Koleksi Game**: Catat game PC, emulator retro (PS2, PSP, Wii U, Switch), dan recompilation port (Ship of Harkinian, OpenGOAL). Lengkap dengan platform pembelian, status tamat, format ROM, dan kalkulasi total pengeluaran koleksi.
+- **Koleksi Sinema**: Pantau film, anime, dan serial TV. Tersedia catatan status tontonan, rating, jumlah episode, musim, studio, dan negara asal.
+- **Koleksi Musik**: Kelola album fisik, rilisan digital (FLAC, MP3), maupun tautan layanan streaming beserta penanda lagu favorit.
+- **Mode Poster dan Tabel**: Telusuri koleksi dengan galeri kartu visual atau beralih ke tampilan tabel ringkas dengan pencarian cepat dan pengurutan kolom.
+- **Data 100% Milik Anda**: Seluruh data tersimpan dalam satu file SQLite lokal (`data/saumabox.sqlite`) dengan mode WAL. Dilengkapi fitur unduh cadangan (backup) dan ekspor-impor file CSV dalam satu klik.
+- **Kompresi Gambar Otomatis**: Gambar sampul dan avatar otomatis dioptimasi ke format WebP ringan (di bawah 200 KB) agar halaman tetap cepat dibuka.
 
 ---
 
-## 🛠️ Arsitektur & Teknologi
-
-SaumaBox dirancang dengan prinsip **Zero-Bloat / High Performance**:
-
-| Komponen | Teknologi | Alasan Pemilihan |
-| :--- | :--- | :--- |
-| **Backend** | Node.js (22+) & Express 5 | Ringan, cepat, dan menggunakan driver native `node:sqlite` tanpa kompilasi C++ lokal (*no node-gyp required*). |
-| **Database** | SQLite 3 (WAL Mode) | Format penyimpanan file tunggal yang tangguh, nol konfigurasi server terpisah, dan ACID-compliant. |
-| **Frontend** | Vanilla JavaScript (ES2022) | Bebas dari build step yang lambat; kode langsung dijalankan oleh browser dengan performa maksimal. |
-| **Styling** | Vanilla CSS (DitherOS System) | Desain bertema DitherOS bernuansa industrial cyberpunk, mendukung Dark Mode & Light Mode, serta aksesibilitas tinggi (WCAG AA). |
-
----
-
-## 🚀 Memulai Instalasi & Menjalankan
+## Menjalankan di Komputer Lokal
 
 ### Prasyarat
-- **Node.js** versi **v22.0.0** atau yang lebih baru (mendukung native `node:sqlite`).
-- Browser modern (Chrome, Edge, Firefox, Safari).
+- Node.js versi 22.0.0 atau lebih baru.
+- Browser modern (Chrome, Edge, Firefox, atau Safari).
 
-### Langkah-langkah
+### Langkah Menjalankan
 
-1. **Clone repositori**:
+1. Clone repositori ini:
    ```bash
    git clone https://github.com/ZhangNX221/SaumaBox.git
    cd SaumaBox
    ```
 
-2. **Pasang dependensi**:
+2. Pasang dependensi:
    ```bash
    npm install
    ```
 
-3. **Jalankan aplikasi**:
+3. Jalankan server:
    ```bash
    npm start
    ```
-   *Atau jalankan mode development (auto-reload saat file diedit):*
-   ```bash
-   npm run dev
-   ```
+   Untuk mode pengembangan dengan auto-reload: `npm run dev`.
 
-4. **Buka di Browser**:
-   Buka alamat berikut di browser Anda:
+4. Buka di browser:
    ```
    http://localhost:3000
    ```
 
 ---
 
-## 🚢 Panduan Deployment (Docker & Hosting)
+## Deployment ke Server dan Docker
 
-SaumaBox dirancang untuk kemudahan *self-hosting* di berbagai infrastruktur:
+### 1. CasaOS dan ZimaOS (Impor 1-Klik)
+1. Buka dashboard CasaOS atau ZimaOS Anda.
+2. Klik tombol **+** (Custom App), lalu klik ikon dokumen di pojok kanan atas untuk **Import YAML**.
+3. Salin dan tempelkan seluruh isi file [docker-compose.yml](docker-compose.yml).
+4. Klik **Install**. Sistem akan otomatis mengunduh bundel rilis resmi, menyiapkan folder penyimpanan di `/DATA/AppData/saumabox/app`, dan membuka aplikasi di port **3088**.
 
-### A. Deploy dengan Docker, Stack Deploy & CasaOS/ZimaOS (Direkomendasikan)
-
-SaumaBox mendukung deployment berbasis container instan baik via Docker Compose lokal maupun **Stack Deploy** (CasaOS, ZimaOS, Portainer, dan Docker Swarm).
-
-#### 1. Stack Deploy di CasaOS / ZimaOS (1-Click YAML)
-1. Buka dashboard CasaOS / ZimaOS.
-2. Klik tombol **`+`** (Install a customized application / Custom App).
-3. Klik ikon terminal/dokumen di pojok kanan atas untuk **Import YAML**.
-4. Salin dan tempelkan seluruh isi berkas [`docker-compose.yml`](docker-compose.yml).
-5. Klik **Submit / Install**. Sistem akan langsung mengunduh image `ghcr.io/zhangnx221/saumabox:latest`, membuat volume persisten di `/DATA/AppData/saumabox/data`, dan menampilkan ikon SaumaBox pada dasbor (port `3088`).
-
-#### 2. Stack Deploy di Portainer / Docker Swarm
-1. Buka Portainer > **Stacks** > **Add stack**.
-2. Beri nama `saumabox`, pilih **Web editor**, dan tempelkan konfigurasi [`docker-compose.yml`](docker-compose.yml).
-3. Klik **Deploy the stack**.
-
-#### 3. Jalankan via Docker Compose Lokal
+### 2. Docker Compose
+Jalankan langsung di server Linux atau VPS Anda:
 ```bash
-# Build dan jalankan di background
+# Jalankan container di background
 docker compose up -d
 
-# Periksa status & healthcheck
-docker compose ps
-
-# Pantau log sistem
+# Cek log aplikasi
 docker compose logs -f
 
-# Hentikan layanan
+# Hentikan container
 docker compose down
 ```
-*Aplikasi dapat diakses di `http://localhost:3088` (container port `3000`), dengan volume persisten data SQLite otomatis tersimpan di folder data host.*
+Aplikasi dapat diakses melalui `http://IP-SERVER:3088`.
 
-### B. Deploy di Linux VPS (Ubuntu / Debian) dengan PM2 & Nginx
-Untuk hosting mandiri di VPS (DigitalOcean, Hetzner, Linode, AWS EC2):
-
-1. **Pasang Node.js 22 LTS & PM2**:
-   ```bash
-   # Install Node.js 22
-   curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
-   sudo apt-get install -y nodejs
-
-   # Install Process Manager PM2
-   sudo npm install -g pm2
-   ```
-
-2. **Jalankan Aplikasi dengan `ecosystem.config.js`**:
-   ```bash
-   pm2 start ecosystem.config.js
-   pm2 save
-   pm2 startup
-   ```
-   *Catatan: Konfigurasi default menggunakan `instances: 1` untuk menjaga integritas transaksi SQLite WAL.*
-
-3. **Contoh Konfigurasi Nginx Reverse Proxy**:
-   ```nginx
-   server {
-       listen 80;
-       server_name saumabox.domainanda.com;
-
-       location / {
-           proxy_pass http://127.0.0.1:3000;
-           proxy_http_version 1.1;
-           proxy_set_header Upgrade $http_upgrade;
-           proxy_set_header Connection 'upgrade';
-           proxy_set_header Host $host;
-           proxy_set_header X-Real-IP $remote_addr;
-           proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-           proxy_cache_bypass $http_upgrade;
-       }
-   }
-   ```
+### 3. VPS dengan PM2 dan Nginx
+Jika memakai VPS Ubuntu atau Debian tanpa Docker:
+```bash
+# Jalankan dengan process manager PM2
+pm2 start ecosystem.config.js
+pm2 save
+pm2 startup
+```
 
 ---
 
-### C. Deploy di Cloud PaaS (Railway, Render, Coolify, Fly.io)
-SaumaBox telah dilengkapi dengan [Dockerfile](Dockerfile), [Procfile](Procfile), dan health check endpoint `/api/health`:
+## Akun Bawaan
 
-- **Mount Persistent Disk**: Wajib memasang persistent disk / volume pada path `/app/data` agar database SQLite tidak ter-reset saat deploy ulang.
-- **Port**: Otomatis mendeteksi `process.env.PORT` dari penyedia cloud.
-- **Health Check Path**: `/api/health` (mengembalikan status HTTP 200 `{ "status": "ok" }`).
-
----
-
-## 🔑 Akun Bawaan (Default Credentials)
-
-Saat pertama kali dijalankan, sistem otomatis membuatkan skema database, data awal (seed), dan akun admin bawaan:
+Saat database pertama kali dibuat, sistem menyediakan akun administrator awal:
 
 - **Username**: `admin`
 - **Password**: `admin123`
 
-> 💡 **Saran Keamanan**: Segera ganti kata sandi admin melalui menu pengaturan profil setelah login pertama kali.
+Ganti kata sandi ini melalui menu pengaturan profil setelah login pertama kali.
 
 ---
 
-## 📁 Struktur Direktori Proyek
+## Lisensi
 
-```text
-SaumaBox/
-├── data/                       # Direktori database lokal (terabaikan di git)
-│   ├── backups/                # Folder penyimpanan file backup snapshot
-│   ├── uploads/                # Folder penyimpanan file upload poster/media
-│   └── saumabox.sqlite         # Database aktif SQLite (otomatis dibuat)
-├── docs/                       # Dokumentasi lengkap PRD & arsitektur sistem
-│   └── prd/                    # 10 bab PRD terperinci
-├── public/                     # Aset web statis frontend
-│   ├── css/
-│   │   └── style.css           # Desain tema DitherOS, grid visual & tata letak
-│   ├── images/
-│   │   └── covers/             # Koleksi cover poster game, cinema, & musik
-│   ├── js/
-│   │   ├── api.js              # Klien HTTP fetch dengan penanganan error
-│   │   ├── app.js              # Controller utama aplikasi & logika tampilan
-│   │   └── utils.js            # Utilitas format rupiah, tanggal, rating, badge
-│   └── index.html              # Halaman SPA tunggal
-├── server/                     # Backend API & layanan sistem
-│   ├── db.js                   # Inisialisasi SQLite, schema DDL, seed data, & logging
-│   └── index.js                # Server Express, routing REST API, & session auth
-├── Dockerfile                  # Konfigurasi container produksi berbasis Node 22 Alpine
-├── docker-compose.yml          # Konfigurasi deployment 1-command dengan volume persistent
-├── ecosystem.config.js         # Konfigurasi PM2 Process Manager untuk VPS
-├── Procfile                    # File proses untuk Cloud PaaS (Render, Railway, Fly.io)
-├── .env.example                # Templat variabel lingkungan sistem
-├── package.json
-└── README.md
-```
-
----
-
-## 📄 Lisensi
-
-Proyek ini dirilis di bawah lisensi [MIT](LICENSE). Bebas digunakan, dimodifikasi, dan dikembangkan untuk keperluan personal maupun komunitas.
+Proyek ini dirilis di bawah lisensi [MIT](LICENSE). Bebas digunakan, dipelajari, dan dikembangkan untuk penggunaan pribadi maupun komunitas.
