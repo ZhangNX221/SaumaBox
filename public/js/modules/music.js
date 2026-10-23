@@ -364,9 +364,16 @@ Object.assign(app, {
     this.createModal(modalId, isEdit ? 'Edit Trek Musik' : 'Tambah Trek Musik', `
       <form id="form-music" onsubmit="app.handleMusicSubmit(event, ${isEdit ? m.id : 'null'})">
         ${this.renderMetaFetchBar('music', m.title)}
-        <div class="form-group">
-          <label class="form-label">Judul Trek / Album *</label>
-          <input type="text" class="form-input" name="title" required value="${escapeHtml(m.title)}" placeholder="Bohemian Rhapsody">
+        
+        <div class="form-row-2-1">
+          <div class="form-group">
+            <label class="form-label">Judul Trek / Album *</label>
+            <input type="text" class="form-input" name="title" required value="${escapeHtml(m.title)}" placeholder="Bohemian Rhapsody">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Tahun Rilis</label>
+            <input type="number" class="form-input" name="year" value="${m.year || ''}" placeholder="1975">
+          </div>
         </div>
 
         ${this.renderCoverUploadField(m.cover_url, 'Gambar Cover Album / Lagu')}
@@ -380,11 +387,6 @@ Object.assign(app, {
             <label class="form-label">Nama Album</label>
             <input type="text" class="form-input" name="album" value="${escapeHtml(m.album || '')}" placeholder="A Night at the Opera">
           </div>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">Tahun Rilis</label>
-          <input type="number" class="form-input" name="year" value="${m.year || ''}" placeholder="1975">
         </div>
 
         ${this.renderGenreSelector(m.genre, 'music', customGenres)}
@@ -411,19 +413,23 @@ Object.assign(app, {
           </div>
         </div>
 
-        <div class="form-group">
-          <label class="form-label">Link Download / Halaman Akses Trek Musik</label>
-          <input type="url" class="form-input" name="download_url" value="${escapeHtml(m.download_url || '')}" placeholder="https://... tautan unduh / stream">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Link Download / Halaman Akses Trek Musik</label>
+            <input type="url" class="form-input" name="download_url" value="${escapeHtml(m.download_url || '')}" placeholder="https://... tautan unduh / stream">
+          </div>
+          <div class="form-group" style="display:flex; flex-direction:column; justify-content:flex-end;">
+            <label class="form-checkbox-card">
+              <input type="checkbox" name="is_favorite" value="1" ${m.is_favorite === 1 ? 'checked' : ''}>
+              <div class="form-checkbox-label">
+                <strong>Tandai Favorit</strong>
+                <span>Koleksi musik pilihan utama</span>
+              </div>
+            </label>
+          </div>
         </div>
 
-        <div class="form-group">
-          <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
-            <input type="checkbox" name="is_favorite" value="1" ${m.is_favorite === 1 ? 'checked' : ''}>
-            <span>Tandai Sebagai Favorit</span>
-          </label>
-        </div>
-
-        <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
+        <div class="modal-actions-footer">
           <button type="button" class="btn btn-secondary" onclick="app.closeModal('${modalId}')">Batal</button>
           <button type="submit" class="btn btn-primary">${isEdit ? 'Simpan Perubahan' : 'Tambah Musik'}</button>
         </div>

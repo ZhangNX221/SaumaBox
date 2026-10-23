@@ -318,7 +318,8 @@ Object.assign(app, {
     this.createModal(modalId, isEdit ? 'Edit Tayangan' : 'Tambah Tayangan Baru', `
       <form id="form-cinema" onsubmit="app.handleCinemaSubmit(event, ${isEdit ? c.id : 'null'})">
         ${this.renderMetaFetchBar('cinema', c.title)}
-        <div class="form-row">
+        
+        <div class="form-row-1-2">
           <div class="form-group">
             <label class="form-label">Tipe Tayangan *</label>
             <select class="form-select" name="type">
@@ -328,37 +329,36 @@ Object.assign(app, {
             </select>
           </div>
           <div class="form-group">
-            <label class="form-label">Tahun Rilis</label>
-            <input type="number" class="form-input" name="year" value="${c.year || ''}" placeholder="2022">
+            <label class="form-label">Judul Tayangan *</label>
+            <input type="text" class="form-input" name="title" required value="${escapeHtml(c.title)}" placeholder="22 Menit, Jujutsu Kaisen...">
           </div>
         </div>
 
-        <div class="form-group">
-          <label class="form-label">Judul Tayangan *</label>
-          <input type="text" class="form-input" name="title" required value="${escapeHtml(c.title)}" placeholder="22 Menit, Jujutsu Kaisen...">
-        </div>
-
-        ${this.renderCoverUploadField(c.cover_url, 'Gambar Poster Tayangan')}
-
-        <div class="form-row">
+        <div class="form-row-3">
+          <div class="form-group">
+            <label class="form-label">Tahun Rilis</label>
+            <input type="number" class="form-input" name="year" value="${c.year || ''}" placeholder="2022">
+          </div>
           <div class="form-group">
             <label class="form-label">Rating IMDb (0 - 10)</label>
             <input type="number" step="0.1" min="0" max="10" class="form-input" name="rating" value="${c.rating || ''}" placeholder="8.5">
           </div>
           <div class="form-group">
             <label class="form-label">Klasifikasi Usia</label>
-            <input type="text" class="form-input" name="age_rating" value="${escapeHtml(c.age_rating || '')}" placeholder="SU, R (13+), D (17+)">
+            <input type="text" class="form-input" name="age_rating" value="${escapeHtml(c.age_rating || '')}" placeholder="SU, R, D">
           </div>
         </div>
 
+        ${this.renderCoverUploadField(c.cover_url, 'Gambar Poster Tayangan')}
+
         <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">Negara</label>
-            <input type="text" class="form-input" name="country" value="${escapeHtml(c.country || '')}" placeholder="Indonesia, Jepang...">
-          </div>
           <div class="form-group">
             <label class="form-label">Studio / Rumah Produksi</label>
             <input type="text" class="form-input" name="studio" value="${escapeHtml(c.studio || '')}" placeholder="MAPPA, Falcon Pictures...">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Negara</label>
+            <input type="text" class="form-input" name="country" value="${escapeHtml(c.country || '')}" placeholder="Indonesia, Jepang...">
           </div>
         </div>
 
@@ -375,19 +375,23 @@ Object.assign(app, {
           </div>
         </div>
 
-        <div class="form-group">
-          <label class="form-label">Link Download / Halaman Akses Video</label>
-          <input type="url" class="form-input" name="download_url" value="${escapeHtml(c.download_url || '')}" placeholder="https://... tautan unduh / tonton">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Link Download / Halaman Akses Video</label>
+            <input type="url" class="form-input" name="download_url" value="${escapeHtml(c.download_url || '')}" placeholder="https://... tautan unduh / tonton">
+          </div>
+          <div class="form-group" style="display:flex; flex-direction:column; justify-content:flex-end;">
+            <label class="form-checkbox-card">
+              <input type="checkbox" name="watched" value="1" ${c.watched === 1 ? 'checked' : ''}>
+              <div class="form-checkbox-label">
+                <strong>Sudah Ditonton</strong>
+                <span>Tandai riwayat selesai tonton</span>
+              </div>
+            </label>
+          </div>
         </div>
 
-        <div class="form-group">
-          <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
-            <input type="checkbox" name="watched" value="1" ${c.watched === 1 ? 'checked' : ''}>
-            <span>Sudah Selesai Ditonton</span>
-          </label>
-        </div>
-
-        <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
+        <div class="modal-actions-footer">
           <button type="button" class="btn btn-secondary" onclick="app.closeModal('${modalId}')">Batal</button>
           <button type="submit" class="btn btn-primary">${isEdit ? 'Simpan Perubahan' : 'Tambah Tayangan'}</button>
         </div>

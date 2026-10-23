@@ -274,19 +274,17 @@ Object.assign(app, {
   },
 
   renderMetaFetchBar(type, defaultQuery = '') {
-    const providerName = type === 'games' ? 'Steam Store API' : (type === 'cinema' ? 'TVMaze Open DB' : 'iTunes & MusicBrainz');
+    const providerName = type === 'games' ? 'Steam' : (type === 'cinema' ? 'TVMaze' : 'iTunes / MusicBrainz');
     return `
-      <div style="background:var(--bg-surface-elevated); border:1px solid var(--border-color); border-radius:10px; padding:10px 12px; margin-bottom:14px;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-          <span style="font-size:0.8rem; font-weight:600; color:var(--text-secondary);">⚡ Auto-Fetch Metadata (${providerName} — Gratis &amp; Open)</span>
-        </div>
-        <div style="display:flex; gap:8px;">
-          <input type="text" id="meta-fetch-query" class="form-input form-input-sm" style="font-size:0.85rem;" placeholder="Ketik judul untuk auto-fill data &amp; cover..." value="${escapeHtml(defaultQuery || '')}">
-          <button type="button" class="btn btn-secondary btn-sm" style="flex-shrink:0; white-space:nowrap;" onclick="app.fetchMetadataLookup('${type}')">
-            🔍 Cari Metadata
+      <div class="meta-fetch-compact-bar">
+        <div class="meta-fetch-input-wrap">
+          <span class="meta-fetch-icon">${getIcon('search', 'ui-icon', 14)}</span>
+          <input type="text" id="meta-fetch-query" class="meta-fetch-input" placeholder="Cari judul di ${providerName} untuk isi otomatis..." value="${escapeHtml(defaultQuery || '')}">
+          <button type="button" class="btn btn-secondary btn-sm meta-fetch-btn" onclick="app.fetchMetadataLookup('${type}')" title="Auto-fill data dari open database">
+            ${getIcon('sparkles', 'ui-icon-btn', 12)} <span>Auto-Fill</span>
           </button>
         </div>
-        <div id="meta-fetch-results" style="display:none; margin-top:10px;"></div>
+        <div id="meta-fetch-results" class="meta-fetch-results-dropdown" style="display:none;"></div>
       </div>
     `;
   },
@@ -310,9 +308,9 @@ Object.assign(app, {
 
     container.style.display = 'block';
     container.innerHTML = `
-      <div style="padding:12px; text-align:center; color:var(--text-secondary); font-size:0.85rem; display:flex; align-items:center; justify-content:center; gap:10px;">
-        <span class="state-spinner" style="width:16px; height:16px; border-width:2px; margin:0;" aria-hidden="true"></span>
-        <span>Mencari metadata dari open database...</span>
+      <div style="padding:10px; text-align:center; color:var(--text-secondary); font-size:0.82rem; display:flex; align-items:center; justify-content:center; gap:8px;">
+        <span class="state-spinner" style="width:14px; height:14px; border-width:2px; margin:0;" aria-hidden="true"></span>
+        <span>Mencari metadata...</span>
       </div>
     `;
 
@@ -320,9 +318,9 @@ Object.assign(app, {
       const res = await api.get('/api/metadata/search', { type, q: query });
       if (!res.results || res.results.length === 0) {
         container.innerHTML = `
-          <div style="padding:8px 12px; background:var(--bg-surface-elevated); border:1px solid var(--border-color); border-radius:8px; font-size:0.8rem; color:var(--text-muted); display:flex; justify-content:space-between; align-items:center;">
+          <div style="padding:6px 10px; background:var(--bg-surface-elevated); border:1px solid var(--border-color); border-radius:6px; font-size:0.78rem; color:var(--text-muted); display:flex; justify-content:space-between; align-items:center;">
             <span>Tidak ditemukan metadata untuk "<strong>${escapeHtml(query)}</strong>".</span>
-            <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('meta-fetch-results').style.display='none'">Tutup</button>
+            <button type="button" class="btn btn-ghost btn-sm" style="font-size:0.7rem; padding:2px 6px;" onclick="document.getElementById('meta-fetch-results').style.display='none'">✕</button>
           </div>
         `;
         return;
@@ -334,14 +332,14 @@ Object.assign(app, {
         const meta = [item.year, item.genre].filter(Boolean).join(' • ');
 
         return `
-          <div style="display:flex; align-items:center; gap:10px; background:var(--bg-surface-elevated); border:1px solid var(--border-color); border-radius:8px; padding:8px 10px;">
-            ${item.cover_url ? `<img src="${escapeHtml(item.cover_url)}" style="width:40px; height:48px; object-fit:cover; border-radius:4px; flex-shrink:0;" alt="Cover">` : ''}
+          <div style="display:flex; align-items:center; gap:8px; background:var(--bg-surface-elevated); border:1px solid var(--border-color); border-radius:6px; padding:6px 8px;">
+            ${item.cover_url ? `<img src="${escapeHtml(item.cover_url)}" style="width:34px; height:44px; object-fit:cover; border-radius:4px; flex-shrink:0;" alt="Cover">` : ''}
             <div style="flex:1; min-width:0;">
-              <strong style="font-size:0.85rem; display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(item.title)}</strong>
-              <div style="font-size:0.75rem; color:var(--text-secondary);">${escapeHtml(subtitle)}</div>
-              <div style="font-size:0.7rem; color:var(--text-muted);">${escapeHtml(meta)}</div>
+              <strong style="font-size:0.82rem; display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(item.title)}</strong>
+              <div style="font-size:0.72rem; color:var(--text-secondary);">${escapeHtml(subtitle)}</div>
+              <div style="font-size:0.68rem; color:var(--text-muted);">${escapeHtml(meta)}</div>
             </div>
-            <button type="button" class="btn btn-primary btn-sm" style="flex-shrink:0; font-size:0.75rem; padding:4px 10px;" onclick="app.applyMetadata('${type}', decodeURIComponent('${itemStr}'))">
+            <button type="button" class="btn btn-primary btn-sm" style="flex-shrink:0; font-size:0.72rem; padding:3px 8px;" onclick="app.applyMetadata('${type}', decodeURIComponent('${itemStr}'))">
               Gunakan
             </button>
           </div>
@@ -349,19 +347,19 @@ Object.assign(app, {
       }).join('');
 
       container.innerHTML = `
-        <div style="border:1px solid var(--border-color); border-radius:10px; padding:10px; background:rgba(0,0,0,0.25); display:flex; flex-direction:column; gap:8px;">
+        <div style="border:1px solid var(--border-color); border-radius:8px; padding:8px; background:rgba(0,0,0,0.25); display:flex; flex-direction:column; gap:6px;">
           <div style="display:flex; justify-content:space-between; align-items:center;">
-            <span style="font-size:0.75rem; font-weight:600; color:var(--text-secondary);">Ditemukan ${res.results.length} kecocokan:</span>
-            <button type="button" class="btn btn-ghost btn-sm" style="font-size:0.7rem; padding:2px 6px;" onclick="document.getElementById('meta-fetch-results').style.display='none'">Tutup</button>
+            <span style="font-size:0.72rem; font-weight:600; color:var(--text-secondary);">${res.results.length} hasil ditemukan:</span>
+            <button type="button" class="btn btn-ghost btn-sm" style="font-size:0.7rem; padding:2px 6px;" onclick="document.getElementById('meta-fetch-results').style.display='none'">✕</button>
           </div>
-          <div style="display:flex; flex-direction:column; gap:6px; max-height:220px; overflow-y:auto;">
+          <div style="display:flex; flex-direction:column; gap:5px; max-height:180px; overflow-y:auto;">
             ${cards}
           </div>
         </div>
       `;
     } catch (err) {
       container.innerHTML = `
-        <div style="padding:8px 12px; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); border-radius:8px; font-size:0.8rem; color:var(--danger, #ef4444);">
+        <div style="padding:6px 10px; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); border-radius:6px; font-size:0.78rem; color:var(--danger, #ef4444);">
           ${escapeHtml(err.message)}
         </div>
       `;
@@ -402,28 +400,28 @@ Object.assign(app, {
     const container = document.getElementById('meta-fetch-results');
     if (container) container.style.display = 'none';
 
-    showToast(`Metadata "${item.title}" berhasil diterapkan!`, 'success');
+    showToast(`Metadata "${item.title}" diterapkan!`, 'success');
   },
 
   renderCoverUploadField(currentUrl = '', label = 'URL Poster / Cover Art') {
     const hasCover = Boolean(currentUrl && currentUrl.trim());
     return `
       <div class="form-group">
-        <label class="form-label">${label}</label>
-        <div style="display:flex; gap:12px; align-items:center;">
-          <div id="cover-preview-box" style="width:52px; height:64px; border-radius:8px; border:1px solid var(--border-color); background:var(--bg-surface-elevated); overflow:hidden; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
-            <img id="cover-preview-img" src="${escapeHtml(currentUrl || '')}" style="width:100%; height:100%; object-fit:cover; display:${hasCover ? 'block' : 'none'};" onerror="this.style.display='none'; document.getElementById('cover-preview-icon').style.display='block';">
-            <span id="cover-preview-icon" style="font-size:1.3rem; display:${hasCover ? 'none' : 'block'};">🖼️</span>
+        <label class="form-label">
+          <span>${label}</span>
+          <span style="font-size:0.72rem; color:var(--text-muted);">Format JPG, PNG, WebP</span>
+        </label>
+        <div class="form-cover-row">
+          <div id="cover-preview-box" class="form-cover-preview" title="Pratinjau Sampul">
+            <img id="cover-preview-img" src="${escapeHtml(currentUrl || '')}" style="display:${hasCover ? 'block' : 'none'};" onerror="this.style.display='none'; document.getElementById('cover-preview-icon').style.display='flex';">
+            <span id="cover-preview-icon" style="display:${hasCover ? 'none' : 'flex'};">${getIcon('image', 'ui-icon', 18)}</span>
           </div>
-          <div style="flex:1; min-width:0; display:flex; flex-direction:column; gap:6px;">
-            <div style="display:flex; gap:8px;">
-              <input type="text" class="form-input form-input-sm" name="cover_url" id="input-cover-url" value="${escapeHtml(currentUrl || '')}" placeholder="Masukkan URL gambar atau klik tombol unggah..." oninput="app.previewCoverUrl(this.value)">
-              <label class="btn btn-secondary btn-sm" style="flex-shrink:0; cursor:pointer; margin:0; display:inline-flex; align-items:center; gap:6px;" title="Unggah gambar poster dari perangkat">
-                ${getIcon('upload', 'ui-icon-btn', 13)} Unggah Gambar
-                <input type="file" id="manual-cover-file" accept="image/*" style="display:none;" onchange="app.handleManualCoverUpload(this)">
-              </label>
-            </div>
-            <span style="font-size:0.72rem; color:var(--text-muted);">Pilih berkas dari perangkat (JPG, PNG, WebP) atau tempelkan URL gambar.</span>
+          <div class="form-cover-inputs">
+            <input type="text" class="form-input form-input-sm" name="cover_url" id="input-cover-url" value="${escapeHtml(currentUrl || '')}" placeholder="Tempel URL gambar atau klik unggah..." oninput="app.previewCoverUrl(this.value)">
+            <label class="btn btn-secondary btn-sm form-cover-upload-btn" title="Unggah gambar dari perangkat">
+              ${getIcon('upload', 'ui-icon-btn', 13)} <span>Unggah</span>
+              <input type="file" id="manual-cover-file" accept="image/*" style="display:none;" onchange="app.handleManualCoverUpload(this)">
+            </label>
           </div>
         </div>
       </div>
@@ -440,7 +438,7 @@ Object.assign(app, {
       icon.style.display = 'none';
     } else {
       img.style.display = 'none';
-      icon.style.display = 'block';
+      icon.style.display = 'flex';
     }
   },
 
@@ -455,7 +453,7 @@ Object.assign(app, {
     formData.append('cover_image', file);
 
     try {
-      showToast('Mengunggah berkas poster...', 'info');
+      showToast('Mengunggah poster...', 'info');
       const res = await api.upload('/api/data/upload-cover', formData);
       const urlInput = document.getElementById('input-cover-url');
       if (urlInput) {
@@ -464,7 +462,7 @@ Object.assign(app, {
         urlInput.dispatchEvent(new Event('change', { bubbles: true }));
       }
       this.previewCoverUrl(res.url);
-      showToast('Gambar poster berhasil diunggah ke server!', 'success');
+      showToast('Poster berhasil diunggah!', 'success');
     } catch (err) {
       showToast(`Gagal mengunggah gambar: ${err.message}`, 'error');
     }
@@ -472,31 +470,37 @@ Object.assign(app, {
 
   renderGenreSelector(currentGenreStr = '', mediaType = 'game', customTaxonomy = []) {
     const defaultGenres = {
-      game: ['Action', 'Adventure', 'Action-Adventure', 'Action RPG', 'RPG', 'JRPG', 'Souls-like', 'Open World', 'Shooter', 'FPS', 'Battle Royale', 'Hack and Slash', 'Platformer', 'Puzzle', 'Racing', 'Fighting', 'Horror', 'Survival', 'Simulation', 'Strategy', 'Sports', 'Indie', 'Casual', 'Stealth', 'Gacha', 'Metroidvania', 'Co-op'],
-      cinema: ['Aksi', 'Petualangan', 'Animasi', 'Anime', 'Biografi', 'Drama', 'Dokumenter', 'Fantasi', 'Horor', 'Kejahatan', 'Komedi', 'Misteri', 'Musikal', 'Romansa', 'Sci-Fi', 'Supernatural', 'Shounen', 'Thriller'],
-      music: ['Akustik', 'Anime OST', 'Blues', 'Country', 'Dangdut', 'EDM / Elektronik', 'Folk', 'Hip-Hop', 'Indie', 'J-Pop', 'J-Rock', 'Jazz', 'Klasik', 'K-Pop', 'Metal', 'Orkestra', 'Pop', 'Pop Rock', 'R&B', 'Reggae', 'Rock', 'Rock Ballad', 'Soundtrack']
+      game: ['Action RPG', 'RPG', 'Open World', 'Souls-like', 'Action', 'Adventure', 'Shooter', 'FPS', 'Platformer', 'Puzzle', 'Fighting', 'Horror', 'Survival', 'Strategy', 'Indie', 'Casual'],
+      cinema: ['Aksi', 'Petualangan', 'Animasi', 'Anime', 'Drama', 'Dokumenter', 'Fantasi', 'Horor', 'Komedi', 'Misteri', 'Romansa', 'Sci-Fi', 'Thriller'],
+      music: ['Akustik', 'Anime OST', 'Blues', 'EDM', 'Folk', 'Hip-Hop', 'Indie', 'J-Pop', 'Jazz', 'Klasik', 'K-Pop', 'Metal', 'Pop', 'R&B', 'Rock', 'Soundtrack']
     };
     const taxNames = Array.isArray(customTaxonomy) ? customTaxonomy.map(x => x.name || x) : [];
     const allPresets = Array.from(new Set([...taxNames, ...(defaultGenres[mediaType] || defaultGenres.game)])).sort((a, b) => a.localeCompare('id'));
     const selectedList = currentGenreStr ? currentGenreStr.split(',').map(s => s.trim()).filter(Boolean) : [];
     const chipsHtml = selectedList.map(g => `<span class="genre-chip"><span>${escapeHtml(g)}</span><button type="button" class="genre-chip-remove" onclick="app.removeGenreTag('${escapeHtml(g)}')" title="Hapus ${escapeHtml(g)}">✕</button></span>`).join('');
     const optionsHtml = allPresets.map(g => `<option value="${escapeHtml(g)}">${escapeHtml(g)}</option>`).join('');
-    const quickPresets = (defaultGenres[mediaType] || defaultGenres.game).slice(0, 14);
-    const quickList = Array.from(new Set([...taxNames.slice(0, 5), ...quickPresets]));
-    const pillsHtml = quickList.map(g => `<button type="button" class="genre-pill-btn ${selectedList.some(s => s.toLowerCase() === g.toLowerCase()) ? 'active' : ''}" data-genre="${escapeHtml(g)}" onclick="app.toggleGenrePill('${escapeHtml(g)}')">${escapeHtml(g)}</button>`).join('');
+    const quickPresets = (defaultGenres[mediaType] || defaultGenres.game).slice(0, 10);
+    const pillsHtml = quickPresets.map(g => `<button type="button" class="genre-pill-btn ${selectedList.some(s => s.toLowerCase() === g.toLowerCase()) ? 'active' : ''}" data-genre="${escapeHtml(g)}" onclick="app.toggleGenrePill('${escapeHtml(g)}')">${escapeHtml(g)}</button>`).join('');
 
     return `
       <div class="form-group">
-        <label class="form-label">Genre ${mediaType === 'game' ? 'Game' : mediaType === 'cinema' ? 'Tayangan' : 'Musik'}</label>
+        <label class="form-label">
+          <span>Genre ${mediaType === 'game' ? 'Game' : mediaType === 'cinema' ? 'Tayangan' : 'Musik'}</span>
+          <span style="font-size:0.72rem; color:var(--text-muted);">Pilih dari daftar atau ketik cepat</span>
+        </label>
         <input type="hidden" name="genre" id="modal-genre-input" value="${escapeHtml(currentGenreStr || '')}">
-        <div class="genre-selector-wrapper">
-          <div id="modal-genre-chips" class="genre-chips-box">${chipsHtml || '<span class="genre-empty-hint">Belum ada genre dipilih. Pilih dari menu atau tombol di bawah:</span>'}</div>
-          <div style="display:flex; gap:8px;">
-            <select class="form-select" id="genre-select-dropdown" onchange="app.selectGenreFromDropdown(this)" aria-label="Pilih genre untuk ditambahkan"><option value="">➕ Pilih Genre untuk Ditambahkan...</option>${optionsHtml}</select>
+        <div class="genre-compact-wrap">
+          <div class="genre-compact-bar">
+            <div id="modal-genre-chips" class="genre-compact-chips">
+              ${chipsHtml || '<span class="genre-empty-hint">Belum ada genre dipilih</span>'}
+            </div>
+            <select class="genre-compact-select" id="genre-select-dropdown" onchange="app.selectGenreFromDropdown(this)" aria-label="Tambah genre">
+              <option value="">+ Tambah...</option>
+              ${optionsHtml}
+            </select>
           </div>
-          <div>
-            <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:4px;">Pilihan Cepat (klik untuk memilih / membatalkan):</div>
-            <div class="genre-quick-pills-wrap">${pillsHtml}</div>
+          <div class="genre-quick-scroll-strip" title="Geser untuk pilihan cepat">
+            ${pillsHtml}
           </div>
         </div>
       </div>
@@ -535,7 +539,7 @@ Object.assign(app, {
     const chipsBox = document.getElementById('modal-genre-chips');
     if (!input || !chipsBox) return;
     const list = input.value ? input.value.split(',').map(s => s.trim()).filter(Boolean) : [];
-    chipsBox.innerHTML = list.length === 0 ? '<span class="genre-empty-hint">Belum ada genre dipilih. Pilih dari menu atau tombol di bawah:</span>' : list.map(g => `
+    chipsBox.innerHTML = list.length === 0 ? '<span class="genre-empty-hint">Belum ada genre dipilih</span>' : list.map(g => `
       <span class="genre-chip"><span>${escapeHtml(g)}</span><button type="button" class="genre-chip-remove" onclick="app.removeGenreTag('${escapeHtml(g)}')" title="Hapus ${escapeHtml(g)}">✕</button></span>
     `).join('');
     document.querySelectorAll('.genre-pill-btn').forEach(btn => {

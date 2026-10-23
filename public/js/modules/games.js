@@ -302,7 +302,8 @@ Object.assign(app, {
     this.createModal(modalId, isEdit ? 'Edit Game' : 'Tambah Game Baru', `
       <form id="form-game" onsubmit="app.handleGameSubmit(event, ${isEdit ? g.id : 'null'})">
         ${this.renderMetaFetchBar('games', g.title)}
-        <div class="form-row">
+        
+        <div class="form-row-1-2">
           <div class="form-group">
             <label class="form-label">Tipe Game *</label>
             <select class="form-select" name="type" onchange="app.toggleGameModalFields(this.value)">
@@ -318,14 +319,22 @@ Object.assign(app, {
           </div>
         </div>
 
-        <div class="form-group">
-          <label class="form-label">Tanggal Rilis (YYYY-MM-DD / Tahun)</label>
-          <input type="text" class="form-input" name="release_date" value="${escapeHtml(g.release_date || (g.year ? String(g.year) : ''))}" placeholder="2020-12-10 atau 2020">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Tanggal Rilis (YYYY-MM-DD / Tahun)</label>
+            <input type="text" class="form-input" name="release_date" value="${escapeHtml(g.release_date || (g.year ? String(g.year) : ''))}" placeholder="2020-12-10 atau 2020">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Status Kepemilikan</label>
+            <select class="form-select" name="status">
+              ${customStatuses.map(s => `<option value="${s}" ${g.status === s || (!customStatuses.includes(g.status) && s === 'Purchase') ? 'selected' : ''}>${s}</option>`).join('')}
+            </select>
+          </div>
         </div>
 
-        ${this.renderGenreSelector(g.genre, 'game', customGenres)}
-
         ${this.renderCoverUploadField(g.cover_url, 'Gambar Poster Cover Art')}
+
+        ${this.renderGenreSelector(g.genre, 'game', customGenres)}
 
         <div class="form-row">
           <div class="form-group">
@@ -406,24 +415,23 @@ Object.assign(app, {
           </div>
         </div>
 
-        <div class="form-group">
-          <label class="form-label">Status Kepemilikan</label>
-          <select class="form-select" name="status">
-            ${customStatuses.map(s => `<option value="${s}" ${g.status === s || (!customStatuses.includes(g.status) && s === 'Purchase') ? 'selected' : ''}>${s}</option>`).join('')}
-          </select>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Link Download / Halaman Akses Game</label>
+            <input type="url" class="form-input" name="download_url" value="${escapeHtml(g.download_url || '')}" placeholder="https://store.steampowered.com/app/... atau tautan unduh">
+          </div>
+          <div class="form-group" style="display:flex; flex-direction:column; justify-content:flex-end;">
+            <label class="form-checkbox-card">
+              <input type="checkbox" id="game-completed" name="completed" ${g.completed === 1 ? 'checked' : ''}>
+              <div class="form-checkbox-label">
+                <strong>Sudah Tamat (Completed)</strong>
+                <span>Tandai riwayat selesai bermain</span>
+              </div>
+            </label>
+          </div>
         </div>
 
-        <div class="form-group">
-          <label class="form-label">Link Download / Halaman Akses Game</label>
-          <input type="url" class="form-input" name="download_url" value="${escapeHtml(g.download_url || '')}" placeholder="https://store.steampowered.com/app/... atau tautan unduh">
-        </div>
-
-        <div class="form-group" style="display:flex; align-items:center; gap:8px; margin-top:8px;">
-          <input type="checkbox" id="game-completed" name="completed" ${g.completed === 1 ? 'checked' : ''} style="width:18px; height:18px; cursor:pointer;">
-          <label for="game-completed" class="form-label" style="margin:0; cursor:pointer; font-weight:600;">Sudah Tamat (Completed)</label>
-        </div>
-
-        <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
+        <div class="modal-actions-footer">
           <button type="button" class="btn btn-secondary" onclick="app.closeModal('${modalId}')">Batal</button>
           <button type="submit" class="btn btn-primary">${isEdit ? 'Simpan Perubahan' : 'Tambah Game'}</button>
         </div>

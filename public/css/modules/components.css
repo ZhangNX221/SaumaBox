@@ -223,53 +223,144 @@
   transform: scale(0.96);
 }
 
-/* Form Styling */
+/* Form Styling — Minimalist & Compact (/antislop-ui & /antislop-layoutmobile) */
 .form-group {
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
 .form-label {
-  display: block;
-  font-size: 0.85rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.78rem;
   font-weight: 600;
-  color: var(--text-primary);
-  margin-bottom: 6px;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+  letter-spacing: 0.2px;
 }
 
 .form-input, .form-select, .form-textarea {
   width: 100%;
-  padding: 10px 14px;
+  padding: 8px 12px;
   background-color: var(--bg-surface-elevated);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-control);
   color: var(--text-primary);
   font-family: var(--font-sans);
-  font-size: 0.9rem;
-  transition: border-color 0.15s ease;
-  min-height: 44px;
+  font-size: 0.88rem;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  min-height: 40px;
+}
+
+.form-input-sm, .form-select-sm {
+  min-height: 36px;
+  padding: 6px 10px;
+  font-size: 0.82rem;
 }
 
 .form-input:focus, .form-select:focus, .form-textarea:focus {
   outline: none;
   border-color: var(--focus-ring);
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.15);
 }
 
 .form-input:focus-visible, .form-select:focus-visible, .form-textarea:focus-visible {
   outline: 2px solid var(--focus-ring);
   outline-offset: 1px;
-  border-color: var(--focus-ring);
 }
 
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 16px;
+  gap: 12px;
+}
+
+.form-row-3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 12px;
+}
+
+.form-row-1-2 {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 12px;
+}
+
+.form-row-2-1 {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 12px;
+}
+
+@media (max-width: 600px) {
+  .form-row,
+  .form-row-3,
+  .form-row-1-2,
+  .form-row-2-1 {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .form-group {
+    margin-bottom: 10px;
+  }
 }
 
 .form-help {
-  font-size: 0.78rem;
+  font-size: 0.74rem;
   color: var(--text-muted);
-  margin-top: 4px;
+  margin-top: 3px;
+}
+
+/* Compact Checkbox Card */
+.form-checkbox-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-control);
+  cursor: pointer;
+  user-select: none;
+  min-height: 40px;
+  height: 100%;
+  transition: all 0.15s ease;
+}
+
+.form-checkbox-card:hover {
+  border-color: var(--border-hover, rgba(255, 255, 255, 0.22));
+}
+
+.form-checkbox-card input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent-color);
+  cursor: pointer;
+  margin: 0;
+  flex-shrink: 0;
+}
+
+.form-checkbox-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+  cursor: pointer;
+}
+
+/* Modal Actions Sticky Footer */
+.modal-actions-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-color);
+  position: sticky;
+  bottom: -1px;
+  background: var(--bg-surface);
+  z-index: 5;
 }
 
 /* Empty State / Loading State / Error State */

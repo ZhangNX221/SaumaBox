@@ -233,30 +233,29 @@ Object.assign(app, {
     const currentColor = item?.bg_color || '#1d4ed8';
 
     const colorSwatchesHtml = colors.map(c => `
-      <button type="button" class="color-swatch-btn ${c === currentColor ? 'selected' : ''}" style="width:26px; height:26px; border-radius:6px; background:${c}; border:2px solid ${c === currentColor ? '#ffffff' : 'transparent'}; cursor:pointer;" onclick="app.pickWebColor('${c}')"></button>
+      <button type="button" class="color-swatch-btn ${c === currentColor ? 'selected' : ''}" style="width:24px; height:24px; border-radius:6px; background:${c}; border:2px solid ${c === currentColor ? '#ffffff' : 'transparent'}; cursor:pointer; flex-shrink:0;" onclick="app.pickWebColor('${c}')"></button>
     `).join('');
 
     const bodyHtml = `
       <form id="form-web-bookmark" onsubmit="app.handleWebSubmit(event, ${item?.id || 'null'})">
         <div class="form-group">
-          <label class="form-label" style="display:flex; justify-content:space-between;">
+          <label class="form-label">
             <span>URL Website / Layanan *</span>
-            <span style="font-size:0.72rem; color:var(--text-muted);">http(s):// atau IP</span>
+            <span style="font-size:0.72rem; color:var(--text-muted); font-weight:normal;">http(s):// atau IP</span>
           </label>
           <div style="display:flex; gap:8px;">
             <input type="text" class="form-input" name="url" id="web-input-url" required placeholder="https://github.com atau 192.168.10.8:8080" value="${escapeHtml(item?.url || '')}">
-            <button type="button" class="btn btn-secondary btn-sm" style="flex-shrink:0; white-space:nowrap;" onclick="app.autoFetchWebMeta()" title="Otomatis isi judul, favicon, dan warna dari URL">
+            <button type="button" class="btn btn-secondary btn-sm" style="flex-shrink:0; white-space:nowrap; padding:0 12px; height:38px; display:inline-flex; align-items:center; gap:6px;" onclick="app.autoFetchWebMeta()" title="Otomatis isi judul, favicon, dan warna dari URL">
               ${getIcon('sparkles', 'ui-icon-btn', 13)} Auto-Fill
             </button>
           </div>
         </div>
 
-        <div class="form-group">
-          <label class="form-label">Nama / Judul Bookmark *</label>
-          <input type="text" class="form-input" name="title" id="web-input-title" required placeholder="Contoh: GitHub, CasaOS, AdGuard Home" value="${escapeHtml(item?.title || '')}">
-        </div>
-
-        <div class="form-row" style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Nama / Judul Bookmark *</label>
+            <input type="text" class="form-input" name="title" id="web-input-title" required placeholder="Contoh: GitHub, CasaOS" value="${escapeHtml(item?.title || '')}">
+          </div>
           <div class="form-group">
             <label class="form-label">Kategori</label>
             <input type="text" list="web-category-list" class="form-input" name="category" id="web-input-cat" placeholder="Pilih atau ketik kategori..." value="${escapeHtml(currentCategory)}">
@@ -264,23 +263,18 @@ Object.assign(app, {
               ${allCats.map(c => `<option value="${escapeHtml(c)}">`).join('')}
             </datalist>
           </div>
-
-          <div class="form-group">
-            <label class="form-label">Urutan Sortir</label>
-            <input type="number" class="form-input" name="sort_order" id="web-input-sort" placeholder="0" value="${item?.sort_order ?? 0}">
-          </div>
         </div>
 
         <div class="form-group">
           <label class="form-label">URL Ikon / Favicon</label>
-          <div style="display:flex; gap:10px; align-items:center;">
-            <div id="web-icon-preview-box" style="width:48px; height:48px; border-radius:12px; background:${escapeHtml(currentColor)}; display:flex; align-items:center; justify-content:center; flex-shrink:0; box-shadow:0 4px 10px rgba(0,0,0,0.3); overflow:hidden;">
-              <img id="web-icon-preview-img" src="${escapeHtml(item?.icon_url || '')}" style="width:32px; height:32px; object-fit:contain; display:${item?.icon_url ? 'block' : 'none'};" onerror="this.style.display='none'; document.getElementById('web-icon-preview-fallback').style.display='block';">
-              <span id="web-icon-preview-fallback" style="font-size:1.2rem; font-weight:700; color:#ffffff; display:${item?.icon_url ? 'none' : 'block'};">${escapeHtml((item?.title || 'W').charAt(0).toUpperCase())}</span>
+          <div class="form-cover-row">
+            <div id="web-icon-preview-box" class="form-cover-preview" style="width:40px; height:40px; background:${escapeHtml(currentColor)}; border-radius:10px; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 8px rgba(0,0,0,0.25);">
+              <img id="web-icon-preview-img" src="${escapeHtml(item?.icon_url || '')}" style="width:26px; height:26px; object-fit:contain; display:${item?.icon_url ? 'block' : 'none'};" onerror="this.style.display='none'; document.getElementById('web-icon-preview-fallback').style.display='block';">
+              <span id="web-icon-preview-fallback" style="font-size:1.1rem; font-weight:700; color:#ffffff; display:${item?.icon_url ? 'none' : 'block'};">${escapeHtml((item?.title || 'W').charAt(0).toUpperCase())}</span>
             </div>
-            <div style="flex:1; display:flex; gap:8px;">
+            <div class="form-cover-inputs">
               <input type="text" class="form-input" name="icon_url" id="web-input-icon" placeholder="https://domain.com/icon.png" value="${escapeHtml(item?.icon_url || '')}" oninput="app.previewWebIcon(this.value)">
-              <label class="btn btn-secondary btn-sm" style="flex-shrink:0; cursor:pointer; margin:0; display:inline-flex; align-items:center; gap:6px;" title="Unggah gambar ikon">
+              <label class="btn btn-secondary btn-sm form-cover-upload-btn" title="Unggah gambar ikon">
                 ${getIcon('upload', 'ui-icon-btn', 13)} Unggah
                 <input type="file" id="web-icon-file-input" accept="image/*" style="display:none;" onchange="app.handleWebIconUpload(this)">
               </label>
@@ -288,29 +282,39 @@ Object.assign(app, {
           </div>
         </div>
 
-        <div class="form-group">
-          <label class="form-label">Warna Latar Ikon</label>
-          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-            <div id="web-swatches-wrap" style="display:flex; gap:6px;">
-              ${colorSwatchesHtml}
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Warna Latar Ikon</label>
+            <div style="display:flex; align-items:center; gap:6px; min-height:38px;">
+              <div id="web-swatches-wrap" style="display:flex; gap:5px; flex-wrap:wrap;">
+                ${colorSwatchesHtml}
+              </div>
+              <input type="color" id="web-color-picker" name="bg_color" value="${escapeHtml(currentColor)}" style="width:30px; height:26px; padding:0; border:none; background:none; cursor:pointer;" onchange="app.pickWebColor(this.value)" title="Pilih warna kustom">
             </div>
-            <input type="color" id="web-color-picker" name="bg_color" value="${escapeHtml(currentColor)}" style="width:32px; height:28px; padding:0; border:none; background:none; cursor:pointer;" onchange="app.pickWebColor(this.value)">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Urutan Sortir</label>
+            <input type="number" class="form-input" name="sort_order" id="web-input-sort" placeholder="0" value="${item?.sort_order ?? 0}">
           </div>
         </div>
 
-        <div class="form-group">
-          <label class="form-label">Deskripsi / Catatan Singkat (Opsional)</label>
-          <input type="text" class="form-input" name="description" placeholder="Catatan kegunaan atau info login cepat..." value="${escapeHtml(item?.description || '')}">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Deskripsi / Catatan Singkat</label>
+            <input type="text" class="form-input" name="description" placeholder="Catatan kegunaan atau info login cepat..." value="${escapeHtml(item?.description || '')}">
+          </div>
+          <div class="form-group" style="display:flex; flex-direction:column; justify-content:flex-end;">
+            <label class="form-checkbox-card">
+              <input type="checkbox" name="is_pinned" value="1" ${item?.is_pinned ? 'checked' : ''}>
+              <div class="form-checkbox-label">
+                <strong>Sematkan di Atas (Pinned)</strong>
+                <span>Tampilkan prioritas di awal daftar</span>
+              </div>
+            </label>
+          </div>
         </div>
 
-        <div class="form-group">
-          <label style="display:inline-flex; align-items:center; gap:8px; cursor:pointer; user-select:none;">
-            <input type="checkbox" name="is_pinned" value="1" ${item?.is_pinned ? 'checked' : ''}>
-            <span>Sematkan di baris teratas (Pinned Bookmark)</span>
-          </label>
-        </div>
-
-        <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px; padding-top:16px; border-top:1px solid var(--border-color);">
+        <div class="modal-actions-footer">
           <button type="button" class="btn btn-secondary" onclick="app.closeModal('modal-web-bookmark')">Batal</button>
           <button type="submit" class="btn btn-primary" id="btn-submit-web">
             ${getIcon('check', 'ui-icon-btn', 14)}
